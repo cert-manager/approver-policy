@@ -1,0 +1,24 @@
+# permissions for end users to edit certificaterequestpolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: certificaterequestpolicy-editor-role
+rules:
+- apiGroups:
+  - policy.cert-manager.io
+  resources:
+  - certificaterequestpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - policy.cert-manager.io
+  resources:
+  - certificaterequestpolicies/status
+  verbs:
+  - get
