@@ -115,7 +115,6 @@ func ObjectReference(el *field.ErrorList, path *field.Path, policy *[]cmmeta.Obj
 		return
 	}
 
-	var found bool
 	for _, policyI := range *policy {
 		if !wildcard.Matchs(policyI.Name, request.Name) {
 			continue
@@ -126,11 +125,12 @@ func ObjectReference(el *field.ErrorList, path *field.Path, policy *[]cmmeta.Obj
 		if !wildcard.Matchs(policyI.Group, request.Group) {
 			continue
 		}
+
+		// This policy matched, return
+		return
 	}
 
-	if !found {
-		*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%v", *policy)))
-	}
+	*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%v", *policy)))
 }
 
 // MinDuration will compare the policy duration being larger than the request.
@@ -141,7 +141,7 @@ func MinDuration(el *field.ErrorList, path *field.Path, policy *metav1.Duration,
 	}
 
 	if policy.Duration > request.Duration {
-		*el = append(*el, field.Invalid(path, request, policy.String()))
+		*el = append(*el, field.Invalid(path, request.Duration.String(), policy.Duration.String()))
 	}
 }
 
@@ -178,5 +178,28 @@ func MaxSize(el *field.ErrorList, path *field.Path, policy *int, request int) {
 
 	if request > *policy {
 		*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%d", *policy)))
+	}
+}
+
+// Bool will compare the request is the same as policy
+func Bool(el *field.ErrorList, path *field.Path, policy *bool, request bool) {
+	// Allow all
+	if policy == nil {
+		return
+	}
+
+	if request != *policy {
+		*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%t", *policy)))
+	}
+}
+
+func KeyAlgorithm(el *field.ErrorList, path *field.Path, policy *cmapi.PrivateKeyAlgorithm, request cmapi.PrivateKeyAlgorithm) {
+	// Allow all
+	if policy == nil {
+		return
+	}
+
+	if request != *policy {
+		*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%s", *policy)))
 	}
 }

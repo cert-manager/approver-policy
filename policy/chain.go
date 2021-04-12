@@ -19,31 +19,45 @@ package policy
 import (
 	"crypto/ecdsa"
 	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"errors"
+	"fmt"
 	"net"
 	"net/url"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	utilpki "github.com/jetstack/cert-manager/pkg/util/pki"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	cmpolicy "github.com/cert-manager/policy-approver/api/v1alpha1"
 	"github.com/cert-manager/policy-approver/policy/checks"
 )
 
-var (
-	parseKeyError = errors.New("failed to parse public key")
+type checkStrategy int
+
+const (
+	checkString checkStrategy = iota
+	checkStringSlice
+	checkBool
+	checkIPs
+	checkURLs
+	checkUsages
+	checkObjRef
+	checkMinDur
+	checkMaxDur
+	checkMinSize
+	checkMaxSize
+	checkKeyAlg
 )
 
 // check holds the json path to this field, the policy enforced on the field,
 // and the requested value.
 type check struct {
-	path    string
-	policy  interface{}
-	request interface{}
+	path     string
+	policy   interface{}
+	request  interface{}
+	strategy checkStrategy
 }
 
 // EvaluateCertificateRequest evaluates whether the given CertificateRequest
@@ -51,109 +65,105 @@ type check struct {
 // policy, 'el' will be populated. An error signals that the policy couldn't be
 // evaluated to completion.
 func EvaluateCertificateRequest(el *field.ErrorList, policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) error {
+	chain, err := buildChecks(policy, cr)
+	if err != nil {
+		return err
+	}
+
 	path := field.NewPath("spec")
-
-	// decode CSR from CertificateRequest
-	csr, err := utilpki.DecodeX509CertificateRequestBytes(cr.Spec.Request)
-	if err != nil {
-		return err
-	}
-
-	// Add x509 subject and private key checks.
-	subjchecks := evaluatex509Subject(el, path.Child("allowedSubject"), policy.Spec.AllowedSubject, csr.Subject)
-	pkchecks, err := evaluatePrivateKey(el, path.Child("allowedPrivateKey"), policy.Spec.AllowedPrivateKey, csr)
-	if err != nil {
-		return err
-	}
-
-	// Adds checks for all fields in CertificateRequestPolicy spec
-	spec := append(subjchecks, []check{
-		{"allowedCommonName", policy.Spec.AllowedCommonName, csr.Subject.CommonName},
-		{"allowedMinDuration", policy.Spec.MinDuration, cr.Spec.Duration},
-		{"allowedMaxDuration", policy.Spec.MaxDuration, cr.Spec.Duration},
-		{"allowedDNSNames", policy.Spec.AllowedDNSNames, csr.DNSNames},
-		{"allowedIPAddresses", policy.Spec.AllowedIPAddresses, csr.IPAddresses},
-		{"allowedURIs", policy.Spec.AllowedURIs, csr.URIs},
-		{"allowedEmailAddresses", policy.Spec.AllowedEmailAddresses, csr.EmailAddresses},
-		{"allowedIssuers", policy.Spec.AllowedIssuers, cr.Spec.IssuerRef},
-		{"allowedIsCA", policy.Spec.AllowedIsCA, cr.Spec.IsCA},
-		{"allowedKeyUsages", policy.Spec.AllowedUsages, cr.Spec.Usages},
-	}...)
-	spec = append(spec, pkchecks...)
-
-	checks.MinDuration(el, path, policy.Spec.MinDuration, cr.Spec.Duration)
-	checks.MaxDuration(el, path, policy.Spec.MinDuration, cr.Spec.Duration)
-
-	// Use the type of the policy and request value to infer which check to
-	// perform.
-	for _, check := range spec {
-		switch check.policy.(type) {
-
-		case *[]string:
-			policy := check.policy.(*[]string)
-			switch check.request.(type) {
-			case string:
-				checks.Strings(el, path.Child(check.path), policy, check.request.(string))
-			case []string:
-				checks.StringSlice(el, path.Child(check.path), policy, check.request.([]string))
-			case []net.IP:
-				checks.IPSlice(el, path.Child(check.path), policy, check.request.([]net.IP))
-			case []*url.URL:
-				checks.URLSlice(el, path.Child(check.path), policy, check.request.([]*url.URL))
-			}
-
-		case *string:
+	for _, check := range chain {
+		switch check.strategy {
+		case checkString:
 			checks.String(el, path.Child(check.path), check.policy.(*string), check.request.(string))
-
-		case *[]cmmeta.ObjectReference:
-			checks.ObjectReference(el, path.Child(check.path), check.policy.(*[]cmmeta.ObjectReference), check.request.(cmmeta.ObjectReference))
-
-		case *[]cmapi.KeyUsage:
+		case checkStringSlice:
+			checks.StringSlice(el, path.Child(check.path), check.policy.(*[]string), check.request.([]string))
+		case checkBool:
+			checks.Bool(el, path.Child(check.path), check.policy.(*bool), check.request.(bool))
+		case checkIPs:
+			checks.IPSlice(el, path.Child(check.path), check.policy.(*[]string), check.request.([]net.IP))
+		case checkURLs:
+			checks.URLSlice(el, path.Child(check.path), check.policy.(*[]string), check.request.([]*url.URL))
+		case checkUsages:
 			checks.KeyUsageSlice(el, path.Child(check.path), check.policy.(*[]cmapi.KeyUsage), check.request.([]cmapi.KeyUsage))
-		case *[]cmapi.PrivateKeyAlgorithm:
-			checks.String(el, path.Child(check.path), check.policy.(*string), check.request.(string))
+		case checkObjRef:
+			checks.ObjectReference(el, path.Child(check.path), check.policy.(*[]cmmeta.ObjectReference), check.request.(cmmeta.ObjectReference))
+		case checkMinDur:
+			checks.MinDuration(el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
+		case checkMaxDur:
+			checks.MaxDuration(el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
+		case checkMinSize:
+			checks.MinSize(el, path.Child(check.path), check.policy.(*int), check.request.(int))
+		case checkMaxSize:
+			checks.MaxSize(el, path.Child(check.path), check.policy.(*int), check.request.(int))
+		case checkKeyAlg:
+			checks.KeyAlgorithm(el, path.Child(check.path), check.policy.(*cmapi.PrivateKeyAlgorithm), check.request.(cmapi.PrivateKeyAlgorithm))
+		default:
+			return fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
 		}
 	}
 
 	return nil
 }
 
-func evaluatex509Subject(el *field.ErrorList, path *field.Path, policy *cmpolicy.PolicyX509Subject, subject pkix.Name) []check {
-	// Allow all
-	if policy == nil {
-		return nil
-	}
-
-	return []check{
-		{"allowedOrganizations", policy.AllowedOrganizations, subject.Organization},
-		{"allowedCountries", policy.AllowedCountries, subject.Country},
-		{"allowedOrganizationalUnits", policy.AllowedOrganizationalUnits, subject.OrganizationalUnit},
-		{"allowedLocalities", policy.AllowedLocalities, subject.Locality},
-		{"allowedProvinces", policy.AllowedProvinces, subject.Province},
-		{"allowedStreetAddresses", policy.AllowedStreetAddresses, subject.StreetAddress},
-		{"allowedPostalCodes", policy.AllowedPostalCodes, subject.PostalCode},
-		{"allowedSerialNumber", policy.AllowedSerialNumber, subject.SerialNumber},
-	}
-}
-
-func evaluatePrivateKey(el *field.ErrorList, path *field.Path, policy *cmpolicy.PolicyPrivateKey, csr *x509.CertificateRequest) ([]check, error) {
-	// Allow all
-	if policy == nil {
-		return nil, nil
-	}
-
-	alg, size, err := parsePublicKey(csr.PublicKey)
+func buildChecks(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
+	// decode CSR from CertificateRequest
+	csr, err := utilpki.DecodeX509CertificateRequestBytes(cr.Spec.Request)
 	if err != nil {
 		return nil, err
 	}
 
-	checks.MinSize(el, path.Child("minSize"), policy.MinSize, size)
-	checks.MaxSize(el, path.Child("minSize"), policy.MaxSize, size)
+	var chain []check
 
-	return []check{
-		{"allowedAlgorithm", policy.AllowedAlgorithm, alg},
-	}, nil
+	// If spec.allowedSubject is not nil, check all subjects.
+	if policy := policy.Spec.AllowedSubject; policy != nil {
+		subject := csr.Subject
+
+		chain = append(chain, []check{
+			{"allowedSubject.allowedOrganizations", policy.AllowedOrganizations, subject.Organization, checkStringSlice},
+			{"allowedSubject.allowedCountries", policy.AllowedCountries, subject.Country, checkStringSlice},
+			{"allowedSubject.allowedOrganizationalUnits", policy.AllowedOrganizationalUnits, subject.OrganizationalUnit, checkStringSlice},
+			{"allowedSubject.allowedLocalities", policy.AllowedLocalities, subject.Locality, checkStringSlice},
+			{"allowedSubject.allowedProvinces", policy.AllowedProvinces, subject.Province, checkStringSlice},
+			{"allowedSubject.allowedStreetAddresses", policy.AllowedStreetAddresses, subject.StreetAddress, checkStringSlice},
+			{"allowedSubject.allowedPostalCodes", policy.AllowedPostalCodes, subject.PostalCode, checkStringSlice},
+			{"allowedSubject.allowedSerialNumber", policy.AllowedSerialNumber, subject.SerialNumber, checkStringSlice},
+		}...)
+	}
+
+	// Adds checks for all fields in CertificateRequestPolicy spec
+	chain = append(chain, []check{
+		{"allowedCommonName", policy.Spec.AllowedCommonName, csr.Subject.CommonName, checkString},
+		{"minDuration", policy.Spec.MinDuration, cr.Spec.Duration, checkMinDur},
+		{"maxDuration", policy.Spec.MaxDuration, cr.Spec.Duration, checkMaxDur},
+		{"allowedDNSNames", policy.Spec.AllowedDNSNames, csr.DNSNames, checkStringSlice},
+		{"allowedIPAddresses", policy.Spec.AllowedIPAddresses, csr.IPAddresses, checkIPs},
+		{"allowedURIs", policy.Spec.AllowedURIs, csr.URIs, checkURLs},
+		{"allowedEmailAddresses", policy.Spec.AllowedEmailAddresses, csr.EmailAddresses, checkStringSlice},
+		{"allowedIssuers", policy.Spec.AllowedIssuers, cr.Spec.IssuerRef, checkObjRef},
+		{"allowedIsCA", policy.Spec.AllowedIsCA, cr.Spec.IsCA, checkBool},
+		{"allowedKeyUsages", policy.Spec.AllowedUsages, cr.Spec.Usages, checkUsages},
+	}...)
+
+	// If spec.allowedPrivateKey is not nil, check private key.
+	if policy := policy.Spec.AllowedPrivateKey; policy != nil {
+		alg, size, err := parsePublicKey(csr.PublicKey)
+		if err != nil {
+			return nil, err
+		}
+
+		chain = append(chain, []check{
+			{"allowedPrivateKey.allowedAlgorithm", policy.AllowedAlgorithm, alg, checkKeyAlg},
+			{"allowedPrivateKey.minSize", policy.MinSize, size, checkMinSize},
+			{"allowedPrivateKey.maxSize", policy.MaxSize, size, checkMaxSize},
+		}...)
+	}
+
+	return chain, nil
 }
+
+var (
+	parseKeyError = errors.New("failed to parse public key")
+)
 
 // parsePublicKey will return the algorithm and size of the given public key.
 // If the public key cannot be decoded, returns error.
