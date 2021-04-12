@@ -23,6 +23,7 @@ import (
 )
 
 //+kubebuilder:object:root=true
+//+kubebuilder:resource:categories=cert-manager,shortName=crp
 //+kubebuilder:subresource:status
 
 // CertificateRequestPolicy is the Schema for the certificaterequestpolicies API
@@ -80,9 +81,6 @@ type CertificateRequestPolicySpec struct {
 
 	// +optional
 	AllowedPrivateKey *PolicyPrivateKey `json:"allowedPrivateKey,omitempty"`
-
-	// +optional
-	ExternalPolicyServers []string `json:"externalPolicyServers,omitempty"`
 }
 
 type PolicyX509Subject struct {
@@ -111,9 +109,9 @@ type PolicyPrivateKey struct {
 	// Values are inclusive (i.e. a min value with 2048 will accept a size of
 	// 2048). MinSize and MaxSize may be the same.
 	// +optional
-	MinSize *int `json:"allowedMinSize,omitempty"`
+	MinSize *int `json:"minSize,omitempty"`
 	// +optional
-	MaxSize *int `json:"allowedMaxSize,omitempty"`
+	MaxSize *int `json:"maxSize,omitempty"`
 }
 
 type CertificateRequestPolicyStatus struct {
