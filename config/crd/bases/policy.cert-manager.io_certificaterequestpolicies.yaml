@@ -10,9 +10,13 @@ metadata:
 spec:
   group: policy.cert-manager.io
   names:
+    categories:
+    - cert-manager
     kind: CertificateRequestPolicy
     listKind: CertificateRequestPolicyList
     plural: certificaterequestpolicies
+    shortNames:
+    - crp
     singular: certificaterequestpolicy
   scope: Namespaced
   versions:
@@ -157,10 +161,6 @@ spec:
                   - ocsp signing
                   - microsoft sgc
                   - netscape sgc
-                  type: string
-                type: array
-              externalPolicyServers:
-                items:
                   type: string
                 type: array
               maxDuration:

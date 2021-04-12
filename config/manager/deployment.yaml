@@ -17,8 +17,9 @@ spec:
       containers:
       - command:
         - /policy-approver
-        image: controller:latest
+        image: policy-approver:latest
         name: policy-approver
+        imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
         livenessProbe:

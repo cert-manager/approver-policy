@@ -1,2 +1,11 @@
 resources:
 - deployment.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: controller
+  newName: policy-approver
+  newTag: latest
+- name: policy-approver
+  newName: policy-approver
+  newTag: latest
