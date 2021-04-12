@@ -60,11 +60,11 @@ type check struct {
 	strategy checkStrategy
 }
 
-// EvaluateCertificateRequest evaluates whether the given CertificateRequest
+// evaluateCertificateRequest evaluates whether the given CertificateRequest
 // passes the CertificateRequestPolicy. If this request is denied by this
 // policy, 'el' will be populated. An error signals that the policy couldn't be
 // evaluated to completion.
-func EvaluateCertificateRequest(el *field.ErrorList, policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) error {
+func evaluateCertificateRequest(el *field.ErrorList, policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) error {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
 		return err

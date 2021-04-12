@@ -116,7 +116,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 			cr := mustCertificateRequest(t, test.request)
 
 			el := new(field.ErrorList)
-			EvaluateCertificateRequest(el, &cmpolicy.CertificateRequestPolicy{Spec: test.policy}, cr)
+			evaluateCertificateRequest(el, &cmpolicy.CertificateRequestPolicy{Spec: test.policy}, cr)
 
 			if !apiequality.Semantic.DeepEqual(el, test.expEl) {
 				t.Errorf("unexpected error, exp=%v got=%v",

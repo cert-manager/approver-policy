@@ -34,15 +34,20 @@ var (
 	MissingBindingMessage = "No CertificateRequestPolicies bound"
 )
 
+type evaluatorFn func(el *field.ErrorList, policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) error
+
 // Policy is responsible for evaluating whether incoming CertificateRequests
 // should be approved, checking CertificateRequestPolicys.
 type Policy struct {
 	client.Client
+
+	evaluator evaluatorFn
 }
 
 func New(client client.Client) *Policy {
 	return &Policy{
-		Client: client,
+		Client:    client,
+		evaluator: evaluateCertificateRequest,
 	}
 }
 
@@ -108,7 +113,7 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 			}
 
 			var el field.ErrorList
-			if err := EvaluateCertificateRequest(&el, &crp, cr); err != nil {
+			if err := p.evaluator(&el, &crp, cr); err != nil {
 				return false, ErrorMessage, err
 			}
 
