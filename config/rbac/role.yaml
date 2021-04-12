@@ -1,34 +1,23 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
-  name: manager-role
+  name: policy-approver
 rules:
 - apiGroups:
   - policy.cert-manager.io
+  - cert-manager.io
   resources:
   - certificaterequestpolicies
+  - certificaterequests
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - events
   verbs:
   - create
-  - delete
-  - get
-  - list
   - patch
-  - update
-  - watch
-- apiGroups:
-  - policy.cert-manager.io
-  resources:
-  - certificaterequestpolicies/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - policy.cert-manager.io
-  resources:
-  - certificaterequestpolicies/status
-  verbs:
-  - get
-  - patch
-  - update

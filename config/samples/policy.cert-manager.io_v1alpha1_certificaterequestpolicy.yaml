@@ -1,7 +1,0 @@
-apiVersion: policy.cert-manager.io/v1alpha1
-kind: CertificateRequestPolicy
-metadata:
-  name: certificaterequestpolicy-sample
-spec:
-  # Add fields here
-  foo: bar
