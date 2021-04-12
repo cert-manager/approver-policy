@@ -1,6 +1,20 @@
+MAKEFLAGS += --warn-undefined-variables
+SHELL := bash
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+.SUFFIXES:
+.ONESHELL:
+
+VERSION ?= $(shell git describe --tags)
+
+# BIN is the directory where tools will be installed
+export BIN ?= ${CURDIR}/bin
+
+OS := $(shell go env GOOS)
+ARCH := $(shell go env GOARCH)
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= policy-approver:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -10,6 +24,14 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
+
+# Kind
+KIND_VERSION := 0.10.0
+KIND := ${BIN}/kind-${KIND_VERSION}
+K8S_CLUSTER_NAME := policy-approver-e2e
+
+# cert-manager
+CERT_MANAGER_VERSION ?= 1.3.0
 
 all: build
 
@@ -31,8 +53,8 @@ help: ## Display this help.
 
 ##@ Development
 
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: controller-gen ## Generate CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
@@ -52,13 +74,17 @@ test: manifests generate fmt vet ## Run tests.
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -o bin/policy-approver main.go
 
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
-docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+docker-build: build
+	docker build \
+		--build-arg VERSION=$(VERSION) \
+		--tag ${IMG} \
+		--file Dockerfile \
+		${CURDIR}
 
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
@@ -72,12 +98,33 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	pushd config/manager
+	$(KUSTOMIZE) edit set image controller=${IMG}
+	popd
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
+
+# ==================================
+# E2E testing
+# ==================================
+.PHONY: kind
+kind: kind-cluster deploy-cert-manager kind-load deploy
+
+.PHONY: kind-cluster
+kind-cluster: ## Use Kind to create a Kubernetes cluster for E2E tests
+kind-cluster: ${KIND}
+	 ${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME}
+
+.PHONY: kind-load
+kind-load: docker-build ## Load all the Docker images into Kind
+	${KIND} load docker-image --name ${K8S_CLUSTER_NAME} ${IMG}
+
+.PHONY: deploy-cert-manager
+deploy-cert-manager: ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
+	helm upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
@@ -86,6 +133,14 @@ controller-gen: ## Download controller-gen locally if necessary.
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+
+
+${BIN}:
+	mkdir -p ${BIN}
+
+${KIND}: ${BIN}
+	curl -sSL -o ${KIND} https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-${OS}-${ARCH}
+	chmod +x ${KIND}
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
