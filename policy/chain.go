@@ -141,6 +141,7 @@ func buildChecks(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.Certificat
 		{"allowedEmailAddresses", policy.Spec.AllowedEmailAddresses, csr.EmailAddresses, checkStringSlice},
 		{"allowedIssuers", policy.Spec.AllowedIssuers, cr.Spec.IssuerRef, checkObjRef},
 		{"allowedIsCA", policy.Spec.AllowedIsCA, cr.Spec.IsCA, checkBool},
+		// TODO: append x509 encoded usages
 		{"allowedKeyUsages", policy.Spec.AllowedUsages, cr.Spec.Usages, checkUsages},
 	}...)
 
