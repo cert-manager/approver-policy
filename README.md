@@ -111,7 +111,7 @@ kind: CertificateRequestPolicy
 metadata:
   name: my-policy
 spec:
-	allowedSubject:
+  allowedSubject:
     allowedOrganizations: #["abc", "123"]
     allowedCountries: #["abc", "123"]
     allowedOrganizationalUnits: #["abc", "123"]
