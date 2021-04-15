@@ -66,10 +66,10 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 		return false, "", err
 	}
 
-	// If no CertificateRequestPolicys exist, exit early approved
-	if len(crps.Items) == 0 {
-		return true, NoCRPExistMessage, nil
-	}
+	//// If no CertificateRequestPolicys exist, exit early approved
+	//if len(crps.Items) == 0 {
+	//	return true, NoCRPExistMessage, nil
+	//}
 
 	policyErrors := make(map[string]string)
 	extra := make(map[string]authzv1.ExtraValue)
@@ -129,7 +129,7 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 		}
 	}
 
-	// If policies exist, but none are bound
+	// If no policies bound, error
 	if len(policyErrors) == 0 {
 		return false, MissingBindingMessage, nil
 	}

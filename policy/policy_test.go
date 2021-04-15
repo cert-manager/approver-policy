@@ -50,11 +50,18 @@ func TestEvaluate(t *testing.T) {
 		expReason string
 		expErr    bool
 	}{
-		"if no CertificateRequestPolicies exist, return ok": {
+		//"if no CertificateRequestPolicies exist, return ok": {
+		//	client:    fakeclient.NewClientBuilder(),
+		//	evaluator: expNoEvaluator,
+		//	expOK:     true,
+		//	expReason: NoCRPExistMessage,
+		//	expErr:    false,
+		//},
+		"if no CertificateRequestPolicies exist, return not ok": {
 			client:    fakeclient.NewClientBuilder(),
 			evaluator: expNoEvaluator,
-			expOK:     true,
-			expReason: NoCRPExistMessage,
+			expOK:     false,
+			expReason: MissingBindingMessage,
 			expErr:    false,
 		},
 		//"test": {
