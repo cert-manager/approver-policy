@@ -29,7 +29,6 @@ import (
 	"github.com/cert-manager/policy-approver/policy"
 )
 
-// CertificateRequest reconciles a CertificateRequestPolicy object
 type CRController struct {
 	client.Client
 	log logr.Logger
@@ -44,10 +43,6 @@ func New(log logr.Logger, client client.Client, policy *policy.Policy) *CRContro
 		policy: policy,
 	}
 }
-
-//+kubebuilder:rbac:groups=policy.cert-manager.io,resources=certificaterequestpolicies,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=policy.cert-manager.io,resources=certificaterequestpolicies/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=policy.cert-manager.io,resources=certificaterequestpolicies/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

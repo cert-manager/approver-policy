@@ -81,9 +81,9 @@ spec:
                     - RSA
                     - ECDSA
                     type: string
-                  allowedMaxSize:
+                  maxSize:
                     type: integer
-                  allowedMinSize:
+                  minSize:
                     description: Values are inclusive (i.e. a min value with 2048
                       will accept a size of 2048). MinSize and MaxSize may be the
                       same.
