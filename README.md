@@ -124,7 +124,7 @@ spec:
   allowedCommonName: # "*-istio-ca"
 
   # Values are inclusive (i.e. a min value with 24h will accept a duration
-	# with 25h). minDuration and maxDuration may be the same value.
+  # with 25h). minDuration and maxDuration may be the same value.
   minDuration: # "24h"
   maxDuration: # "720h"
 
@@ -154,14 +154,14 @@ spec:
 
   allowedIsCA: # false
 
-	allowedUsages:
+  allowedUsages:
   #- "server auth"
   #- "client auth"
 
   allowedPrivateKey:
     allowedAlgorithm: # "RSA"
     # Values are inclusive (i.e. a min value with 2048 will accept a size of
-	  # 2048). MinSize and MaxSize may be the same.
-	  minSize: # 2048
-	  maxSize: # 2048
+    # 2048). MinSize and MaxSize may be the same.
+    minSize: # 2048
+    maxSize: # 2048
 ```
