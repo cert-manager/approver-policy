@@ -55,7 +55,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				commonName: "test",
 				ca:         true,
 				duration: &metav1.Duration{
-					time.Hour * 100,
+					Duration: time.Hour * 100,
 				},
 				dnsNames: []string{
 					"foo.bar",
@@ -76,7 +76,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				AllowedCommonName: stringPtr("not-test"),
 				AllowedIsCA:       boolPtr(false),
 				MinDuration: &metav1.Duration{
-					time.Hour * 200,
+					Duration: time.Hour * 200,
 				},
 				AllowedDNSNames: &[]string{
 					"not-foo.bar",
