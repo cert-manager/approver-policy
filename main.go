@@ -84,20 +84,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	//if err = (&controllers.CRController{
-	//	Client: mgr.GetClient(),
-	//	Log:    ctrl.Log.WithName("controllers").WithName("CertificateRequestPolicy"),
-	//	Scheme: mgr.GetScheme(),
-	//}).SetupWithManager(mgr); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "CertificateRequestPolicy")
-	//	os.Exit(1)
-	//}
-	c := controllers.New(ctrl.Log, mgr.GetClient(), policy.New(mgr.GetClient()))
+	c := controllers.New(ctrl.Log, mgr.GetClient(), mgr.GetEventRecorderFor("policy-approver"), policy.New(mgr.GetClient()))
 	if err := c.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CertificateRequestPolicy")
 		os.Exit(1)
 	}
-	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

@@ -23,6 +23,8 @@ import (
 	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -31,16 +33,19 @@ import (
 
 type CRController struct {
 	client.Client
+
 	log logr.Logger
 
-	policy *policy.Policy
+	recorder record.EventRecorder
+	policy   *policy.Policy
 }
 
-func New(log logr.Logger, client client.Client, policy *policy.Policy) *CRController {
+func New(log logr.Logger, client client.Client, recorder record.EventRecorder, policy *policy.Policy) *CRController {
 	return &CRController{
-		Client: client,
-		log:    log.WithName("certificate-requests"),
-		policy: policy,
+		Client:   client,
+		log:      log.WithName("certificate-requests"),
+		recorder: recorder,
+		policy:   policy,
 	}
 }
 
@@ -72,8 +77,10 @@ func (c *CRController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	}
 
 	if ok {
+		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", reason)
 		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "policy.cert-manager.io", reason)
 	} else {
+		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", reason)
 		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", reason)
 	}
 
