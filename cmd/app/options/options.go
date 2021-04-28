@@ -31,6 +31,8 @@ type Options struct {
 	MetricsAddress string
 	ProbeAddress   string
 
+	ApproveWhenNoPolicies bool
+
 	zapOptions *zap.Options
 	Log        logr.Logger
 }
@@ -49,6 +51,7 @@ func (o *Options) AddFlags(cmd *cobra.Command) *Options {
 
 	fs.StringVar(&o.MetricsAddress, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	fs.StringVar(&o.ProbeAddress, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	fs.BoolVar(&o.ApproveWhenNoPolicies, "approve-when-no-policies", false, "When no CertificateRequestPolicies exist in the cluster, approve all requests.")
 
 	cmd.PersistentFlags().AddGoFlagSet(fs)
 

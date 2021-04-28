@@ -58,7 +58,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				os.Exit(1)
 			}
 
-			c := controllers.New(ctrl.Log, mgr.GetClient(), mgr.GetEventRecorderFor("policy-approver"), policy.New(mgr.GetClient()))
+			c := controllers.New(
+				ctrl.Log, mgr.GetClient(),
+				mgr.GetEventRecorderFor("policy-approver"),
+				policy.New(mgr.GetClient(), opts.ApproveWhenNoPolicies),
+			)
 			if err := c.SetupWithManager(mgr); err != nil {
 				log.Error(err, "unable to create controller", "controller", "CertificateRequestPolicy")
 				os.Exit(1)

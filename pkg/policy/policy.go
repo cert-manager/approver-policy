@@ -40,14 +40,16 @@ type evaluatorFn func(el *field.ErrorList, policy *cmpolicy.CertificateRequestPo
 // should be approved, checking CertificateRequestPolicys.
 type Policy struct {
 	client.Client
+	approveWhenNoPolicies bool
 
 	evaluator evaluatorFn
 }
 
-func New(client client.Client) *Policy {
+func New(client client.Client, approveWhenNoPolicies bool) *Policy {
 	return &Policy{
-		Client:    client,
-		evaluator: evaluateCertificateRequest,
+		Client:                client,
+		approveWhenNoPolicies: approveWhenNoPolicies,
+		evaluator:             evaluateCertificateRequest,
 	}
 }
 
@@ -66,10 +68,11 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 		return false, "", err
 	}
 
-	//// If no CertificateRequestPolicys exist, exit early approved
-	//if len(crps.Items) == 0 {
-	//	return true, NoCRPExistMessage, nil
-	//}
+	// If no CertificateRequestPolicys exist, exit early approved if configured
+	// to do so
+	if p.approveWhenNoPolicies && len(crps.Items) == 0 {
+		return true, NoCRPExistMessage, nil
+	}
 
 	policyErrors := make(map[string]string)
 	extra := make(map[string]authzv1.ExtraValue)
