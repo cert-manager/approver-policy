@@ -33,7 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpolicy "github.com/cert-manager/policy-approver/api/v1alpha1"
+	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
 )
 
 func TestEvaluateCertificateRequest(t *testing.T) {

@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpolicy "github.com/cert-manager/policy-approver/api/v1alpha1"
+	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
 )
 
 var (

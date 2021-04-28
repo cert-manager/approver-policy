@@ -30,8 +30,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpolicy "github.com/cert-manager/policy-approver/api/v1alpha1"
-	"github.com/cert-manager/policy-approver/policy/checks"
+	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/policy/checks"
 )
 
 type checkStrategy int

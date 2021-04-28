@@ -27,7 +27,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	cmpolicy "github.com/cert-manager/policy-approver/api/v1alpha1"
+	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
 )
 
 func TestEvaluate(t *testing.T) {
