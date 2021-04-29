@@ -44,6 +44,7 @@ KIND_VERSION := 0.10.0
 KIND := ${BIN}/kind-${KIND_VERSION}
 GINKGO := ${BIN}/ginkgo
 K8S_CLUSTER_NAME := policy-approver-e2e
+K8S_VERSION ?= 1.20.1
 
 # cert-manager
 CERT_MANAGER_VERSION ?= 1.3.0
@@ -119,7 +120,7 @@ kind: kind-cluster deploy-cert-manager kind-load install deploy
 .PHONY: kind-cluster
 kind-cluster: ## Use Kind to create a Kubernetes cluster for E2E tests
 kind-cluster: ${KIND}
-	 ${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME}
+	${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME} --image kindest/node:${K8S_VERSION}
 
 .PHONY: kind-load
 kind-load: docker-build ## Load all the Docker images into Kind
@@ -142,7 +143,7 @@ e2e: all kind ${GINKGO}
 	kubectl rollout status -w -n cert-manager deployment/policy-approver
 	${KIND} get kubeconfig --name ${K8S_CLUSTER_NAME} > kubeconfig.yaml
 	${GINKGO} -nodes 1 ./test/. -- -kubeconfig=$(shell pwd)/kubeconfig.yaml
-	kind delete cluster --name ${K8S_CLUSTER_NAME}
+	${KIND} delete cluster --name ${K8S_CLUSTER_NAME}
 	rm kubeconfig.yaml
 
 ${BIN}:
