@@ -44,7 +44,7 @@ KIND_VERSION := 0.10.0
 KIND := ${BIN}/kind-${KIND_VERSION}
 GINKGO := ${BIN}/ginkgo
 K8S_CLUSTER_NAME := policy-approver-e2e
-K8S_VERSION ?= 1.20.1
+K8S_VERSION ?= 1.20.0
 
 # cert-manager
 CERT_MANAGER_VERSION ?= 1.3.0
@@ -119,7 +119,7 @@ kind: kind-cluster deploy-cert-manager kind-load install deploy
 .PHONY: kind-cluster
 kind-cluster: ## Use Kind to create a Kubernetes cluster for E2E tests
 kind-cluster: ${KIND}
-	${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME} --image kindest/node:${K8S_VERSION}
+	${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME} --image kindest/node:v${K8S_VERSION}
 
 .PHONY: kind-load
 kind-load: docker-build ## Load all the Docker images into Kind
