@@ -4,6 +4,8 @@ Policy Approver is a cert-manager approver that is responsible for [Approving
 or Denying
 CertificateRequests](https://cert-manager.io/docs/concepts/certificaterequest/#approval).
 
+---
+
 
 # Installation
 
