@@ -1,3 +1,17 @@
+# Copyright 2021 The cert-manager Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 MAKEFLAGS += --warn-undefined-variables
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
@@ -14,7 +28,7 @@ OS := $(shell go env GOOS)
 ARCH := $(shell go env GOARCH)
 
 # Image URL to use all building/pushing image targets
-IMG ?= policy-approver:latest
+IMG ?= quay.io/jestack/policy-approver:v0.1.0-alpha.0
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -28,6 +42,7 @@ endif
 # Kind
 KIND_VERSION := 0.10.0
 KIND := ${BIN}/kind-${KIND_VERSION}
+GINKGO := ${BIN}/ginkgo
 K8S_CLUSTER_NAME := policy-approver-e2e
 
 # cert-manager
@@ -36,17 +51,6 @@ CERT_MANAGER_VERSION ?= 1.3.0
 all: build
 
 ##@ General
-
-# The help target prints out all targets with their descriptions organized
-# beneath their categories. The categories are represented by '##@' and the
-# target descriptions by '##'. The awk commands is responsible for reading the
-# entire set of makefiles included in this invocation, looking for lines of the
-# file as xyz: ## something, and then pretty-format the target and help. Then,
-# if there's a line with ##@ something, that gets pretty-printed as a category.
-# More info on the usage of ANSI control characters for terminal formatting:
-# https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters
-# More info on the awk command:
-# http://linuxcommand.org/lc3_adv_awk.php
 
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -65,16 +69,16 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: manifests generate fmt vet ## Run tests.
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.2/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+lint: ## Run linters against code.
+	./hack/verify-boilerplate.sh
+
+test: manifests generate lint fmt vet ## Run tests.
+	go test ./cmd/... ./pkg/...
 
 ##@ Build
 
-build: generate fmt vet ## Build manager binary.
-	go build -o bin/policy-approver main.go
+build: test ## Build manager binary.
+	go build -o bin/policy-approver ./cmd
 
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
@@ -99,19 +103,18 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	pushd config/manager
-	$(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) edit set image policy-approver=${IMG}
 	popd
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
-
 # ==================================
 # E2E testing
 # ==================================
 .PHONY: kind
-kind: kind-cluster deploy-cert-manager kind-load deploy
+kind: kind-cluster deploy-cert-manager kind-load install deploy
 
 .PHONY: kind-cluster
 kind-cluster: ## Use Kind to create a Kubernetes cluster for E2E tests
@@ -124,7 +127,7 @@ kind-load: docker-build ## Load all the Docker images into Kind
 
 .PHONY: deploy-cert-manager
 deploy-cert-manager: ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
-	helm upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
+	helm upgrade --wait -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
@@ -134,6 +137,13 @@ KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
 
+.PHONY: e2e
+e2e: all kind ${GINKGO}
+	kubectl rollout status -w -n cert-manager deployment/policy-approver
+	${KIND} get kubeconfig --name ${K8S_CLUSTER_NAME} > kubeconfig.yaml
+	${GINKGO} -nodes 1 ./test/. -- -kubeconfig=$(shell pwd)/kubeconfig.yaml
+	kind delete cluster --name ${K8S_CLUSTER_NAME}
+	rm kubeconfig.yaml
 
 ${BIN}:
 	mkdir -p ${BIN}
@@ -141,6 +151,10 @@ ${BIN}:
 ${KIND}: ${BIN}
 	curl -sSL -o ${KIND} https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-${OS}-${ARCH}
 	chmod +x ${KIND}
+
+
+${GINKGO}: ${BIN}
+	go build -o ${BIN}/ginkgo github.com/onsi/ginkgo/ginkgo
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
