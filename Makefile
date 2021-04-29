@@ -132,7 +132,7 @@ kind-load: docker-build ## Load all the Docker images into Kind
 
 .PHONY: deploy-cert-manager
 deploy-cert-manager: ${HELM} ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
-	${HELM} upgrade --wait -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
+	${HELM} upgrade --wait -i -n cert-manager cert-manager cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace --repo https://charts.jetstack.io
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
