@@ -11,5 +11,9 @@ rules:
   verbs:
   - approve
   resourceNames:
+# The below two lines will allow the approver to approve all core cert-manager
+# issuer referenced CertificateRequests (Issuers and ClusterIssuers). To extend
+# the approver to external issuers, add their resource names below
+# (https://cert-manager.io/docs/concepts/certificaterequest/#approver-controller).
   - issuers.cert-manager.io/*
   - clusterissuers.cert-manager.io/*
