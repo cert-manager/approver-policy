@@ -41,7 +41,9 @@ endif
 
 # Kind
 KIND_VERSION := 0.10.0
+HELM_VERSION := 3.5.4
 KIND := ${BIN}/kind-${KIND_VERSION}
+HELM := ${BIN}/helm-${HELM_VERSION}
 GINKGO := ${BIN}/ginkgo
 K8S_CLUSTER_NAME := policy-approver-e2e
 K8S_VERSION ?= 1.20.0
@@ -63,6 +65,9 @@ manifests: controller-gen ## Generate CustomResourceDefinition objects.
 
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+clean:
+	rm -rf ${BIN}
 
 fmt: ## Run go fmt against code.
 	go fmt ./...
@@ -126,8 +131,8 @@ kind-load: docker-build ## Load all the Docker images into Kind
 	${KIND} load docker-image --name ${K8S_CLUSTER_NAME} ${IMG}
 
 .PHONY: deploy-cert-manager
-deploy-cert-manager: ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
-	helm upgrade --wait -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
+deploy-cert-manager: ${HELM} ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
+	${HELM} upgrade --wait -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
@@ -151,6 +156,13 @@ ${BIN}:
 ${KIND}: ${BIN}
 	curl -sSL -o ${KIND} https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-${OS}-${ARCH}
 	chmod +x ${KIND}
+
+${HELM}: ${BIN}
+	curl -sSL -o ${HELM}.tar.gz https://get.helm.sh/helm-v${HELM_VERSION}-${OS}-${ARCH}.tar.gz
+	tar xvf ${HELM}.tar.gz -C ${BIN}
+	mv ${BIN}/${OS}-${ARCH}/helm ${HELM}
+	rm -rf ${BIN}/${OS}-${ARCH} ${HELM}.tar.gz
+	chmod +x ${HELM}
 
 
 ${GINKGO}: ${BIN}
