@@ -81,8 +81,7 @@ test: manifests generate lint fmt vet ## Run tests.
 build: test ## Build manager binary.
 	go build -o bin/policy-approver ./cmd
 
-run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+verify: all ## Verify repo.
 
 docker-build: build
 	docker build \
