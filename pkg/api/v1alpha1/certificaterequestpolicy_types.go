@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The cert-manager authors.
+Copyright 2021 The cert-manager Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 )
 
 //+kubebuilder:object:root=true
-//+kubebuilder:resource:categories=cert-manager,shortName=crp
+//+kubebuilder:resource:categories=cert-manager,shortName=crp,scope=Cluster
 //+kubebuilder:subresource:status
 
 // CertificateRequestPolicy is the Schema for the certificaterequestpolicies API
