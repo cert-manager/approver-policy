@@ -28,7 +28,7 @@ OS := $(shell go env GOOS)
 ARCH := $(shell go env GOARCH)
 
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/jestack/policy-approver:v0.1.0-alpha.0
+IMG ?= quay.io/jetstack/policy-approver:v0.1.0-alpha.0
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
