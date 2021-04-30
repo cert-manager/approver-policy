@@ -22,7 +22,7 @@ SHELL := bash
 VERSION ?= $(shell git describe --tags)
 
 # BIN is the directory where tools will be installed
-export BIN ?= ${CURDIR}/bin
+BIN = ${CURDIR}/bin
 
 OS := $(shell go env GOOS)
 ARCH := $(shell go env GOARCH)
@@ -41,13 +41,9 @@ endif
 
 # Kind
 KIND_VERSION := 0.10.0
-KIND := ${BIN}/kind-${KIND_VERSION}
-GINKGO := ${BIN}/ginkgo
+HELM_VERSION := 3.5.4
 K8S_CLUSTER_NAME := policy-approver-e2e
-K8S_VERSION ?= 1.20.1
-
-# cert-manager
-CERT_MANAGER_VERSION ?= 1.3.0
+K8S_VERSION ?= 1.20.0
 
 all: build
 
@@ -64,6 +60,9 @@ manifests: controller-gen ## Generate CustomResourceDefinition objects.
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
+clean:
+	rm -rf ${BIN}
+
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
@@ -79,10 +78,9 @@ test: manifests generate lint fmt vet ## Run tests.
 ##@ Build
 
 build: test ## Build manager binary.
-	go build -o bin/policy-approver ./cmd
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o bin/policy-approver ./cmd/
 
-run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+verify: all ## Verify repo.
 
 docker-build: build
 	docker build \
@@ -97,65 +95,87 @@ docker-push: ## Push docker image with the manager.
 ##@ Deployment
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | ${KUBECTL} apply -f -
 
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | ${KUBECTL} delete -f -
 
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	pushd config/manager
 	$(KUSTOMIZE) edit set image policy-approver=${IMG}
 	popd
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | ${KUBECTL} apply -f -
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+	$(KUSTOMIZE) build config/default | ${KUBECTL} delete -f -
 
 # ==================================
 # E2E testing
 # ==================================
 .PHONY: kind
-kind: kind-cluster deploy-cert-manager kind-load install deploy
+kind: deps docker-build kind-cluster deploy-cert-manager kind-load install deploy
 
 .PHONY: kind-cluster
-kind-cluster: ## Use Kind to create a Kubernetes cluster for E2E tests
-kind-cluster: ${KIND}
-	${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME} --image kindest/node:${K8S_VERSION}
+kind-cluster: deps ## Use Kind to create a Kubernetes cluster for E2E tests
+	${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME} --image kindest/node:v${K8S_VERSION}
 
 .PHONY: kind-load
-kind-load: docker-build ## Load all the Docker images into Kind
+kind-load: ## Load all the Docker images into Kind
 	${KIND} load docker-image --name ${K8S_CLUSTER_NAME} ${IMG}
 
 .PHONY: deploy-cert-manager
-deploy-cert-manager: ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
-	helm upgrade --wait -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
-
-CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
-controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
-
-KUSTOMIZE = $(shell pwd)/bin/kustomize
-kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+deploy-cert-manager: deps ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
+	${HELM} upgrade --wait -i -n cert-manager cert-manager ${CERT_MANAGER_CHART} --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
 
 .PHONY: e2e
-e2e: all kind ${GINKGO}
-	kubectl rollout status -w -n cert-manager deployment/policy-approver
+e2e: deps all kind
+	${KUBECTL} rollout status -w -n cert-manager deployment/policy-approver
 	${KIND} get kubeconfig --name ${K8S_CLUSTER_NAME} > kubeconfig.yaml
 	${GINKGO} -nodes 1 ./test/. -- -kubeconfig=$(shell pwd)/kubeconfig.yaml
 	${KIND} delete cluster --name ${K8S_CLUSTER_NAME}
 	rm kubeconfig.yaml
 
-${BIN}:
+bin:
 	mkdir -p ${BIN}
 
-${KIND}: ${BIN}
+KUSTOMIZE = $(shell pwd)/bin/kustomize
+kustomize: ## Download kustomize locally if necessary.
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+
+
+CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
+controller-gen: ## Download controller-gen locally if necessary.
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
+
+HELM = $(shell pwd)/bin/helm-${HELM_VERSION}
+$(HELM): ## Download helm
+	curl -o ${BIN}/helm.tar.gz -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
+	tar -C ${BIN} -xzf ${BIN}/helm.tar.gz
+	cp ${BIN}/${OS}-${ARCH}/helm ${HELM}
+	rm -r ${BIN}/${OS}-${ARCH} ${BIN}/helm.tar.gz
+
+KIND = $(shell pwd)/bin/kind-${KIND_VERSION}
+$(KIND): bin ## Download kind
 	curl -sSL -o ${KIND} https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-${OS}-${ARCH}
 	chmod +x ${KIND}
 
-
-${GINKGO}: ${BIN}
+GINKGO = $(shell pwd)/bin/ginkgo
+$(GINKGO): ## Download ginkgo
 	go build -o ${BIN}/ginkgo github.com/onsi/ginkgo/ginkgo
+
+CERT_MANAGER_CHART = $(shell pwd)/bin/cert-manager
+$(CERT_MANAGER_CHART): $(HELM) ## Download the cert-manager chart
+	rm -rf ${CERT_MANAGER_CHART}*
+	${HELM} pull cert-manager --repo https://charts.jetstack.io -d bin/ --untar
+
+KUBECTL = $(shell pwd)/bin/kubectl
+$(KUBECTL): $(BIN) ## Download kubectl
+	curl -sSL -o ${KUBECTL} "https://dl.k8s.io/release/$(shell curl -L -s https://dl.k8s.io/release/stable.txt)/bin/${OS}/${ARCH}/kubectl"
+	chmod +x ${KUBECTL}
+
+.PHONY: deps
+deps: bin kustomize controller-gen $(HELM) $(KIND) $(GINKGO) $(CERT_MANAGER_CHART) $(KUBECTL) ## install dependencies
+
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
