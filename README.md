@@ -91,11 +91,11 @@ the request to be permitted.
 If a field is omitted from the policy, then it is considered as "allow all",
 meaning anything is permissible in the request.
 
-Policy fields that are strings allow for wildcards "*". Wildcards "*" in
+Policy fields that are strings allow for wildcards "\*". Wildcards "\*" in
 patterns represent any string which has a length of 0 or more. A pattern
-containing only "*" will match anything. A pattern containing "*foo" will match
+containing only "\*" will match anything. A pattern containing "\*foo" will match
 "foo" as well as any string which ends in "foo" (e.g. "bar-foo"). A pattern
-containing "*.foo" will match "bar-123.foo", but not "barfoo".
+containing "\*.foo" will match "bar-123.foo", but not "barfoo".
 
 Policy fields that are lists will permit requests that are a subset of that
 list. This means that if `allowedUsages` contains `["server auth", "client
