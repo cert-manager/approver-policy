@@ -15,7 +15,7 @@ disabled](https://cert-manager.io/docs/concepts/certificaterequest/#approver-con
 This can be done via helm using:
 
 ```bash
-$ helm upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
+$ helm upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs="{--controllers=*\,-certificaterequests-approver}" --set installCRDs=true --create-namespace
 ```
 
 Next, install policy-approver:
