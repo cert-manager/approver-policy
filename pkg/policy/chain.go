@@ -60,49 +60,59 @@ type check struct {
 	strategy checkStrategy
 }
 
-// evaluateCertificateRequest evaluates whether the given CertificateRequest
-// passes the CertificateRequestPolicy. If this request is denied by this
-// policy, 'el' will be populated. An error signals that the policy couldn't be
-// evaluated to completion.
-func evaluateCertificateRequest(el *field.ErrorList, policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) error {
+// evaluateChainChecks evaluates whether the given CertificateRequest passes
+// the 'chain checks' of the CertificateRequestPolicy. If this request is
+// denied by these checks then a string explanation is returned.
+// An error signals that the policy couldn't be evaluated to completion.
+func evaluateChainChecks(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
-		return err
+		return false, "", err
 	}
+
+	// el will contain a list of policy violations for fields, if there are
+	// items in the list, then the CR is not approved
+	var el field.ErrorList
 
 	path := field.NewPath("spec")
 	for _, check := range chain {
 		switch check.strategy {
 		case checkString:
-			checks.String(el, path.Child(check.path), check.policy.(*string), check.request.(string))
+			checks.String(&el, path.Child(check.path), check.policy.(*string), check.request.(string))
 		case checkStringSlice:
-			checks.StringSlice(el, path.Child(check.path), check.policy.(*[]string), check.request.([]string))
+			checks.StringSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]string))
 		case checkBool:
-			checks.Bool(el, path.Child(check.path), check.policy.(*bool), check.request.(bool))
+			checks.Bool(&el, path.Child(check.path), check.policy.(*bool), check.request.(bool))
 		case checkIPs:
-			checks.IPSlice(el, path.Child(check.path), check.policy.(*[]string), check.request.([]net.IP))
+			checks.IPSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]net.IP))
 		case checkURLs:
-			checks.URLSlice(el, path.Child(check.path), check.policy.(*[]string), check.request.([]*url.URL))
+			checks.URLSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]*url.URL))
 		case checkUsages:
-			checks.KeyUsageSlice(el, path.Child(check.path), check.policy.(*[]cmapi.KeyUsage), check.request.([]cmapi.KeyUsage))
+			checks.KeyUsageSlice(&el, path.Child(check.path), check.policy.(*[]cmapi.KeyUsage), check.request.([]cmapi.KeyUsage))
 		case checkObjRef:
-			checks.ObjectReference(el, path.Child(check.path), check.policy.(*[]cmmeta.ObjectReference), check.request.(cmmeta.ObjectReference))
+			checks.ObjectReference(&el, path.Child(check.path), check.policy.(*[]cmmeta.ObjectReference), check.request.(cmmeta.ObjectReference))
 		case checkMinDur:
-			checks.MinDuration(el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
+			checks.MinDuration(&el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
 		case checkMaxDur:
-			checks.MaxDuration(el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
+			checks.MaxDuration(&el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
 		case checkMinSize:
-			checks.MinSize(el, path.Child(check.path), check.policy.(*int), check.request.(int))
+			checks.MinSize(&el, path.Child(check.path), check.policy.(*int), check.request.(int))
 		case checkMaxSize:
-			checks.MaxSize(el, path.Child(check.path), check.policy.(*int), check.request.(int))
+			checks.MaxSize(&el, path.Child(check.path), check.policy.(*int), check.request.(int))
 		case checkKeyAlg:
-			checks.KeyAlgorithm(el, path.Child(check.path), check.policy.(*cmapi.PrivateKeyAlgorithm), check.request.(cmapi.PrivateKeyAlgorithm))
+			checks.KeyAlgorithm(&el, path.Child(check.path), check.policy.(*cmapi.PrivateKeyAlgorithm), check.request.(cmapi.PrivateKeyAlgorithm))
 		default:
-			return fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
+			return false, "", fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
 		}
 	}
 
-	return nil
+	// If there are errors, then return not approved and the aggregated errors
+	if len(el) > 0 {
+		return false, el.ToAggregate().Error(), nil
+	}
+
+	// If no evaluation errors resulting from this policy, return approved
+	return true, "", nil
 }
 
 func buildChecks(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
