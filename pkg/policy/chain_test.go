@@ -17,64 +17,59 @@ limitations under the License.
 package policy
 
 import (
-	"crypto"
 	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
 	"net"
-	"net/url"
 	"testing"
 	"time"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
-	cmpki "github.com/jetstack/cert-manager/pkg/util/pki"
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
+	"github.com/cert-manager/policy-approver/test/gen"
 )
 
 func TestEvaluateCertificateRequest(t *testing.T) {
 	tests := map[string]struct {
-		request requestOptions
+		request gen.CertificateRequestOptions
 		policy  cmpolicy.CertificateRequestPolicySpec
 		expEl   *field.ErrorList
 	}{
 		"any request with all fields nil shouldn't return error": {
-			request: requestOptions{
-				commonName: "test",
-				issuerName: "my-issuer",
+			request: gen.CertificateRequestOptions{
+				CommonName: "test",
+				IssuerName: "my-issuer",
 			},
 			policy: cmpolicy.CertificateRequestPolicySpec{},
 			expEl:  new(field.ErrorList),
 		},
 		"violations should return errors": {
-			request: requestOptions{
-				commonName: "test",
-				ca:         true,
-				duration: &metav1.Duration{
+			request: gen.CertificateRequestOptions{
+				CommonName: "test",
+				CA:         true,
+				Duration: &metav1.Duration{
 					Duration: time.Hour * 100,
 				},
-				dnsNames: []string{
+				DNSNames: []string{
 					"foo.bar",
 					"example.com",
 				},
-				ips: []net.IP{
+				IPs: []net.IP{
 					net.ParseIP("1.2.3.4"),
 				},
-				uris: []string{
+				URIs: []string{
 					"hello.world",
 				},
-				keyAlgorithm: x509.RSA,
-				issuerName:   "my-issuer",
-				issuerKind:   "my-kind",
-				issuerGroup:  "my-group",
+				KeyAlgorithm: x509.RSA,
+				IssuerName:   "my-issuer",
+				IssuerKind:   "my-kind",
+				IssuerGroup:  "my-group",
 			},
 			policy: cmpolicy.CertificateRequestPolicySpec{
-				AllowedCommonName: stringPtr("not-test"),
-				AllowedIsCA:       boolPtr(false),
+				AllowedCommonName: gen.StringPtr("not-test"),
+				AllowedIsCA:       gen.BoolPtr(false),
 				MinDuration: &metav1.Duration{
 					Duration: time.Hour * 200,
 				},
@@ -88,7 +83,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 					"world.hello",
 				},
 				AllowedPrivateKey: &cmpolicy.PolicyPrivateKey{
-					AllowedAlgorithm: algPtr(cmapi.ECDSAKeyAlgorithm),
+					AllowedAlgorithm: gen.AlgPtr(cmapi.ECDSAKeyAlgorithm),
 				},
 				AllowedIssuers: &[]cmmeta.ObjectReference{
 					{
@@ -113,111 +108,18 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			cr := mustCertificateRequest(t, test.request)
+			cr := gen.MustCertificateRequest(t, test.request)
 
-			el := new(field.ErrorList)
-			evaluateCertificateRequest(el, &cmpolicy.CertificateRequestPolicy{Spec: test.policy}, cr)
+			_, message, _ := evaluateChainChecks(&cmpolicy.CertificateRequestPolicy{Spec: test.policy}, cr)
 
-			if !apiequality.Semantic.DeepEqual(el, test.expEl) {
-				t.Errorf("unexpected error, exp=%v got=%v",
-					test.expEl, el)
+			expectedMessage := ""
+			if len(*test.expEl) > 0 {
+				expectedMessage = test.expEl.ToAggregate().Error()
+			}
+
+			if message != expectedMessage {
+				t.Errorf("unexpected error, exp=%v got=%v", expectedMessage, message)
 			}
 		})
 	}
-}
-
-type requestOptions struct {
-	issuerName, issuerKind, issuerGroup string
-
-	duration     *metav1.Duration
-	commonName   string
-	dnsNames     []string
-	ips          []net.IP
-	uris         []string
-	keyAlgorithm x509.PublicKeyAlgorithm
-	ca           bool
-}
-
-func mustCertificateRequest(t *testing.T, opts requestOptions) *cmapi.CertificateRequest {
-	var parsedURIs []*url.URL
-	for _, uri := range opts.uris {
-		parsed, err := url.Parse(uri)
-		if err != nil {
-			t.Fatal(err)
-		}
-		parsedURIs = append(parsedURIs, parsed)
-	}
-
-	var sk crypto.Signer
-	var signatureAlgorithm x509.SignatureAlgorithm
-	var err error
-
-	if opts.keyAlgorithm == 0 {
-		opts.keyAlgorithm = x509.RSA
-	}
-
-	switch opts.keyAlgorithm {
-	case x509.RSA:
-		sk, err = cmpki.GenerateRSAPrivateKey(2048)
-		if err != nil {
-			t.Fatal(err)
-		}
-		signatureAlgorithm = x509.SHA256WithRSA
-	case x509.ECDSA:
-		sk, err = cmpki.GenerateECPrivateKey(cmpki.ECCurve256)
-		if err != nil {
-			t.Fatal(err)
-		}
-		signatureAlgorithm = x509.ECDSAWithSHA256
-	default:
-		t.Fatalf("unrecognised key algorithm: %s", err)
-	}
-
-	csr := &x509.CertificateRequest{
-		Version:            3,
-		SignatureAlgorithm: signatureAlgorithm,
-		PublicKeyAlgorithm: opts.keyAlgorithm,
-		PublicKey:          sk.Public(),
-		Subject: pkix.Name{
-			CommonName: opts.commonName,
-		},
-		DNSNames:    opts.dnsNames,
-		IPAddresses: opts.ips,
-		URIs:        parsedURIs,
-	}
-
-	csrBytes, err := cmpki.EncodeCSR(csr, sk)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	csrPEM := pem.EncodeToMemory(&pem.Block{
-		Type: "CERTIFICATE REQUEST", Bytes: csrBytes,
-	})
-
-	return &cmapi.CertificateRequest{
-		Spec: cmapi.CertificateRequestSpec{
-			Duration: opts.duration,
-			Request:  csrPEM,
-			IsCA:     opts.ca,
-			IssuerRef: cmmeta.ObjectReference{
-				Name:  opts.issuerName,
-				Kind:  opts.issuerKind,
-				Group: opts.issuerGroup,
-			},
-		},
-	}
-}
-
-func intPtr(i int) *int {
-	return &i
-}
-func stringPtr(s string) *string {
-	return &s
-}
-func boolPtr(b bool) *bool {
-	return &b
-}
-func algPtr(alg cmapi.PrivateKeyAlgorithm) *cmapi.PrivateKeyAlgorithm {
-	return &alg
 }

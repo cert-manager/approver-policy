@@ -19,10 +19,10 @@ package policy
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	authzv1 "k8s.io/api/authorization/v1"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
@@ -34,7 +34,16 @@ var (
 	MissingBindingMessage = "No CertificateRequestPolicies bound"
 )
 
-type evaluatorFn func(el *field.ErrorList, policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) error
+type evaluatorFn func(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error)
+
+// loadedEvaluators is a list of different evaluators which will be run during
+// policy evaluation. External packages calling Load will register their
+// evaluatorFn in this list to be used by the client
+var loadedEvaluators = []evaluatorFn{
+	// base evaluatorFn evaluates the checks on fields in
+	// CertificateRequestPolicy resources, no external dependency
+	evaluateChainChecks,
+}
 
 // Policy is responsible for evaluating whether incoming CertificateRequests
 // should be approved, checking CertificateRequestPolicys.
@@ -42,14 +51,20 @@ type Policy struct {
 	client.Client
 	approveWhenNoPolicies bool
 
-	evaluator evaluatorFn
+	evaluators []evaluatorFn
+}
+
+// Load can be called in init functions of external evaluator packages to set
+// their evaluatorFns to be run
+func Load(fn evaluatorFn) {
+	loadedEvaluators = append(loadedEvaluators, fn)
 }
 
 func New(client client.Client, approveWhenNoPolicies bool) *Policy {
 	return &Policy{
 		Client:                client,
 		approveWhenNoPolicies: approveWhenNoPolicies,
-		evaluator:             evaluateCertificateRequest,
+		evaluators:            loadedEvaluators,
 	}
 }
 
@@ -115,20 +130,34 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 				continue
 			}
 
-			var el field.ErrorList
-			if err := p.evaluator(&el, &crp, cr); err != nil {
-				return false, ErrorMessage, err
+			allEvaluatorsApproved := true
+			var evaluatorMessages []string
+			for _, evaluator := range p.evaluators {
+				approved, message, err := evaluator(&crp, cr)
+				if err != nil {
+					// if a single evaluator fails, then return early without
+					// trying others
+					return false, ErrorMessage, err
+				}
+
+				// messages will only be returned when the CertificateRequest
+				// is not approved
+				evaluatorMessages = append(evaluatorMessages, message)
+
+				// allApprovedApproved will be set to false if any evaluators
+				// do not approve
+				if !approved {
+					allEvaluatorsApproved = false
+				}
 			}
 
-			// If no evaluation errors resulting from this policy, return approved
-			// with the name of the CertificateRequestPolicy.
-			if len(el) == 0 {
+			if allEvaluatorsApproved {
 				return true, fmt.Sprintf("Approved by CertificateRequestPolicy %q", crp.Name), nil
 			}
 
 			// Collect policy errors by the CertificateRequestPolicy name, so errors
 			// can be bubbled to the CertificateRequest condition
-			policyErrors[crp.Name] = el.ToAggregate().Error()
+			policyErrors[crp.Name] = strings.Join(evaluatorMessages, ", ")
 		}
 	}
 

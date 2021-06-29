@@ -23,7 +23,6 @@ import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -32,9 +31,9 @@ import (
 
 func TestEvaluate(t *testing.T) {
 	expNoEvaluator := func(t *testing.T) evaluatorFn {
-		return func(el *field.ErrorList, policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) error {
+		return func(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
 			t.Fatal("unexpected evaluator call")
-			return nil
+			return false, "", nil
 		}
 	}
 
@@ -87,8 +86,8 @@ func TestEvaluate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			client := test.client.WithScheme(scheme).Build()
 			p := &Policy{
-				Client:    client,
-				evaluator: test.evaluator(t),
+				Client:     client,
+				evaluators: []evaluatorFn{test.evaluator(t)},
 			}
 
 			ok, reason, err := p.Evaluate(context.TODO(), new(cmapi.CertificateRequest))
