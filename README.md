@@ -165,3 +165,39 @@ spec:
     minSize: # 2048
     maxSize: # 2048
 ```
+
+
+# Custom Evaluators
+
+It's possible to add custom evaluator logic. This logic should be added to a
+new package.
+
+First, create a new package with a function to perform evaluation. This takes a
+`CertificateRequestPolicy` and a `CertificateRequest`.
+
+It must return three values:
+* a boolean approve/deny value (return true to approve a `CertificateRequest`)
+* a string message explaining the decision (can be blank)
+* an error representing any evaluation issues that should be retried (optional)
+
+```go
+func myEvaluateFunction(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+	...
+}
+```
+
+Next, import your new package with a blank identifier:
+
+```go
+# main.go
+_ "github.com/ORG/policy-approver/pkg/policy/PACKAGE"
+```
+
+Finally, create an `init` function to load your package into the policy evaluation
+for the approver.
+
+```go
+func init() {
+	policy.Load(myEvaluateFunction)
+}
+```
