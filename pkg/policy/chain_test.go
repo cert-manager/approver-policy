@@ -28,18 +28,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
-
 	test "github.com/cert-manager/policy-approver/test/gen"
 )
 
 func TestEvaluateCertificateRequest(t *testing.T) {
 	tests := map[string]struct {
-		request test.RequestOptions
+		request test.CertificateRequestOptions
 		policy  cmpolicy.CertificateRequestPolicySpec
 		expEl   *field.ErrorList
 	}{
 		"any request with all fields nil shouldn't return error": {
-			request: test.RequestOptions{
+			request: test.CertificateRequestOptions{
 				CommonName: "test",
 				IssuerName: "my-issuer",
 			},
@@ -47,7 +46,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 			expEl:  new(field.ErrorList),
 		},
 		"violations should return errors": {
-			request: test.RequestOptions{
+			request: test.CertificateRequestOptions{
 				CommonName: "test",
 				CA:         true,
 				Duration: &metav1.Duration{

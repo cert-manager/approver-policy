@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
+package gen
 
 import (
 	"crypto"
@@ -31,8 +31,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// RequestOptions are passed to MustCertificateRequest
-type RequestOptions struct {
+// CertificateRequestOptions are passed to MustCertificateRequest
+type CertificateRequestOptions struct {
 	IssuerName  string
 	IssuerKind  string
 	IssuerGroup string
@@ -48,7 +48,7 @@ type RequestOptions struct {
 
 // MustCertificateRequest will build a cert-manager CertificateRequest with the
 // supplied options for use in test cases
-func MustCertificateRequest(t *testing.T, opts RequestOptions) *cmapi.CertificateRequest {
+func MustCertificateRequest(t *testing.T, opts CertificateRequestOptions) *cmapi.CertificateRequest {
 	var parsedURIs []*url.URL
 	for _, uri := range opts.URIs {
 		parsed, err := url.Parse(uri)

@@ -37,7 +37,7 @@ var (
 type evaluatorFn func(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error)
 
 // loadedEvaluators is a list of different evaluators which will be run during
-// policy evaluation. External packages calling Load will can register their
+// policy evaluation. External packages calling Load will register their
 // evaluatorFn in this list to be used by the client
 var loadedEvaluators = []evaluatorFn{
 	// base evaluatorFn evaluates the checks on fields in
