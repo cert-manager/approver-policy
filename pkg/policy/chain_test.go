@@ -28,17 +28,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
-	test "github.com/cert-manager/policy-approver/test/gen"
+	"github.com/cert-manager/policy-approver/test/gen"
 )
 
 func TestEvaluateCertificateRequest(t *testing.T) {
 	tests := map[string]struct {
-		request test.CertificateRequestOptions
+		request gen.CertificateRequestOptions
 		policy  cmpolicy.CertificateRequestPolicySpec
 		expEl   *field.ErrorList
 	}{
 		"any request with all fields nil shouldn't return error": {
-			request: test.CertificateRequestOptions{
+			request: gen.CertificateRequestOptions{
 				CommonName: "test",
 				IssuerName: "my-issuer",
 			},
@@ -46,7 +46,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 			expEl:  new(field.ErrorList),
 		},
 		"violations should return errors": {
-			request: test.CertificateRequestOptions{
+			request: gen.CertificateRequestOptions{
 				CommonName: "test",
 				CA:         true,
 				Duration: &metav1.Duration{
@@ -68,8 +68,8 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				IssuerGroup:  "my-group",
 			},
 			policy: cmpolicy.CertificateRequestPolicySpec{
-				AllowedCommonName: test.StringPtr("not-test"),
-				AllowedIsCA:       test.BoolPtr(false),
+				AllowedCommonName: gen.StringPtr("not-test"),
+				AllowedIsCA:       gen.BoolPtr(false),
 				MinDuration: &metav1.Duration{
 					Duration: time.Hour * 200,
 				},
@@ -83,7 +83,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 					"world.hello",
 				},
 				AllowedPrivateKey: &cmpolicy.PolicyPrivateKey{
-					AllowedAlgorithm: test.AlgPtr(cmapi.ECDSAKeyAlgorithm),
+					AllowedAlgorithm: gen.AlgPtr(cmapi.ECDSAKeyAlgorithm),
 				},
 				AllowedIssuers: &[]cmmeta.ObjectReference{
 					{
@@ -106,15 +106,15 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 		},
 	}
 
-	for name, tc := range tests {
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			cr := test.MustCertificateRequest(t, tc.request)
+			cr := gen.MustCertificateRequest(t, test.request)
 
-			_, message, _ := evaluateChainChecks(&cmpolicy.CertificateRequestPolicy{Spec: tc.policy}, cr)
+			_, message, _ := evaluateChainChecks(&cmpolicy.CertificateRequestPolicy{Spec: test.policy}, cr)
 
 			expectedMessage := ""
-			if len(*tc.expEl) > 0 {
-				expectedMessage = tc.expEl.ToAggregate().Error()
+			if len(*test.expEl) > 0 {
+				expectedMessage = test.expEl.ToAggregate().Error()
 			}
 
 			if message != expectedMessage {
