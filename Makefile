@@ -78,7 +78,7 @@ test: manifests generate lint fmt vet ## Run tests.
 ##@ Build
 
 build: test ## Build manager binary.
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o bin/policy-approver ./cmd/
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
 
 verify: all ## Verify repo.
 
