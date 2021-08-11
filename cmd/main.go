@@ -17,20 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
-	"os"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-
 	"github.com/cert-manager/policy-approver/cmd/app"
 )
 
 func main() {
-	ctx := ctrl.SetupSignalHandler()
-	cmd := app.NewCommand(ctx)
-
-	if err := cmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
+	app.ExecutePolicyApprover()
 }
