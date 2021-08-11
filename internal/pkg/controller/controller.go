@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package controller
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/cert-manager/policy-approver/pkg/policy"
+	"github.com/cert-manager/policy-approver/internal/pkg/manager"
 )
 
 type CRController struct {
@@ -37,15 +37,15 @@ type CRController struct {
 	log logr.Logger
 
 	recorder record.EventRecorder
-	policy   *policy.Policy
+	manager  *manager.Manager
 }
 
-func New(log logr.Logger, client client.Client, recorder record.EventRecorder, policy *policy.Policy) *CRController {
+func New(log logr.Logger, client client.Client, recorder record.EventRecorder, manager *manager.Manager) *CRController {
 	return &CRController{
 		Client:   client,
 		log:      log.WithName("certificate-requests"),
 		recorder: recorder,
-		policy:   policy,
+		manager:  manager,
 	}
 }
 
@@ -71,17 +71,17 @@ func (c *CRController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	ok, reason, err := c.policy.Evaluate(ctx, cr)
+	ok, reason, err := c.manager.Evaluate(ctx, cr)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if ok {
-		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", reason)
-		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "policy.cert-manager.io", reason)
+		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", reason.String())
+		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "policy.cert-manager.io", reason.String())
 	} else {
-		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", reason)
-		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", reason)
+		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", reason.String())
+		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", reason.String())
 	}
 
 	if err := c.Status().Update(ctx, cr); err != nil {
