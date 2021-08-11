@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package policy
+package base
 
 import (
 	"crypto/ecdsa"
@@ -30,9 +30,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/policy/checks"
+	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	"github.com/cert-manager/policy-approver/internal/pkg/base/checks"
+	"github.com/cert-manager/policy-approver/registry"
 )
+
+// Load the base evaluator checks.
+func init() {
+	registry.Load(evaluateBaseChecks)
+}
 
 type checkStrategy int
 
@@ -60,11 +66,11 @@ type check struct {
 	strategy checkStrategy
 }
 
-// evaluateChainChecks evaluates whether the given CertificateRequest passes
+// evaluateBaseChecks evaluates whether the given CertificateRequest passes
 // the 'chain checks' of the CertificateRequestPolicy. If this request is
 // denied by these checks then a string explanation is returned.
 // An error signals that the policy couldn't be evaluated to completion.
-func evaluateChainChecks(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+func evaluateBaseChecks(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
 		return false, "", err
@@ -115,7 +121,7 @@ func evaluateChainChecks(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.Ce
 	return true, "", nil
 }
 
-func buildChecks(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
+func buildChecks(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
 	// decode CSR from CertificateRequest
 	csr, err := utilpki.DecodeX509CertificateRequestBytes(cr.Spec.Request)
 	if err != nil {

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package policy
+package base
 
 import (
 	"crypto/x509"
@@ -27,14 +27,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
-	"github.com/cert-manager/policy-approver/test/gen"
+	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	"github.com/cert-manager/policy-approver/internal/test/gen"
 )
 
 func TestEvaluateCertificateRequest(t *testing.T) {
 	tests := map[string]struct {
 		request gen.CertificateRequestOptions
-		policy  cmpolicy.CertificateRequestPolicySpec
+		policy  cmpapi.CertificateRequestPolicySpec
 		expEl   *field.ErrorList
 	}{
 		"any request with all fields nil shouldn't return error": {
@@ -42,7 +42,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				CommonName: "test",
 				IssuerName: "my-issuer",
 			},
-			policy: cmpolicy.CertificateRequestPolicySpec{},
+			policy: cmpapi.CertificateRequestPolicySpec{},
 			expEl:  new(field.ErrorList),
 		},
 		"violations should return errors": {
@@ -67,7 +67,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				IssuerKind:   "my-kind",
 				IssuerGroup:  "my-group",
 			},
-			policy: cmpolicy.CertificateRequestPolicySpec{
+			policy: cmpapi.CertificateRequestPolicySpec{
 				AllowedCommonName: gen.StringPtr("not-test"),
 				AllowedIsCA:       gen.BoolPtr(false),
 				MinDuration: &metav1.Duration{
@@ -82,7 +82,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				AllowedURIs: &[]string{
 					"world.hello",
 				},
-				AllowedPrivateKey: &cmpolicy.PolicyPrivateKey{
+				AllowedPrivateKey: &cmpapi.PolicyPrivateKey{
 					AllowedAlgorithm: gen.AlgPtr(cmapi.ECDSAKeyAlgorithm),
 				},
 				AllowedIssuers: &[]cmmeta.ObjectReference{
@@ -110,7 +110,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			cr := gen.MustCertificateRequest(t, test.request)
 
-			_, message, _ := evaluateChainChecks(&cmpolicy.CertificateRequestPolicy{Spec: test.policy}, cr)
+			_, message, _ := evaluateBaseChecks(&cmpapi.CertificateRequestPolicy{Spec: test.policy}, cr)
 
 			expectedMessage := ""
 			if len(*test.expEl) > 0 {
