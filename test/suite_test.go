@@ -22,7 +22,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"go.uber.org/zap/zapcore"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -47,7 +46,7 @@ var _ = BeforeSuite(func(done Done) {
 		panic("-kubeconfig not defined")
 	}
 
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.Level(zapcore.Level(4))))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("Creating a kubernetes client")
 	clientConfigFlags := genericclioptions.NewConfigFlags(true)
