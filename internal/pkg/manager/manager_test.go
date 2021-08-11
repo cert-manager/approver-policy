@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package policy
+package manager
 
 import (
 	"context"
@@ -26,12 +26,13 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	"github.com/cert-manager/policy-approver/registry"
 )
 
 func TestEvaluate(t *testing.T) {
-	expNoEvaluator := func(t *testing.T) evaluatorFn {
-		return func(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+	expNoEvaluator := func(t *testing.T) registry.EvaluateFunc {
+		return func(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
 			t.Fatal("unexpected evaluator call")
 			return false, "", nil
 		}
@@ -39,14 +40,14 @@ func TestEvaluate(t *testing.T) {
 
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(cmpolicy.AddToScheme(scheme))
+	utilruntime.Must(cmpapi.AddToScheme(scheme))
 
 	tests := map[string]struct {
 		client    *fakeclient.ClientBuilder
-		evaluator func(t *testing.T) evaluatorFn
+		evaluator func(t *testing.T) registry.EvaluateFunc
 
 		expOK     bool
-		expReason string
+		expReason PolicyMessage
 		expErr    bool
 	}{
 		//"if no CertificateRequestPolicies exist, return ok": {
@@ -60,7 +61,7 @@ func TestEvaluate(t *testing.T) {
 			client:    fakeclient.NewClientBuilder(),
 			evaluator: expNoEvaluator,
 			expOK:     false,
-			expReason: MissingBindingMessage,
+			expReason: MessageNoApplicableCertificateRequestPolicy,
 			expErr:    false,
 		},
 		//"test": {
@@ -85,12 +86,12 @@ func TestEvaluate(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			client := test.client.WithScheme(scheme).Build()
-			p := &Policy{
+			m := &Manager{
 				Client:     client,
-				evaluators: []evaluatorFn{test.evaluator(t)},
+				evaluators: []registry.EvaluateFunc{test.evaluator(t)},
 			}
 
-			ok, reason, err := p.Evaluate(context.TODO(), new(cmapi.CertificateRequest))
+			ok, reason, err := m.Evaluate(context.TODO(), new(cmapi.CertificateRequest))
 			if ok != test.expOK {
 				t.Errorf("unexpected ok, exp=%t got=%t",
 					test.expOK, ok)

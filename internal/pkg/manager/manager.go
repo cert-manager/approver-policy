@@ -14,57 +14,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package policy
+package manager
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	authzv1 "k8s.io/api/authorization/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	_ "github.com/cert-manager/policy-approver/internal/pkg/base"
+	"github.com/cert-manager/policy-approver/registry"
 )
 
-var (
-	ErrorMessage          = "Evaluation error"
-	NoCRPExistMessage     = "No CertificateRequestPolicies exist"
-	MissingBindingMessage = "No CertificateRequestPolicies bound"
-)
-
-type evaluatorFn func(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error)
-
-// loadedEvaluators is a list of different evaluators which will be run during
-// policy evaluation. External packages calling Load will register their
-// evaluatorFn in this list to be used by the client
-var loadedEvaluators = []evaluatorFn{
-	// base evaluatorFn evaluates the checks on fields in
-	// CertificateRequestPolicy resources, no external dependency
-	evaluateChainChecks,
-}
-
-// Policy is responsible for evaluating whether incoming CertificateRequests
-// should be approved, checking CertificateRequestPolicys.
-type Policy struct {
+// Manager is responsible for evaluating whether incoming CertificateRequests
+// should be approved or denied, checking CertificateRequestPolicys against
+// evaluators which have been registries. Policies will be chosen based on
+// their suitability for a particular request, namely whether they are bound to
+// a policy via RBAC.
+type Manager struct {
 	client.Client
 	approveWhenNoPolicies bool
 
-	evaluators []evaluatorFn
+	evaluators registry.Registry
 }
 
-// Load can be called in init functions of external evaluator packages to set
-// their evaluatorFns to be run
-func Load(fn evaluatorFn) {
-	loadedEvaluators = append(loadedEvaluators, fn)
-}
-
-func New(client client.Client, approveWhenNoPolicies bool) *Policy {
-	return &Policy{
+// New constructs a new policy Manager which will use all currently loaded
+// policy evaluators to manage the approval condition of CertificateRequests.
+func New(client client.Client, approveWhenNoPolicies bool) *Manager {
+	return &Manager{
 		Client:                client,
 		approveWhenNoPolicies: approveWhenNoPolicies,
-		evaluators:            loadedEvaluators,
+		evaluators:            registry.List(),
 	}
 }
 
@@ -76,17 +59,17 @@ func New(client client.Client, approveWhenNoPolicies bool) *Policy {
 //   CertificateRequest is **denied**.
 // - Consumers should treat any error response as marking the
 //   CertificateRequest as neither approved nor denied, and may consider
-//   reevaluation at a later time.
-func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bool, string, error) {
-	crps := new(cmpolicy.CertificateRequestPolicyList)
-	if err := p.List(ctx, crps); err != nil {
+//   re-evaluation at a later time.
+func (m *Manager) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bool, PolicyMessage, error) {
+	crps := new(cmpapi.CertificateRequestPolicyList)
+	if err := m.List(ctx, crps); err != nil {
 		return false, "", err
 	}
 
 	// If no CertificateRequestPolicys exist, exit early approved if configured
 	// to do so
-	if p.approveWhenNoPolicies && len(crps.Items) == 0 {
-		return true, NoCRPExistMessage, nil
+	if m.approveWhenNoPolicies && len(crps.Items) == 0 {
+		return true, MessageNoExistingCertificateRequestPolicy, nil
 	}
 
 	policyErrors := make(map[string]string)
@@ -121,8 +104,8 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 					},
 				},
 			}
-			if err := p.Create(ctx, rev); err != nil {
-				return false, ErrorMessage, err
+			if err := m.Create(ctx, rev); err != nil {
+				return false, MessageError, err
 			}
 
 			// Don't perform evaluation if this CertificateRequestPolicy is not bound
@@ -132,12 +115,12 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 
 			allEvaluatorsApproved := true
 			var evaluatorMessages []string
-			for _, evaluator := range p.evaluators {
+			for _, evaluator := range m.evaluators {
 				approved, message, err := evaluator(&crp, cr)
 				if err != nil {
 					// if a single evaluator fails, then return early without
 					// trying others
-					return false, ErrorMessage, err
+					return false, MessageError, err
 				}
 
 				// messages will only be returned when the CertificateRequest
@@ -152,7 +135,7 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 			}
 
 			if allEvaluatorsApproved {
-				return true, fmt.Sprintf("Approved by CertificateRequestPolicy %q", crp.Name), nil
+				return true, approvedMessage(crp.Name), nil
 			}
 
 			// Collect policy errors by the CertificateRequestPolicy name, so errors
@@ -163,10 +146,10 @@ func (p *Policy) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bo
 
 	// If no policies bound, error
 	if len(policyErrors) == 0 {
-		return false, MissingBindingMessage, nil
+		return false, MessageNoApplicableCertificateRequestPolicy, nil
 	}
 
 	// Return with all policies that we consulted, and their errors to why the
 	// request was denied.
-	return false, fmt.Sprintf("No policy approved this request: %v", policyErrors), nil
+	return false, deniedMessage(policyErrors), nil
 }
