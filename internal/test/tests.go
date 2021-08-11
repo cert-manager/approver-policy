@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpolicy "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
 )
 
 var (
@@ -68,11 +68,11 @@ var _ = Context("Policy", func() {
 		Expect(kubeclient.Delete(context.TODO(), namespace)).ToNot(HaveOccurred())
 
 		By("deleting all policies")
-		polList := new(cmpolicy.CertificateRequestPolicyList)
+		polList := new(cmpapi.CertificateRequestPolicyList)
 		Expect(kubeclient.List(context.TODO(), polList)).ToNot(HaveOccurred())
 
 		if len(polList.Items) > 0 {
-			Expect(kubeclient.DeleteAllOf(context.TODO(), new(cmpolicy.CertificateRequestPolicy))).ToNot(HaveOccurred())
+			Expect(kubeclient.DeleteAllOf(context.TODO(), new(cmpapi.CertificateRequestPolicy))).ToNot(HaveOccurred())
 		}
 
 		if role != nil {
@@ -118,11 +118,11 @@ var _ = Context("Policy", func() {
 		))
 		Expect(err).ToNot(HaveOccurred())
 
-		err = kubeclient.Create(context.TODO(), &cmpolicy.CertificateRequestPolicy{
+		err = kubeclient.Create(context.TODO(), &cmpapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: cmpolicy.CertificateRequestPolicySpec{},
+			Spec: cmpapi.CertificateRequestPolicySpec{},
 		})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -132,11 +132,11 @@ var _ = Context("Policy", func() {
 	It("if allow all policy exists and is bound, all requests should be approved", func() {
 		bindAllToPolicy("allow-all")
 
-		err := kubeclient.Create(context.TODO(), &cmpolicy.CertificateRequestPolicy{
+		err := kubeclient.Create(context.TODO(), &cmpapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: cmpolicy.CertificateRequestPolicySpec{},
+			Spec: cmpapi.CertificateRequestPolicySpec{},
 		})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -161,11 +161,11 @@ var _ = Context("Policy", func() {
 		bindAllToPolicy("allow-common-name-foo")
 
 		dnsName := "foo"
-		err := kubeclient.Create(context.TODO(), &cmpolicy.CertificateRequestPolicy{
+		err := kubeclient.Create(context.TODO(), &cmpapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-common-name-foo",
 			},
-			Spec: cmpolicy.CertificateRequestPolicySpec{
+			Spec: cmpapi.CertificateRequestPolicySpec{
 				AllowedDNSNames: &[]string{dnsName},
 			},
 		})

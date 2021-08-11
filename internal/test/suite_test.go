@@ -27,7 +27,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/cert-manager/policy-approver/pkg/api"
+	"github.com/cert-manager/policy-approver/apis"
 )
 
 func init() {
@@ -54,7 +54,7 @@ var _ = BeforeSuite(func(done Done) {
 	config, err := clientConfigFlags.ToRESTConfig()
 	Expect(err).NotTo(HaveOccurred())
 
-	kubeclient, err = client.New(config, client.Options{Scheme: api.Scheme})
+	kubeclient, err = client.New(config, client.Options{Scheme: apis.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	close(done)
 }, 180)
