@@ -46,13 +46,14 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			log := opts.Log
 
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-				Scheme:                  api.Scheme,
-				MetricsBindAddress:      opts.MetricsAddress,
-				HealthProbeBindAddress:  opts.ProbeAddress,
-				LeaderElectionNamespace: opts.LeaderElectionNamespace,
-				LeaderElection:          true,
-				LeaderElectionID:        "policy.cert-manager.io",
-				Logger:                  log,
+				Scheme:                        api.Scheme,
+				MetricsBindAddress:            opts.MetricsAddress,
+				HealthProbeBindAddress:        opts.ProbeAddress,
+				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
+				LeaderElection:                true,
+				LeaderElectionID:              "policy.cert-manager.io",
+				LeaderElectionReleaseOnCancel: true,
+				Logger:                        log,
 			})
 			if err != nil {
 				log.Error(err, "unable to start manager")
