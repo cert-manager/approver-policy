@@ -17,47 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
 	"github.com/cert-manager/policy-approver/cmd/app"
 )
 
 func main() {
-	ctx := signalHandler()
-	cmd := app.NewCommand(ctx)
-
-	if err := cmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func signalHandler() context.Context {
-	ctx, cancel := context.WithCancel(context.Background())
-	ch := make(chan os.Signal, 2)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	log := zap.New()
-
-	go func() {
-		sig := <-ch
-
-		cancel()
-
-		for i := 0; i < 3; i++ {
-			log.Info("received signal, shutting down gracefully...", "signal", sig.String())
-			sig = <-ch
-		}
-
-		log.Info("received signal, force closing", "signal", sig.String())
-
-		os.Exit(1)
-	}()
-
-	return ctx
+	app.ExecutePolicyApprover()
 }

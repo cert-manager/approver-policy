@@ -18,8 +18,10 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
@@ -27,14 +29,21 @@ import (
 	"github.com/cert-manager/policy-approver/pkg/api"
 	"github.com/cert-manager/policy-approver/pkg/controllers"
 	"github.com/cert-manager/policy-approver/pkg/policy"
-	"github.com/spf13/cobra"
 )
 
 const (
 	helpOutput = "A cert-manager policy approver which bases decisions on CertificateRequestPolicies"
 )
 
-func NewCommand(ctx context.Context) *cobra.Command {
+func ExecutePolicyApprover() {
+	cmd := newCommand(ctrl.SetupSignalHandler())
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func newCommand(ctx context.Context) *cobra.Command {
 	opts := new(options.Options)
 
 	cmd := &cobra.Command{
