@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 )
 
 var (
