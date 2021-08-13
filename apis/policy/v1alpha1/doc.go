@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +domain=policy.cert-manager.io
-
-package apis
+// +k8s:openapi-gen=true
+// +k8s:deepcopy-gen=package,register
+// +groupName=policy.cert-manager.io
+package v1alpha1

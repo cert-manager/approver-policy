@@ -14,6 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +domain=policy.cert-manager.io
+package policy
 
-package apis
+const GroupName = "policy.cert-manager.io"
