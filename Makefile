@@ -82,6 +82,7 @@ kind-load: ## Load all the Docker images into Kind
 
 .PHONY: deploy-cert-manager
 deploy-cert-manager: depend ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
+	$(BINDIR)/helm repo add jetstack https://charts.jetstack.io --force-update
 	$(BINDIR)/helm upgrade --wait -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
 
 .PHONY: deploy
