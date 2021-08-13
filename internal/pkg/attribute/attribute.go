@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/internal/pkg/attribute/checks"
+	"github.com/cert-manager/policy-approver/internal/pkg/base/checks"
 	"github.com/cert-manager/policy-approver/registry"
 )
 

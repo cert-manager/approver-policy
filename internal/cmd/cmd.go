@@ -24,7 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
-	"github.com/cert-manager/policy-approver/apis"
+	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/internal/pkg/controller"
 	"github.com/cert-manager/policy-approver/internal/pkg/manager"
@@ -46,14 +46,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			log := opts.Log
 
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-				Scheme:                        apis.Scheme,
-				MetricsBindAddress:            opts.MetricsAddress,
-				HealthProbeBindAddress:        opts.ProbeAddress,
-				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
-				LeaderElection:                true,
-				LeaderElectionID:              "policy.cert-manager.io",
-				LeaderElectionReleaseOnCancel: true,
-				Logger:                        log,
+				Scheme:                  cmpapi.GlobalScheme,
+				MetricsBindAddress:      opts.MetricsAddress,
+				HealthProbeBindAddress:  opts.ProbeAddress,
+				LeaderElectionNamespace: opts.LeaderElectionNamespace,
+				LeaderElection:          true,
+				LeaderElectionID:        "policy.cert-manager.io",
+				Logger:                  log,
 			})
 			if err != nil {
 				log.Error(err, "unable to start manager")
