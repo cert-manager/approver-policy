@@ -27,26 +27,56 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/cert-manager/policy-approver/internal/pkg/manager"
+	"github.com/cert-manager/policy-approver/internal/pkg/evaluator"
 )
 
-type CRController struct {
-	client.Client
+// Options hold options for the Policy controller.
+type Options struct {
+	// Log is the Policy controller logger.
+	Log logr.Logger
 
-	log logr.Logger
-
-	recorder record.EventRecorder
-	manager  *manager.Manager
+	// Manager is the policy manager which is responsible for evaluating
+	// CertificateRequests against relevant policies using registered evaluators.
+	Manager *evaluator.Manager
 }
 
-func New(log logr.Logger, client client.Client, recorder record.EventRecorder, manager *manager.Manager) *CRController {
-	return &CRController{
-		Client:   client,
-		log:      log.WithName("certificate-requests"),
-		recorder: recorder,
-		manager:  manager,
-	}
+// controller is a controller-runtime Controller which evaluates whether
+// reconciled CertificateRequests should be Approved or Denied based on
+// registered policy evaluators.
+type controller struct {
+	// log is a shared logger for the policy controller.
+	log logr.Logger
+
+	// recorder is used for creating Kubernetes events on resources.
+	recorder record.EventRecorder
+
+	// client is a Kubernetes REST client to interact with objects in the API
+	// server.
+	client client.Client
+
+	// lister makes requests to the informer cache for getting and listing
+	// objects.
+	lister client.Reader
+
+	// manager is a evaluator manager responsible for evaluating whether a
+	// CertificateRequest should be approved or denied
+	manager *evaluator.Manager
+}
+
+// AddPolicyController will register the Policy controller with the
+// controller-runtime Manager.
+func AddPolicyController(mgr manager.Manager, opts Options) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(new(cmapi.CertificateRequest)).
+		Complete(&controller{
+			log:      opts.Log.WithName("controller"),
+			recorder: mgr.GetEventRecorderFor("policy.cert-manager.io"),
+			client:   mgr.GetClient(),
+			lister:   mgr.GetCache(),
+			manager:  opts.Manager,
+		})
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -58,12 +88,12 @@ func New(log logr.Logger, client client.Client, recorder record.EventRecorder, m
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
-func (c *CRController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (c *controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := c.log.WithValues("certificaterequestpolicy", req.NamespacedName)
 	log.Info("reconciling")
 
 	cr := new(cmapi.CertificateRequest)
-	if err := c.Get(ctx, req.NamespacedName, cr); err != nil {
+	if err := c.lister.Get(ctx, req.NamespacedName, cr); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
@@ -84,17 +114,9 @@ func (c *CRController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", reason.String())
 	}
 
-	if err := c.Status().Update(ctx, cr); err != nil {
+	if err := c.client.Status().Update(ctx, cr); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (c *CRController) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		//For(&policycertmanageriov1alpha1.CertificateRequestPolicy{}).
-		For(&cmapi.CertificateRequest{}).
-		Complete(c)
 }

@@ -28,7 +28,7 @@ import (
 	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/internal/pkg/controller"
-	"github.com/cert-manager/policy-approver/internal/pkg/manager"
+	"github.com/cert-manager/policy-approver/internal/pkg/evaluator"
 )
 
 const (
@@ -61,13 +61,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("unable to start controller manager: %w", err)
 			}
 
-			c := controller.New(
-				ctrl.Log, mgr.GetClient(),
-				mgr.GetEventRecorderFor("policy-approver"),
-				manager.New(mgr.GetClient(), opts.ApproveWhenNoPolicies),
-			)
-			if err := c.SetupWithManager(mgr); err != nil {
-				return fmt.Errorf("unable to create controller CertificateRequestPolicy controller: %w", err)
+			if err := controller.AddPolicyController(mgr, controller.Options{
+				Log:     opts.Log,
+				Manager: evaluator.NewManager(mgr.GetClient(), opts.ApproveWhenNoPolicies),
+			}); err != nil {
+				return fmt.Errorf("failed to add policy controller: %w", err)
 			}
 
 			if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {

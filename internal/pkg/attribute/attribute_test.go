@@ -26,12 +26,15 @@ import (
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
 
 	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/internal/test/gen"
 )
 
 func TestEvaluateCertificateRequest(t *testing.T) {
+	var ecdaKeyAlg = cmapi.ECDSAKeyAlgorithm
+
 	tests := map[string]struct {
 		request gen.CertificateRequestOptions
 		policy  cmpapi.CertificateRequestPolicySpec
@@ -68,8 +71,8 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				IssuerGroup:  "my-group",
 			},
 			policy: cmpapi.CertificateRequestPolicySpec{
-				AllowedCommonName: gen.StringPtr("not-test"),
-				AllowedIsCA:       gen.BoolPtr(false),
+				AllowedCommonName: pointer.String("not-test"),
+				AllowedIsCA:       pointer.Bool(false),
 				MinDuration: &metav1.Duration{
 					Duration: time.Hour * 200,
 				},
@@ -83,7 +86,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 					"world.hello",
 				},
 				AllowedPrivateKey: &cmpapi.PolicyPrivateKey{
-					AllowedAlgorithm: gen.AlgPtr(cmapi.ECDSAKeyAlgorithm),
+					AllowedAlgorithm: &ecdaKeyAlg,
 				},
 				AllowedIssuers: &[]cmmeta.ObjectReference{
 					{
