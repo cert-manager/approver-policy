@@ -18,7 +18,7 @@ ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
 HELM_VERSION ?= 3.6.3
-KUBEBUILDER_TOOLS_VERISON ?= 1.21.2
+KUBEBUILDER_TOOLS_VERISON ?= 1.22.0
 K8S_CLUSTER_NAME ?= policy-approver
 
 help: ## Display this help.
@@ -47,8 +47,8 @@ lint: ## Run linters against code.
 	./hack/verify-boilerplate.sh
 
 .PHONY: test
-test: generate lint vet ## test policy-approver
-	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin go test -v ./cmd/... ./internal/pkg/... ./internal/cmd/... ./apis/...
+test: depend lint vet ## test policy-approver
+	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v ./cmd/... ./apis/... ./internal/...
 
 .PHONY: generate
 generate: depend ## generate code
@@ -99,17 +99,15 @@ e2e: depend kind
 	rm kubeconfig.yaml
 
 .PHONY: depend
-depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver
+depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
 
 $(BINDIR):
 	mkdir -p ./bin
 
 $(BINDIR)/deepcopy-gen:
-	mkdir -p $(BINDIR)
 	go build -o $@ k8s.io/code-generator/cmd/deepcopy-gen
 
 $(BINDIR)/controller-gen:
-	mkdir -p $(BINDIR)
 	go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 $(BINDIR)/ginkgo:
@@ -133,3 +131,7 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver:
 	curl -sSLo $(BINDIR)/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERISON)-$(OS)-$(ARCH).tar.gz"
 	mkdir -p $(BINDIR)/kubebuilder
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
+
+$(BINDIR)/cert-manager/crds.yaml:
+	mkdir -p $(BINDIR)/cert-manager
+	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/jetstack/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/jetstack/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
