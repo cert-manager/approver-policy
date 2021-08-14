@@ -19,7 +19,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -62,7 +61,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			}
 
 			if err := controller.AddPolicyController(mgr, controller.Options{
-				Log:     opts.Log,
+				Log:     opts.Logr,
 				Manager: evaluator.NewManager(mgr.GetClient(), opts.ApproveWhenNoPolicies),
 			}); err != nil {
 				return fmt.Errorf("failed to add policy controller: %w", err)

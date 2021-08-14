@@ -91,7 +91,7 @@ deploy: depend ## Install CRDs into the K8s cluster
 	$(BINDIR)/kubectl apply -k config/default
 
 .PHONY: e2e
-e2e: verify
+e2e:
 
 .PHONY: depend
 depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
