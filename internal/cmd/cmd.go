@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -27,7 +28,7 @@ import (
 	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/internal/pkg/controller"
-	"github.com/cert-manager/policy-approver/internal/pkg/manager"
+	"github.com/cert-manager/policy-approver/internal/pkg/evaluator"
 )
 
 const (
@@ -59,14 +60,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				os.Exit(1)
 			}
 
-			c := controller.New(
-				ctrl.Log, mgr.GetClient(),
-				mgr.GetEventRecorderFor("policy-approver"),
-				manager.New(mgr.GetClient(), opts.ApproveWhenNoPolicies),
-			)
-			if err := c.SetupWithManager(mgr); err != nil {
-				log.Error(err, "unable to create controller", "controller", "CertificateRequestPolicy")
-				os.Exit(1)
+			if err := controller.AddPolicyController(mgr, controller.Options{
+				Log:     opts.Log,
+				Manager: evaluator.NewManager(mgr.GetClient(), opts.ApproveWhenNoPolicies),
+			}); err != nil {
+				return fmt.Errorf("failed to add policy controller: %w", err)
 			}
 
 			if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
