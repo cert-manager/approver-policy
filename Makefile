@@ -91,12 +91,7 @@ deploy: depend ## Install CRDs into the K8s cluster
 	$(BINDIR)/kubectl apply -k config/default
 
 .PHONY: e2e
-e2e: depend kind
-	$(BINDIR)/kubectl rollout status -w -n cert-manager deployment/policy-approver
-	$(BINDIR)/kind get kubeconfig --name $(K8S_CLUSTER_NAME) > kubeconfig.yaml
-	$(BINDIR)/ginkgo -nodes 1 ./internal/test/. -- -kubeconfig=$(shell pwd)/kubeconfig.yaml
-	$(BINDIR)/kind delete cluster --name $(K8S_CLUSTER_NAME)
-	rm kubeconfig.yaml
+e2e: verify
 
 .PHONY: depend
 depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
