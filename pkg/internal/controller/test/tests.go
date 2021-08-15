@@ -37,7 +37,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	_ "github.com/cert-manager/policy-approver/pkg/approver/base"
+	_ "github.com/cert-manager/policy-approver/pkg/approver/attribute"
 	"github.com/cert-manager/policy-approver/pkg/internal/controller"
 )
 

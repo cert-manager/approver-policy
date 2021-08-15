@@ -56,12 +56,6 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 		return false, "", err
 	}
 
-	// If no CertificateRequestPolicys exist, exit early approved if configured
-	// to do so
-	//if m.approveWhenNoPolicies && len(crps.Items) == 0 {
-	//	return true, MessageNoExistingCertificateRequestPolicy, nil
-	//}
-
 	policyErrors := make(map[string]string)
 	extra := make(map[string]authzv1.ExtraValue)
 	for k, v := range cr.Spec.Extra {
