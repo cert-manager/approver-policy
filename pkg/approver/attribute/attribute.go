@@ -33,13 +33,13 @@ import (
 
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/approver/base/internal"
+	"github.com/cert-manager/policy-approver/pkg/approver/attribute/internal"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
-var _ approver.Interface = base{}
+var _ approver.Interface = attribute{}
 
-type base struct{}
+type attribute struct{}
 
 type checkStrategy int
 
@@ -71,7 +71,7 @@ type check struct {
 // checks' of the CertificateRequestPolicy. If this request is denied by these
 // checks then a string explanation is returned.  An error signals that the
 // policy couldn't be evaluated to completion.
-func (b base) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
 		return false, "", err
@@ -204,7 +204,7 @@ func parsePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 	}
 }
 
-// Load the base evaluator checks.
+// Load the attribute evaluator checks.
 func init() {
-	registry.Shared.Store(base{})
+	registry.Shared.Store(attribute{})
 }
