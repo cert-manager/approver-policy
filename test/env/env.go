@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 func init() {
