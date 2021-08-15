@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package evaluator
+package manager
 
 import (
 	"context"
@@ -26,16 +26,17 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/registry"
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/approver"
+	"github.com/cert-manager/policy-approver/pkg/approver/fake"
 )
 
-func TestEvaluate(t *testing.T) {
-	expNoEvaluator := func(t *testing.T) registry.EvaluateFunc {
-		return func(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+func Test_Review(t *testing.T) {
+	expNoEvaluator := func(t *testing.T) approver.Evaluator {
+		return fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *cmpapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (bool, string, error) {
 			t.Fatal("unexpected evaluator call")
 			return false, "", nil
-		}
+		})
 	}
 
 	scheme := runtime.NewScheme()
@@ -44,10 +45,10 @@ func TestEvaluate(t *testing.T) {
 
 	tests := map[string]struct {
 		client    *fakeclient.ClientBuilder
-		evaluator func(t *testing.T) registry.EvaluateFunc
+		evaluator func(t *testing.T) approver.Evaluator
 
 		expOK     bool
-		expReason PolicyMessage
+		expReason string
 		expErr    bool
 	}{
 		//"if no CertificateRequestPolicies exist, return ok": {
@@ -86,12 +87,12 @@ func TestEvaluate(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			client := test.client.WithScheme(scheme).Build()
-			m := &Manager{
-				Client:     client,
-				evaluators: []registry.EvaluateFunc{test.evaluator(t)},
+			s := &subjectaccessreview{
+				client:     client,
+				evaluators: []approver.Evaluator{test.evaluator(t)},
 			}
 
-			ok, reason, err := m.Evaluate(context.TODO(), new(cmapi.CertificateRequest))
+			ok, reason, err := s.Review(context.TODO(), new(cmapi.CertificateRequest))
 			if ok != test.expOK {
 				t.Errorf("unexpected ok, exp=%t got=%t",
 					test.expOK, ok)

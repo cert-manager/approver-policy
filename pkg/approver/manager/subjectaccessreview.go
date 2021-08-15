@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package evaluator
+package manager
 
 import (
 	"context"
@@ -24,54 +24,43 @@ import (
 	authzv1 "k8s.io/api/authorization/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
-	_ "github.com/cert-manager/policy-approver/internal/pkg/base"
-	"github.com/cert-manager/policy-approver/registry"
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
-// Manager is responsible for evaluating whether incoming CertificateRequests
-// should be approved or denied, checking CertificateRequestPolicys against
-// evaluators which have been registries. Policies will be chosen based on
-// their suitability for a particular request, namely whether they are bound to
-// a policy via RBAC.
-type Manager struct {
-	client.Client
-	approveWhenNoPolicies bool
+// subjectaccessreview is a manager that calls evaluators with
+// CertificateRequestPolicys that have been RBAC bound to the user who appears
+// in the passed CertificateRequest to Evaluate.
+type subjectaccessreview struct {
+	client client.Client
 
-	evaluators registry.Registry
+	evaluators []approver.Evaluator
 }
 
-// NewManager constructs a new policy Manager evaluates whether
-// CertificateRequests should be approved or denied, managing registered
-// evaluators.
-func NewManager(client client.Client, approveWhenNoPolicies bool) *Manager {
-	return &Manager{
-		Client:                client,
-		approveWhenNoPolicies: approveWhenNoPolicies,
-		evaluators:            registry.List(),
+// NewSubjectAccessReview constructs a new approver Manager which evaluates
+// whether CertificateRequests should be approved or denied, managing
+// registered evaluators.
+func NewSubjectAccessReview(client client.Client, evaluators []approver.Evaluator) *subjectaccessreview {
+	return &subjectaccessreview{
+		client:     client,
+		evaluators: evaluators,
 	}
 }
 
-// Evaluate will evaluate whether the incoming CertificateRequest should be
-// approved.
-// - Consumers should consider a true response meaning the CertificateRequest
-//   is **approved**.
-// - Consumers should consider a false response and no error to mean the
-//   CertificateRequest is **denied**.
-// - Consumers should treat any error response as marking the
-//   CertificateRequest as neither approved nor denied, and may consider
-//   re-evaluation at a later time.
-func (m *Manager) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (bool, PolicyMessage, error) {
+// Review will evaluate whether the incoming CertificateRequest should be
+// approved. All evaluators will be called with CertificateRequestPolicys that
+// have been RBAC bound to the user included in the CertificateRequest.
+func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateRequest) (bool, string, error) {
 	crps := new(cmpapi.CertificateRequestPolicyList)
-	if err := m.List(ctx, crps); err != nil {
+	if err := s.client.List(ctx, crps); err != nil {
 		return false, "", err
 	}
 
 	// If no CertificateRequestPolicys exist, exit early approved if configured
 	// to do so
-	if m.approveWhenNoPolicies && len(crps.Items) == 0 {
-		return true, MessageNoExistingCertificateRequestPolicy, nil
-	}
+	//if m.approveWhenNoPolicies && len(crps.Items) == 0 {
+	//	return true, MessageNoExistingCertificateRequestPolicy, nil
+	//}
 
 	policyErrors := make(map[string]string)
 	extra := make(map[string]authzv1.ExtraValue)
@@ -105,7 +94,7 @@ func (m *Manager) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (b
 					},
 				},
 			}
-			if err := m.Create(ctx, rev); err != nil {
+			if err := s.client.Create(ctx, rev); err != nil {
 				return false, MessageError, err
 			}
 
@@ -116,8 +105,8 @@ func (m *Manager) Evaluate(ctx context.Context, cr *cmapi.CertificateRequest) (b
 
 			allEvaluatorsApproved := true
 			var evaluatorMessages []string
-			for _, evaluator := range m.evaluators {
-				approved, message, err := evaluator(&crp, cr)
+			for _, evaluator := range s.evaluators {
+				approved, message, err := evaluator.Evaluate(ctx, &crp, cr)
 				if err != nil {
 					// if a single evaluator fails, then return early without
 					// trying others
