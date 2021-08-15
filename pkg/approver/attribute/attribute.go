@@ -74,9 +74,8 @@ type check struct {
 }
 
 // Evaluate evaluates whether the given CertificateRequest passes the 'chain
-// checks' of the CertificateRequestPolicy.
-// If this request is denied by these checks then a string explanation is
-// returned.
+// checks' of the CertificateRequestPolicy.  If this request is denied by these
+// checks then a string explanation is returned.
 // An error signals that the policy couldn't be evaluated to completion.
 func (b attribute) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 	chain, err := buildChecks(policy, cr)
@@ -206,9 +205,4 @@ func parsePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 	default:
 		return "", -1, parseKeyError
 	}
-}
-
-// Load the base evaluator checks.
-func init() {
-	registry.Shared.Store(attribute{})
 }
