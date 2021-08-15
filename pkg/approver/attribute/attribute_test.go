@@ -114,7 +114,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			cr := gen.MustCertificateRequest(t, test.request)
 
-			_, message, _ := base{}.Evaluate(context.TODO(), &cmpapi.CertificateRequestPolicy{Spec: test.policy}, cr)
+			_, message, _ := attribute{}.Evaluate(context.TODO(), &cmpapi.CertificateRequestPolicy{Spec: test.policy}, cr)
 
 			expectedMessage := ""
 			if len(*test.expEl) > 0 {
