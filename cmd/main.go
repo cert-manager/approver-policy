@@ -17,9 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"github.com/cert-manager/policy-approver/cmd/app"
+	"github.com/cert-manager/policy-approver/pkg/cmd"
 )
 
 func main() {
-	app.ExecutePolicyApprover()
+	cmd.ExecutePolicyApprover()
 }
