@@ -117,14 +117,11 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, message, err := attribute{}.Evaluate(context.TODO(), &cmpapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
-			assert.NoError(t, err)
+			cr := gen.MustCertificateRequest(t, test.request)
 
-			expectedMessage := ""
-			if len(*test.expEl) > 0 {
-				expectedMessage = test.expEl.ToAggregate().Error()
-			}
-			assert.Equal(t, expectedMessage, message)
+			response, err := attribute{}.Evaluate(context.TODO(), &cmpapi.CertificateRequestPolicy{Spec: test.policy}, cr)
+			assert.NoError(t, err)
+			assert.Equal(t, test.expResponse, response, "unexpected evaluation response")
 		})
 	}
 }
