@@ -21,7 +21,7 @@ set -o pipefail
 POLICY_PKG="github.com/cert-manager/policy-approver"
 BOILERPLATE="hack/boilerplate/boilerplate.go.txt"
 
-APIS_PKG="$POLICY_PKG/apis"
+APIS_PKG="$POLICY_PKG/pkg/apis"
 GROUPS_WITH_VERSIONS="policy:v1alpha1"
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
@@ -44,4 +44,4 @@ echo "Generating deepcopy funcs"
 ${BIN_DIR}/deepcopy-gen --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" -O zz_generated.deepcopy --bounding-dirs "${APIS_PKG}" -h $BOILERPLATE
 
 echo "Generating CRDs in ./config/crd/bases"
-${BIN_DIR}/controller-gen crd schemapatch:manifests=./config/crd/bases output:dir=./config/crd/bases paths=./apis/...
+${BIN_DIR}/controller-gen crd schemapatch:manifests=./config/crd/bases output:dir=./config/crd/bases paths=./pkg/apis/...
