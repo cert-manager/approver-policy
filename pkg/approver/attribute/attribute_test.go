@@ -86,15 +86,8 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				AllowedURIs: &[]string{
 					"world.hello",
 				},
-				AllowedPrivateKey: &cmpapi.PolicyPrivateKey{
+				AllowedPrivateKey: &cmpapi.CertificateRequestPolicyPrivateKey{
 					AllowedAlgorithm: &ecdaKeyAlg,
-				},
-				AllowedIssuers: &[]cmmeta.ObjectReference{
-					{
-						Name:  "not-my-issuer",
-						Kind:  "not-my-kind",
-						Group: "not-my-group",
-					},
 				},
 			},
 			expEl: &field.ErrorList{
