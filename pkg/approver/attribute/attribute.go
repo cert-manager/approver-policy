@@ -37,6 +37,11 @@ import (
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
+// Load the attribute evaluator checks.
+func init() {
+	registry.Shared.Store(attribute{})
+}
+
 var _ approver.Interface = attribute{}
 
 type attribute struct{}
@@ -68,10 +73,11 @@ type check struct {
 }
 
 // Evaluate evaluates whether the given CertificateRequest passes the 'chain
-// checks' of the CertificateRequestPolicy. If this request is denied by these
-// checks then a string explanation is returned.  An error signals that the
-// policy couldn't be evaluated to completion.
-func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+// checks' of the CertificateRequestPolicy.
+// If this request is denied by these checks then a string explanation is
+// returned.
+// An error signals that the policy couldn't be evaluated to completion.
+func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
 		return approver.EvaluationResponse{}, err
@@ -202,9 +208,4 @@ func parsePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 	default:
 		return "", -1, parseKeyError
 	}
-}
-
-// Load the attribute evaluator checks.
-func init() {
-	registry.Shared.Store(attribute{})
 }
