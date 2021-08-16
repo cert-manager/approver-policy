@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.0
+    controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
   name: certificaterequestpolicies.policy.cert-manager.io
 spec:
@@ -21,7 +21,7 @@ spec:
     - name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: CertificateRequestPolicy is the Schema for the certificaterequestpolicies API
+          description: CertificateRequestPolicy is an object for describing a "policy profile" that makes decisions on whether applicable CertificateRequests should be approved or denied.
           type: object
           properties:
             apiVersion:
@@ -33,93 +33,98 @@ spec:
             metadata:
               type: object
             spec:
+              description: CertificateRequestPolicySpec defines the desired state of CertificateRequestPolicy.
               type: object
+              required:
+                - issuerRefSelector
               properties:
                 allowedCommonName:
+                  description: AllowedCommonName defines the X.509 Common Name this is permissible. Accepts wildcards "*". An omitted field or value of nil permits all.
                   type: string
                 allowedDNSNames:
+                  description: AllowedDNSNames defines the X.509 DNS SAN names that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                   type: array
                   items:
                     type: string
                 allowedEmailAddresses:
+                  description: AllowedEmailAddresses defines the X.509 URI SAN names that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                   type: array
                   items:
                     type: string
                 allowedIPAddresses:
+                  description: AllowedIPAddresses defines the X.509 IP SAN names that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                   type: array
                   items:
                     type: string
                 allowedIsCA:
+                  description: AllowedIsCA defines whether it is permissible for the CertificateRequest to contain the field `spec.isCA`. An omitted field or value of nil permits all.
                   type: boolean
-                allowedIssuer:
-                  type: array
-                  items:
-                    description: ObjectReference is a reference to an object with a given name, kind and group.
-                    type: object
-                    required:
-                      - name
-                    properties:
-                      group:
-                        description: Group of the resource being referred to.
-                        type: string
-                      kind:
-                        description: Kind of the resource being referred to.
-                        type: string
-                      name:
-                        description: Name of the resource being referred to.
-                        type: string
                 allowedPrivateKey:
+                  description: AllowedPrivateKey defines the shape of permissible private keys that may be used for the request. An omitted field or value of nil permits all.
                   type: object
                   properties:
                     allowedAlgorithm:
+                      description: AllowedAlgorithm defines the allowed crypto algorithm that is used by the requestor for their private key. An omitted field or value of nil permits all.
                       type: string
                       enum:
                         - RSA
                         - ECDSA
                         - Ed25519
                     maxSize:
+                      description: MaxSize defines the maximum key size a requestor may use for their private key. Values are inclusive (i.e. a min value of `2048` will accept a size of `2048`). MaxSize and MinSize may be the same value. An omitted field or value of nil permits all.
                       type: integer
                     minSize:
-                      description: Values are inclusive (i.e. a min value with 2048 will accept a size of 2048). MinSize and MaxSize may be the same.
+                      description: MinSize defines the minimum key size a requestor may use for their private key. Values are inclusive (i.e. a min value of `2048` will accept a size of `2048`). MinSize and MaxSize may be the same value. An omitted field or value of nil permits all.
                       type: integer
                 allowedSubject:
+                  description: AllowedSubject defines the X.509 subject that is permissible. An omitted field or value of nil permits all.
                   type: object
                   properties:
                     allowedCountries:
+                      description: AllowedCountries defines the X.509 Subject Countries that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                       type: array
                       items:
                         type: string
                     allowedLocalities:
+                      description: AllowedLocalities defines the X.509 Subject Localities that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                       type: array
                       items:
                         type: string
                     allowedOrganizationalUnits:
+                      description: AllowedOrganizationalUnitsdefines the X.509 Subject Organizational Units that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                       type: array
                       items:
                         type: string
                     allowedOrganizations:
+                      description: AllowedOrganizations defines the X.509 Subject Organizations that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                       type: array
                       items:
                         type: string
                     allowedPostalCodes:
+                      description: AllowedPostalCodes defines the X.509 Subject Postal Codes that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                       type: array
                       items:
                         type: string
                     allowedProvinces:
+                      description: AllowedProvinces defines the X.509 Subject Provinces that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                       type: array
                       items:
                         type: string
                     allowedSerialNumber:
+                      description: AllowedSerialNumber defines the X.509 Subject Serial Number that must be requested for. An omitted field or value of nil permits all.
                       type: string
                     allowedStreetAddresses:
+                      description: AllowedStreetAddresses defines the X.509 Subject Street Addresses that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                       type: array
                       items:
                         type: string
                 allowedURIs:
+                  description: AllowedURIs defines the X.509 URI SAN names that may be requested for. Accepts wildcards "*". An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                   type: array
                   items:
                     type: string
                 allowedUsages:
+                  description: AllowedUsages defines the list of permissible key usages that may appear of the CertificateRequest `spec.keyUsages` field. An omitted field or value of nil permits all. An empty slice `[]` permits nothing.
                   type: array
                   items:
                     description: 'KeyUsage specifies valid usage contexts for keys. See: https://tools.ietf.org/html/rfc5280#section-4.2.1.3      https://tools.ietf.org/html/rfc5280#section-4.2.1.12 Valid KeyUsage values are as follows: "signing", "digital signature", "content commitment", "key encipherment", "key agreement", "data encipherment", "cert sign", "crl sign", "encipher only", "decipher only", "any", "server auth", "client auth", "code signing", "email protection", "s/mime", "ipsec end system", "ipsec tunnel", "ipsec user", "timestamping", "ocsp signing", "microsoft sgc", "netscape sgc"'
@@ -148,41 +153,28 @@ spec:
                       - ocsp signing
                       - microsoft sgc
                       - netscape sgc
+                issuerRefSelector:
+                  description: "IssuerRefSelector is used to match this CertificateRequestPolicy against processed CertificateRequests. This policy will only be evaluated against a CertificateRequest whose `spec.issuerRef` field matches `issuerRefSelector`. CertificateRequests will not be processed on unmatched `issuerRefSelector`, regardless of whether the requestor is bound. Accepts wildcards \"*\". Nil values are equivalent to \"*\", \n The following value will match _all_ `issuerRefs`: ``` issuerRefSelector: {} ``` \n Required field."
+                  type: object
+                  properties:
+                    group:
+                      description: Group is the wildcard selector to match the `spec.issuerRef.group` field on requests. Accepts wildcards "*". An omitted field or value of nil permits all.
+                      type: string
+                    kind:
+                      description: Kind is the wildcard selector to match the `spec.issuerRef.kind` field on requests. Accepts wildcards "*". An omitted field or value of nil permits all.
+                      type: string
+                    name:
+                      description: Name is the wildcard selector to match the `spec.issuerRef.name` field on requests. Accepts wildcards "*". An omitted field or value of nil permits all.
+                      type: string
                 maxDuration:
+                  description: MaxDuration defines the maximum duration a certificate may be requested for. Values are inclusive (i.e. a max value of `1h` will accept a duration of `1h`). MaxDuration and MinDuration may be the same value. An omitted field or value of nil permits all.
                   type: string
                 minDuration:
-                  description: Values are inclusive (i.e. a min value with 50s will accept a duration with 50s). MinDuration and MaxDuration may be the same.
+                  description: MinDuration defines the minimum duration a certificate may be requested for. Values are inclusive (i.e. a min value of `1h` will accept a duration of `1h`). MinDuration and MaxDuration may be the same value. An omitted field or value of nil permits all.
                   type: string
             status:
+              description: TODO
               type: object
-              properties:
-                conditions:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - status
-                      - type
-                    properties:
-                      lastTransitionTime:
-                        type: string
-                        format: date-time
-                      message:
-                        type: string
-                      observedGeneration:
-                        type: integer
-                        format: int64
-                      reason:
-                        type: string
-                      status:
-                        description: ConditionStatus represents a condition's status.
-                        type: string
-                        enum:
-                          - "True"
-                          - "False"
-                          - Unknown
-                      type:
-                        type: string
       served: true
       storage: true
       subresources:
