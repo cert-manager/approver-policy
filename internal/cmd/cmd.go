@@ -45,7 +45,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return opts.Complete()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 				Scheme:                        cmpapi.GlobalScheme,
 				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
