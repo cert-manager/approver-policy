@@ -50,23 +50,24 @@ func newCommand(ctx context.Context) *cobra.Command {
 		Use:   "policy-approver",
 		Short: helpOutput,
 		Long:  helpOutput,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return opts.Complete()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.Complete()
-			log := opts.Log
 
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 				Scheme:                        api.Scheme,
-				MetricsBindAddress:            opts.MetricsAddress,
-				HealthProbeBindAddress:        opts.ProbeAddress,
 				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
 				LeaderElection:                true,
 				LeaderElectionID:              "policy.cert-manager.io",
 				LeaderElectionReleaseOnCancel: true,
-				Logger:                        log,
+				ReadinessEndpointName:         "/readyz",
+				HealthProbeBindAddress:        opts.ReadyzAddress,
+				MetricsBindAddress:            opts.MetricsAddress,
+				Logger:                        opts.Logr.WithName("controller"),
 			})
 			if err != nil {
-				log.Error(err, "unable to start manager")
-				os.Exit(1)
+				return fmt.Errorf("unable to start controller manager: %w", err)
 			}
 
 			c := controllers.New(
@@ -75,25 +76,22 @@ func newCommand(ctx context.Context) *cobra.Command {
 				policy.New(mgr.GetClient(), opts.ApproveWhenNoPolicies),
 			)
 			if err := c.SetupWithManager(mgr); err != nil {
-				log.Error(err, "unable to create controller", "controller", "CertificateRequestPolicy")
-				os.Exit(1)
+				return fmt.Errorf("unable to create controller CertificateRequestPolicy controller: %w", err)
 			}
 
 			if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-				log.Error(err, "unable to set up health check")
-				os.Exit(1)
+				return fmt.Errorf("unable to set up health check: %w", err)
 			}
 			if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-				log.Error(err, "unable to set up ready check")
-				os.Exit(1)
+				return fmt.Errorf("unable to set up ready check: %w", err)
 			}
 
-			log.Info("starting manager")
+			opts.Logr.WithName("main").Info("starting policy controller")
 			return mgr.Start(ctx)
 		},
 	}
 
-	opts.AddFlags(cmd)
+	opts.Prepare(cmd)
 
 	return cmd
 }
