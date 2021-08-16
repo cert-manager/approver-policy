@@ -172,9 +172,52 @@ spec:
                 minDuration:
                   description: MinDuration defines the minimum duration a certificate may be requested for. Values are inclusive (i.e. a min value of `1h` will accept a duration of `1h`). MinDuration and MaxDuration may be the same value. An omitted field or value of nil permits all.
                   type: string
+                plugins:
+                  description: Plugins define a set of plugins and their configuration that should be executed when this policy is evaluated against a CertificateRequest. A plugin must already be built within policy-approver for it to be available.
+                  type: object
+                  additionalProperties:
+                    description: CertificateRequestPolicyPluginData is configuration needed by the plugin approver to evaluate a CertificateRequest on this policy.
+                    type: object
+                    properties:
+                      values:
+                        description: Values define a set of well-known, to the plugin, key value pairs that are required for the plugin to successfully evaluate a request based on this policy.
+                        type: object
+                        additionalProperties:
+                          type: string
             status:
-              description: TODO
+              description: CertificateRequestPolicyStatus defines the observed state of the CertificateRequestPolicy.
               type: object
+              properties:
+                conditions:
+                  description: List of status conditions to indicate the status of the CertificateRequestPolicy. Known condition types are `Ready`.
+                  type: array
+                  items:
+                    description: CertificateRequestPolicyCondition contains condition information for a CertificateRequestPolicyStatus.
+                    type: object
+                    required:
+                      - status
+                      - type
+                    properties:
+                      lastTransitionTime:
+                        description: LastTransitionTime is the timestamp corresponding to the last status change of this condition.
+                        type: string
+                        format: date-time
+                      message:
+                        description: Message is a human readable description of the details of the last transition, complementing reason.
+                        type: string
+                      observedGeneration:
+                        description: If set, this represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the Bundle.
+                        type: integer
+                        format: int64
+                      reason:
+                        description: Reason is a brief machine readable explanation for the condition's last transition.
+                        type: string
+                      status:
+                        description: Status of the condition, one of ('True', 'False', 'Unknown').
+                        type: string
+                      type:
+                        description: Type of the condition, known values are (`Ready`).
+                        type: string
       served: true
       storage: true
       subresources:
