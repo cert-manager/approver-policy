@@ -74,7 +74,7 @@ type check struct {
 func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
-		return false, "", err
+		return approver.EvaluationResponse{}, err
 	}
 
 	// el will contain a list of policy violations for fields, if there are
@@ -109,17 +109,17 @@ func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequest
 		case checkKeyAlg:
 			internal.KeyAlgorithm(&el, path.Child(check.path), check.policy.(*cmapi.PrivateKeyAlgorithm), check.request.(cmapi.PrivateKeyAlgorithm))
 		default:
-			return false, "", fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
+			return approver.EvaluationResponse{}, fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
 		}
 	}
 
 	// If there are errors, then return not approved and the aggregated errors
 	if len(el) > 0 {
-		return false, el.ToAggregate().Error(), nil
+		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: el.ToAggregate().Error()}, nil
 	}
 
-	// If no evaluation errors resulting from this policy, return approved
-	return true, "", nil
+	// If no evaluation errors resulting from this policy, return not denied
+	return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
 }
 
 func buildChecks(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
