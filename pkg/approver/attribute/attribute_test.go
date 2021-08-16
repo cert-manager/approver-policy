@@ -95,15 +95,8 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				AllowedURIs: &[]string{
 					"world.hello",
 				},
-				AllowedPrivateKey: &policyapi.PolicyPrivateKey{
+				AllowedPrivateKey: &policyapi.CertificateRequestPolicyPrivateKey{
 					AllowedAlgorithm: &ecdaKeyAlg,
-				},
-				AllowedIssuers: &[]cmmeta.ObjectReference{
-					{
-						Name:  "not-my-issuer",
-						Kind:  "not-my-kind",
-						Group: "not-my-group",
-					},
 				},
 			},
 			expResponse: approver.EvaluationResponse{
@@ -114,7 +107,6 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 					field.Invalid(field.NewPath("spec.allowedDNSNames"), []string{"foo.bar", "example.com"}, "[not-foo.bar]"),
 					field.Invalid(field.NewPath("spec.allowedIPAddresses"), []string{"1.2.3.4"}, "[5.6.7.8]"),
 					field.Invalid(field.NewPath("spec.allowedURIs"), []string{"hello.world"}, "[world.hello]"),
-					field.Invalid(field.NewPath("spec.allowedIssuers"), cmmeta.ObjectReference{Name: "my-issuer", Kind: "my-kind", Group: "my-group"}, "[{not-my-issuer not-my-kind not-my-group}]"),
 					field.Invalid(field.NewPath("spec.allowedIsCA"), true, "false"),
 					field.Invalid(field.NewPath("spec.allowedPrivateKey.allowedAlgorithm"), cmapi.RSAKeyAlgorithm, "ECDSA"),
 				}.ToAggregate().Error(),
