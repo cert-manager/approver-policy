@@ -19,6 +19,8 @@ package approver
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
@@ -28,9 +30,8 @@ type WebhookValidationResponse struct {
 	// Allowed indicates whether the request was permitted by this Webhook.
 	Allowed bool
 
-	// message is optional context as to why the webhook has given allowed
-	// result.
-	Message string
+	// Errors are errors in response to the validation request being not Allowed.
+	Errors field.ErrorList
 }
 
 // Webhook is responsible for making decisions about whether a
