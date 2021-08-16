@@ -19,7 +19,7 @@ package registry
 import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 )
 
 // EvaluateFunc is a function which is used by an evaluator to asses whether a

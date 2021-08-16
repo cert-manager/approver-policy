@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/internal/pkg/base/checks"
 	"github.com/cert-manager/policy-approver/registry"
 )

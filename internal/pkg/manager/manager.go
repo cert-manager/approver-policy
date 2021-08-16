@@ -24,7 +24,7 @@ import (
 	authzv1 "k8s.io/api/authorization/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 	_ "github.com/cert-manager/policy-approver/internal/pkg/base"
 	"github.com/cert-manager/policy-approver/registry"
 )

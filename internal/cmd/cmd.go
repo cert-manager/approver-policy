@@ -24,7 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
-	"github.com/cert-manager/policy-approver/apis"
+	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/internal/pkg/controller"
 	"github.com/cert-manager/policy-approver/internal/pkg/manager"
@@ -47,7 +47,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-				Scheme:                        apis.Scheme,
+				Scheme:                        cmpapi.GlobalScheme,
 				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
 				LeaderElection:                true,
 				LeaderElectionID:              "policy.cert-manager.io",
