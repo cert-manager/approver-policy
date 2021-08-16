@@ -22,20 +22,63 @@ import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 )
 
-// Interface is a approver manager that responsible for evaluating whether
+// ReviewResult is the result from an approver manager reviewing a
+// CertificateRequest.
+type ReviewResult int
+
+const (
+	// ResultApproved is the result of a review where the manager approves the
+	// request.
+	ResultApproved ReviewResult = iota + 1
+
+	// ResultDenied is the result of a review where the manager denies the
+	// request.
+	ResultDenied
+
+	// ResultUnprocessed is the result of a review where the manager has deemed
+	// that the request is not appropriate for any evaluators given the current
+	// policy. It is neither approved or denied by the manager.
+	ResultUnprocessed
+)
+
+// ReviewResponse is the response to an approver manager request review.
+type ReviewResponse struct {
+	// Result is the actionable result code from running the review.
+	Result ReviewResult
+
+	// Message is optional context as to why the manager has given the result it
+	// has.
+	Message string
+}
+
+// Interface is an Approver Manager that responsible for evaluating whether
 // incoming CertificateRequests should be approved or denied, checking
-// CertificateRequestPolicys against approvers that have been registered.
-// Policies will be chosen based on their suitability for a particular request,
-// namely whether they are bound to a policy via RBAC.
+// CertificateRequestPolicies against approvers that have been registered.
+// Policies will be chosen based on their suitability for a particular request.
 type Interface interface {
 	// Review will evaluate whether the incoming CertificateRequest should be
-	// approved or denied.
-	// - Consumers should consider a true response meaning the CertificateRequest
-	//   is **approved**.
-	// - Consumers should consider a false response and no error to mean the
-	//   CertificateRequest is **denied**.
+	// approved, denied, or if the review was unprocessed.
+	// - Consumers should consider a ResultApproved response to mean the
+	//   CertificateRequest is **approved**.
+	// - Consumers should consider a ResultDenied response to mean
+	//   the CertificateRequest is **denied**.
+	// - Consumers should consider a ResultUnprocessed response to mean the
+	//   manager doesn't consider the request to be appropriate for any evaluator
+	//   and so no review was run. The request is neither approved or denied.
 	// - Consumers should treat any error response as marking the
 	//   CertificateRequest as neither approved nor denied, and may consider
 	//   re-evaluation at a later time.
-	Review(ctx context.Context, cr *cmapi.CertificateRequest) (bool, string, error)
+	Review(ctx context.Context, cr *cmapi.CertificateRequest) (ReviewResponse, error)
+}
+
+// policyMessage holds the name of the CertificateRequestPolicy and aggregated
+// message when running the evaluators against the CertificateRequest.
+type policyMessage struct {
+	// name is the name of the CertificateRequestPolicy which resulted gave the
+	// response by the evaluators.
+	name string
+
+	// message is the aggregated messages returned from the evaluators for this
+	// policy.
+	message string
 }
