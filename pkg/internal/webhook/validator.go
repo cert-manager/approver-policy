@@ -21,11 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
@@ -57,9 +57,10 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 
 	switch *req.RequestKind {
 	case metav1.GroupVersionKind{Group: policy.GroupName, Version: "v1alpha1", Kind: "CertificateRequestPolicy"}:
-		var crp cmpapi.CertificateRequestPolicy
+		log = log.WithValues("kind", "CertificateRequestPolicy")
 
 		v.lock.RLock()
+		var crp cmpapi.CertificateRequestPolicy
 		err := v.decoder.Decode(req, &crp)
 		v.lock.RUnlock()
 
@@ -69,7 +70,7 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 		}
 
 		var (
-			errs    []string
+			el      field.ErrorList
 			allowed = true
 		)
 		for _, webhook := range v.webhooks {
@@ -80,14 +81,13 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 			}
 			if !response.Allowed {
 				allowed = false
-				errs = append(errs, response.Message)
+				el = append(el, response.Errors...)
 			}
 		}
 
 		if !allowed {
-			err := strings.Join(errs, ", ")
-			v.log.V(2).Info("denied request", "reason", err)
-			return admission.Denied(err)
+			v.log.V(2).Info("denied admission", "errors", el.ToAggregate().Error())
+			return admission.Denied(el.ToAggregate().Error())
 		}
 
 		log.V(2).Info("allowed request")
