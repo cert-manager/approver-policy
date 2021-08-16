@@ -16,7 +16,9 @@ limitations under the License.
 
 package approver
 
-// Interface is an Approver. Implements Evaluator.
+// Interface is an Approver.
+// An Approver implements an Evaluator and Webhook.
 type Interface interface {
 	Evaluator
+	Webhook
 }

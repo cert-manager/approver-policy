@@ -1,0 +1,46 @@
+/*
+Copyright 2021 The cert-manager Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package approver
+
+import (
+	"context"
+
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+)
+
+// WebhookValidationResponse is the response to a validate request to a
+// Webhook.
+type WebhookValidationResponse struct {
+	// Allowed indicates whether the request was permitted by this Webhook.
+	Allowed bool
+
+	// message is optional context as to why the webhook has given allowed
+	// result.
+	Message string
+}
+
+// Webhook is responsible for making decisions about whether a
+// CertificateRequestPolicy should be committed to the API server at admission
+// time.
+type Webhook interface {
+	// Validate is run every time a CertificateRequestPolicy is created or
+	// updated at admission time to the API server. If Validate returns a
+	// response with Allowed set to false, the object will not be committed.
+	// Similarly, any error will cause the object not to be committed
+	// immediately, and no other webhooks will be run.
+	Validate(context.Context, *cmpapi.CertificateRequestPolicy) (WebhookValidationResponse, error)
+}
