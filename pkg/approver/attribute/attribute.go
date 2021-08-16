@@ -54,7 +54,7 @@ func (a attribute) RegisterFlags(_ *pflag.FlagSet) {
 // validation.
 func (a attribute) Prepare(_ context.Context, _ manager.Manager) error {
 	for _, approver := range registry.Shared.Approvers() {
-		// Don't allow plugins with the same name as the base attribute approver.
+		// Only track plugins, not the attribute approver itself.
 		if approver.Name() != a.Name() {
 			a.registeredPlugins = append(a.registeredPlugins, approver.Name())
 		}
