@@ -27,6 +27,8 @@ import (
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/pkg/internal/controller"
+	"github.com/cert-manager/policy-approver/pkg/internal/webhook"
+	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
 const (
@@ -60,10 +62,16 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			}
 
 			if err := controller.AddPolicyController(ctx, mgr, controller.Options{
-				Log: opts.Logr,
+				Log:        opts.Logr,
+				Evaluators: registry.Shared.Evaluators(),
 			}); err != nil {
 				return fmt.Errorf("failed to add policy controller: %w", err)
 			}
+
+			webhook.Register(mgr, webhook.Options{
+				Log:      opts.Logr,
+				Webhooks: registry.Shared.Webhooks(),
+			})
 
 			if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 				return fmt.Errorf("unable to set up ready check: %w", err)
