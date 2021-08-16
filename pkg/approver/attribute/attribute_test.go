@@ -25,11 +25,13 @@ import (
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/internal/test/gen"
 )
 
@@ -37,9 +39,9 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 	var ecdaKeyAlg = cmapi.ECDSAKeyAlgorithm
 
 	tests := map[string]struct {
-		request gen.CertificateRequestOptions
-		policy  cmpapi.CertificateRequestPolicySpec
-		expEl   *field.ErrorList
+		request     gen.CertificateRequestOptions
+		policy      cmpapi.CertificateRequestPolicySpec
+		expResponse approver.EvaluationResponse
 	}{
 		"any request with all fields nil shouldn't return error": {
 			request: gen.CertificateRequestOptions{
@@ -47,7 +49,10 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				IssuerName: "my-issuer",
 			},
 			policy: cmpapi.CertificateRequestPolicySpec{},
-			expEl:  new(field.ErrorList),
+			expResponse: approver.EvaluationResponse{
+				Result:  approver.ResultNotDenied,
+				Message: "",
+			},
 		},
 		"violations should return errors": {
 			request: gen.CertificateRequestOptions{
@@ -97,15 +102,18 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 					},
 				},
 			},
-			expEl: &field.ErrorList{
-				field.Invalid(field.NewPath("spec.allowedCommonName"), "test", "not-test"),
-				field.Invalid(field.NewPath("spec.minDuration"), "100h0m0s", "200h0m0s"),
-				field.Invalid(field.NewPath("spec.allowedDNSNames"), []string{"foo.bar", "example.com"}, "[not-foo.bar]"),
-				field.Invalid(field.NewPath("spec.allowedIPAddresses"), []string{"1.2.3.4"}, "[5.6.7.8]"),
-				field.Invalid(field.NewPath("spec.allowedURIs"), []string{"hello.world"}, "[world.hello]"),
-				field.Invalid(field.NewPath("spec.allowedIssuers"), cmmeta.ObjectReference{Name: "my-issuer", Kind: "my-kind", Group: "my-group"}, "[{not-my-issuer not-my-kind not-my-group}]"),
-				field.Invalid(field.NewPath("spec.allowedIsCA"), true, "false"),
-				field.Invalid(field.NewPath("spec.allowedPrivateKey.allowedAlgorithm"), cmapi.RSAKeyAlgorithm, "ECDSA"),
+			expResponse: approver.EvaluationResponse{
+				Result: approver.ResultDenied,
+				Message: field.ErrorList{
+					field.Invalid(field.NewPath("spec.allowedCommonName"), "test", "not-test"),
+					field.Invalid(field.NewPath("spec.minDuration"), "100h0m0s", "200h0m0s"),
+					field.Invalid(field.NewPath("spec.allowedDNSNames"), []string{"foo.bar", "example.com"}, "[not-foo.bar]"),
+					field.Invalid(field.NewPath("spec.allowedIPAddresses"), []string{"1.2.3.4"}, "[5.6.7.8]"),
+					field.Invalid(field.NewPath("spec.allowedURIs"), []string{"hello.world"}, "[world.hello]"),
+					field.Invalid(field.NewPath("spec.allowedIssuers"), cmmeta.ObjectReference{Name: "my-issuer", Kind: "my-kind", Group: "my-group"}, "[{not-my-issuer not-my-kind not-my-group}]"),
+					field.Invalid(field.NewPath("spec.allowedIsCA"), true, "false"),
+					field.Invalid(field.NewPath("spec.allowedPrivateKey.allowedAlgorithm"), cmapi.RSAKeyAlgorithm, "ECDSA"),
+				}.ToAggregate().Error(),
 			},
 		},
 	}
