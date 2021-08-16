@@ -19,6 +19,7 @@ package attribute
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -64,16 +65,35 @@ func (a attribute) Validate(_ context.Context, crp *cmpapi.CertificateRequestPol
 		}
 	}
 
+	var unrecognisedNames []string
+	for name := range crp.Spec.Plugins {
+		var found bool
+		for _, known := range a.registeredPlugins {
+			if name == known {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			unrecognisedNames = append(unrecognisedNames, name)
+		}
+	}
+
+	if len(unrecognisedNames) > 0 {
+		// Sort list so testing is deterministic.
+		sort.Strings(unrecognisedNames)
+		for _, name := range unrecognisedNames {
+			el = append(el, field.NotSupported(fldPath.Child("plugins"), name, a.registeredPlugins))
+		}
+	}
+
 	if crp.Spec.IssuerRefSelector == nil {
 		el = append(el, field.Required(fldPath.Child("issuerRefSelector"), "must be defined, hint: `{}` matches everything"))
 	}
 
-	if len(el) > 0 {
-		return approver.WebhookValidationResponse{
-			Allowed: false,
-			Message: el.ToAggregate().Error(),
-		}, nil
-	}
-
-	return approver.WebhookValidationResponse{Allowed: true}, nil
+	return approver.WebhookValidationResponse{
+		Allowed: len(el) == 0,
+		Errors:  el,
+	}, nil
 }

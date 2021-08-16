@@ -45,17 +45,24 @@ func Test_Validate(t *testing.T) {
 						MaxSize:          pointer.Int(-1),
 					},
 					IssuerRefSelector: nil,
+					Plugins: map[string]cmpapi.CertificateRequestPolicyPluginData{
+						"plugin-1":  cmpapi.CertificateRequestPolicyPluginData{Values: map[string]string{"foo": "bar"}},
+						"plugin-2":  cmpapi.CertificateRequestPolicyPluginData{Values: map[string]string{"bar": "foo"}},
+						"attribute": cmpapi.CertificateRequestPolicyPluginData{Values: map[string]string{"hello": "world"}},
+					},
 				},
 			},
 			expResponse: approver.WebhookValidationResponse{
 				Allowed: false,
-				Message: field.ErrorList{
-					field.Invalid(field.NewPath("spec.allowedPrivateKey.allowedAlgorithm"), "bad-alg", `must be either one of "RSA", "ECDSA", or "Ed25519"`),
+				Errors: field.ErrorList{
+					field.Invalid(field.NewPath("spec.allowedPrivateKey.allowedAlgorithm"), cmapi.PrivateKeyAlgorithm("bad-alg"), `must be either one of "RSA", "ECDSA", or "Ed25519"`),
 					field.Invalid(field.NewPath("spec.allowedPrivateKey.maxSize"), -1, "must be between 0 and 8192 inclusive"),
 					field.Invalid(field.NewPath("spec.allowedPrivateKey.minSize"), 9999, "must be between 0 and 8192 inclusive"),
 					field.Invalid(field.NewPath("spec.allowedPrivateKey.maxSize"), -1, "maxSize must be the same value as minSize or larger"),
+					field.NotSupported(field.NewPath("spec.plugins"), "attribute", []string{"plugin-2", "plugin-3"}),
+					field.NotSupported(field.NewPath("spec.plugins"), "plugin-1", []string{"plugin-2", "plugin-3"}),
 					field.Required(field.NewPath("spec.issuerRefSelector"), "must be defined, hint: `{}` matches everything"),
-				}.ToAggregate().Error(),
+				},
 			},
 		},
 		"if policy contains no validation errors, expect a Allowed=true response": {
@@ -71,16 +78,16 @@ func Test_Validate(t *testing.T) {
 			},
 			expResponse: approver.WebhookValidationResponse{
 				Allowed: true,
-				Message: "",
+				Errors:  nil,
 			},
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			response, err := attribute{}.Validate(nil, test.policy)
+			response, err := attribute{[]string{"plugin-2", "plugin-3"}}.Validate(nil, test.policy)
 			assert.NoError(t, err)
-			assert.Equal(t, response, test.expResponse)
+			assert.Equal(t, test.expResponse, response)
 		})
 	}
 }
