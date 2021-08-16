@@ -18,13 +18,14 @@ package test
 
 import (
 	. "github.com/onsi/ginkgo"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	testenv "github.com/cert-manager/policy-approver/test/env"
 )
 
 var (
-	apienv *envtest.Environment
+	env *testenv.Environment
 )
 
 var _ = BeforeSuite(func() {

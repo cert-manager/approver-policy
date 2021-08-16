@@ -87,7 +87,7 @@ func AddPolicyController(ctx context.Context, mgr ctrlmgr.Manager, opts Options)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(new(cmapi.CertificateRequest), builder.WithPredicates(
-			// Only process CertificateRequests which have not yet got a approval
+			// Only process CertificateRequests which have not yet got an approval
 			// status.
 			predicate.NewPredicateFuncs(func(obj client.Object) bool {
 				cr := obj.(*cmapi.CertificateRequest)
