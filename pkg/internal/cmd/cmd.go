@@ -32,9 +32,10 @@ import (
 )
 
 const (
-	helpOutput = "A cert-manager policy approver which bases decisions on CertificateRequestPolicies"
+	helpOutput = "A cert-manager CertificateRequest approver that bases decisions on CertificateRequestPolicies"
 )
 
+// NewCommand returns an new command instance of policy-approver.
 func NewCommand(ctx context.Context) *cobra.Command {
 	opts := new(options.Options)
 
@@ -46,6 +47,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return opts.Complete()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			log := opts.Logr.WithName("main")
+
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 				Scheme:                        cmpapi.GlobalScheme,
 				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
@@ -58,7 +61,14 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Logger:                        opts.Logr.WithName("controller"),
 			})
 			if err != nil {
-				return fmt.Errorf("unable to start controller manager: %w", err)
+				return fmt.Errorf("unable to create controller manager: %w", err)
+			}
+
+			for _, approver := range registry.Shared.Approvers() {
+				log.Info("preparing approver", "approver", approver.Name())
+				if err := approver.Prepare(ctx, mgr); err != nil {
+					return fmt.Errorf("failed to prepare approver %q: %w", approver.Name(), err)
+				}
 			}
 
 			if err := controller.AddPolicyController(ctx, mgr, controller.Options{
@@ -77,12 +87,12 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("unable to set up ready check: %w", err)
 			}
 
-			opts.Logr.WithName("main").Info("starting policy controller")
+			log.Info("starting policy controller")
 			return mgr.Start(ctx)
 		},
 	}
 
-	opts.Prepare(cmd)
+	opts.Prepare(cmd, registry.Shared.Approvers()...)
 
 	return cmd
 }
