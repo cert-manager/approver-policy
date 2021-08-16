@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 //+kubebuilder:resource:categories=cert-manager,shortName=crp,scope=Cluster
 //+kubebuilder:subresource:status
@@ -35,7 +36,7 @@ type CertificateRequestPolicy struct {
 	Status CertificateRequestPolicyStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // CertificateRequestPolicyList contains a list of CertificateRequestPolicy
 type CertificateRequestPolicyList struct {
@@ -140,7 +141,3 @@ type CertificateRequestPolicyConditionType string
 const (
 	CertificateRequestPolicyConditionReady CertificateRequestPolicyConditionType = "Ready"
 )
-
-func init() {
-	SchemeBuilder.Register(&CertificateRequestPolicy{}, &CertificateRequestPolicyList{})
-}

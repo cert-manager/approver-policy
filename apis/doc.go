@@ -14,23 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+// +domain=policy.cert-manager.io
 
-import (
-	cmapi "github.com/jetstack/cert-manager/pkg/api"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-
-	policycertmanageriov1alpha1 "github.com/cert-manager/policy-approver/pkg/api/v1alpha1"
-)
-
-var (
-	Scheme = runtime.NewScheme()
-)
-
-func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(Scheme))
-	utilruntime.Must(policycertmanageriov1alpha1.AddToScheme(Scheme))
-	utilruntime.Must(cmapi.AddToScheme(Scheme))
-}
+package apis

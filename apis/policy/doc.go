@@ -14,21 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package app
+package policy
 
-import (
-	"fmt"
-	"os"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/cert-manager/policy-approver/internal/cmd"
-)
-
-func ExecutePolicyApprover() {
-	cmd := cmd.NewCommand(ctrl.SetupSignalHandler())
-	if err := cmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-}
+const GroupName = "policy.cert-manager.io"

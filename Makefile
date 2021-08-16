@@ -73,7 +73,7 @@ lint: ## Run linters against code.
 	./hack/verify-boilerplate.sh
 
 test: manifests generate lint fmt vet ## Run tests.
-	go test ./cmd/... ./pkg/...
+	go test ./cmd/... ./internal/pkg/... ./internal/cmd/... ./apis/...
 
 ##@ Build
 
@@ -131,7 +131,7 @@ deploy-cert-manager: deps ## Deploy cert-manager in the configured Kubernetes cl
 e2e: deps all kind
 	${KUBECTL} rollout status -w -n cert-manager deployment/policy-approver
 	${KIND} get kubeconfig --name ${K8S_CLUSTER_NAME} > kubeconfig.yaml
-	${GINKGO} -nodes 1 ./test/. -- -kubeconfig=$(shell pwd)/kubeconfig.yaml
+	${GINKGO} -nodes 1 ./internal/test/. -- -kubeconfig=$(shell pwd)/kubeconfig.yaml
 	${KIND} delete cluster --name ${K8S_CLUSTER_NAME}
 	rm kubeconfig.yaml
 

@@ -14,21 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package app
-
-import (
-	"fmt"
-	"os"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/cert-manager/policy-approver/internal/cmd"
-)
-
-func ExecutePolicyApprover() {
-	cmd := cmd.NewCommand(ctrl.SetupSignalHandler())
-	if err := cmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-}
+// +k8s:openapi-gen=true
+// +k8s:deepcopy-gen=package,register
+// +groupName=policy.cert-manager.io
+package v1alpha1

@@ -122,12 +122,12 @@ func (o *Options) addAppFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&o.logLevel, "log-level", "v", "1",
 		"Log level (1-5).")
 
-	fs.StringVar(&o.MetricsAddress, "metrics-address", ":9402",
-		`Port to expose Prometheus metrics on 0.0.0.0 on path '/metrics'. The value "0" will disable exposing metrics.`)
-
-	fs.StringVar(&o.ReadyzAddress, "readiness-probe-address", ":6060",
+	fs.StringVar(&o.MetricsAddress, "metrics-bind-address", ":9402",
 		`TCP address for exposing HTTP Prometheus metrics which will be served on the HTTP path '/metrics'. The value "0" will
 	 disable exposing metrics.`)
+
+	fs.StringVar(&o.ReadyzAddress, "readiness-probe-bind-address", ":6060",
+		"TCP address for exposing the HTTP readiness probe which will be served on the HTTP path '/readyz'.")
 
 	fs.BoolVar(&o.ApproveWhenNoPolicies, "approve-when-no-policies", false,
 		"TCP address for exposing the HTTP readiness probe which will be served on the HTTP path '/readyz'.")
