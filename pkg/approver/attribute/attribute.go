@@ -210,5 +210,5 @@ func parsePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 
 // Load the base evaluator checks.
 func init() {
-	registry.Shared.Store(base{})
+	registry.Shared.Store(attribute{})
 }

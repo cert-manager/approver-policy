@@ -38,6 +38,7 @@ import (
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	_ "github.com/cert-manager/policy-approver/pkg/approver/attribute"
 	"github.com/cert-manager/policy-approver/pkg/internal/controller"
+	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
 const (
@@ -78,7 +79,9 @@ var _ = Context("Policy", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(controller.AddPolicyController(ctx, mgr, controller.Options{Log: logf.Log})).NotTo(HaveOccurred())
+		Expect(controller.AddPolicyController(ctx, mgr,
+			controller.Options{Log: logf.Log, Evaluators: registry.Shared.Evaluators()},
+		)).NotTo(HaveOccurred())
 
 		By("Running Policy controller")
 		go mgr.Start(ctx)
@@ -145,14 +148,10 @@ var _ = Context("Policy", func() {
 		))
 		Expect(err).ToNot(HaveOccurred())
 
-		Consistently(func() bool {
-			cr := new(cmapi.CertificateRequest)
-			Expect(env.AdminClient.Get(ctx, client.ObjectKey{Namespace: namespace.Name, Name: "no-policy"}, cr)).ToNot(HaveOccurred())
-			return apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr)
-		}, "3s").Should(BeFalse())
+		waitForNoApproveDeny(ctx, env.AdminClient, namespace.Name, "no-policy")
 	})
 
-	It("if one policy exists but not bound, then all requests should be denied", func() {
+	It("if one policy exists but not bound, then all requests should be neither approved or denied", func() {
 		csr, _, err := gen.CSR(x509.RSA)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -171,11 +170,13 @@ var _ = Context("Policy", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: policyapi.CertificateRequestPolicySpec{},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 
-		waitForDenial(ctx, env.AdminClient, namespace.Name, "no-bind")
+		waitForNoApproveDeny(ctx, env.AdminClient, namespace.Name, "no-bind")
 	})
 
 	It("if 'allow-all' policy exists and is bound, all requests should be approved", func() {
@@ -185,7 +186,9 @@ var _ = Context("Policy", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: policyapi.CertificateRequestPolicySpec{},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		time.Sleep(time.Microsecond * 500)
@@ -215,7 +218,8 @@ var _ = Context("Policy", func() {
 				Name: "allow-common-name-foo",
 			},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				AllowedDNSNames: &[]string{"foo"},
+				AllowedDNSNames:   &[]string{"foo"},
+				IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -264,6 +268,14 @@ func waitForDenial(ctx context.Context, cl client.Client, ns, name string) {
 		Expect(cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)).ToNot(HaveOccurred())
 		return apiutil.CertificateRequestIsDenied(cr)
 	}).Should(BeTrue())
+}
+
+func waitForNoApproveDeny(ctx context.Context, cl client.Client, ns, name string) {
+	Consistently(func() bool {
+		cr := new(cmapi.CertificateRequest)
+		Expect(cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)).ToNot(HaveOccurred())
+		return apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr)
+	}, "3s").Should(BeFalse())
 }
 
 func bindAllToPolicy(ctx context.Context, cl client.Client, policyName string) {
