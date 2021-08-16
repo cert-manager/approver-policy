@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package manager
+package evaluator
 
 import (
 	"context"
@@ -41,9 +41,10 @@ type Manager struct {
 	evaluators registry.Registry
 }
 
-// New constructs a new policy Manager which will use all currently loaded
-// policy evaluators to manage the approval condition of CertificateRequests.
-func New(client client.Client, approveWhenNoPolicies bool) *Manager {
+// NewManager constructs a new policy Manager evaluates whether
+// CertificateRequests should be approved or denied, managing registered
+// evaluators.
+func NewManager(client client.Client, approveWhenNoPolicies bool) *Manager {
 	return &Manager{
 		Client:                client,
 		approveWhenNoPolicies: approveWhenNoPolicies,

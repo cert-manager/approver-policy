@@ -14,21 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gen
+package test
 
 import (
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	. "github.com/onsi/ginkgo"
+	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
-func IntPtr(i int) *int {
-	return &i
-}
-func StringPtr(s string) *string {
-	return &s
-}
-func BoolPtr(b bool) *bool {
-	return &b
-}
-func AlgPtr(alg cmapi.PrivateKeyAlgorithm) *cmapi.PrivateKeyAlgorithm {
-	return &alg
-}
+var (
+	apienv *envtest.Environment
+)
+
+var _ = BeforeSuite(func() {
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+}, 60)
+
+var _ = AfterSuite(func() {
+}, 60)
