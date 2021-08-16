@@ -22,10 +22,13 @@ import (
 	"testing"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
@@ -72,12 +75,15 @@ func Test_Review(t *testing.T) {
 			expResponse:     ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies exist"},
 			expErr:          false,
 		},
-		"if no CertificateRequestPolicies are bound to the user, return ResultDenied": {
+		"if no CertificateRequestPolicies are bound to the user, return ResultUnprocessed": {
 			evaluators: expNoEvaluation,
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 			},
-			expResponse: ReviewResponse{Result: ResultDenied, Message: "No CertificateRequestPolicies bound or applicable"},
+			expResponse: ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies bound or applicable"},
 			expErr:      false,
 		},
 		"if single CertificateRequestPolicy bound at cluster level but returns denied, return ResultDenied": {
@@ -87,7 +93,9 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.ClusterRole{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -110,7 +118,9 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -133,7 +143,9 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.ClusterRole{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -156,7 +168,9 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -182,8 +196,14 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.ClusterRole{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -211,8 +231,14 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -237,8 +263,14 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.ClusterRole{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -263,8 +295,14 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
 					Rules: []rbacv1.PolicyRule{
@@ -289,8 +327,14 @@ func Test_Review(t *testing.T) {
 				})}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding-namespaced"},
 					Rules: []rbacv1.PolicyRule{
@@ -347,6 +391,34 @@ func Test_Review(t *testing.T) {
 			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
 			expErr:      false,
 		},
+		"if single CertificateRequestPolicy bound at namespace level but issuerRefSelector doesn't match, return ResultUnprocessed": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is a not-denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name"), Kind: pointer.String("kind "), Group: pointer.String("group"),
+					}},
+				},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
+			expErr:      false,
+		},
 		"if single CertificateRequestPolicy bound at namespace, two evaluators returns deined, return Denied": {
 			evaluators: func(t *testing.T) []approver.Evaluator {
 				return []approver.Evaluator{
@@ -373,6 +445,34 @@ func Test_Review(t *testing.T) {
 				},
 			},
 			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response, this is another denied response]"},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at namespace level and issuerRefSelector matches, return ResultApproved": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is a not-denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-name"), Kind: pointer.String("*"), Group: pointer.String("*-group"),
+					}},
+				},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
 			expErr:      false,
 		},
 		"if single CertificateRequestPolicy bound at cluster level and both evaluators return not denied, return ResultApproved": {
@@ -430,11 +530,218 @@ func Test_Review(t *testing.T) {
 
 			response, err := s.Review(context.TODO(), &cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
-				Spec:       cmapi.CertificateRequestSpec{Username: "example"},
+				Spec: cmapi.CertificateRequestSpec{
+					Username: "example",
+					IssuerRef: cmmeta.ObjectReference{
+						Name:  "test-name",
+						Kind:  "test-kind",
+						Group: "test-group",
+					},
+				},
 			})
 
 			assert.Equalf(t, test.expErr, err != nil, "%v", err)
 			assert.Equal(t, test.expResponse, response)
+		})
+	}
+}
+
+func Test_issuerRefSelector(t *testing.T) {
+	baseRequest := &cmapi.CertificateRequest{
+		Spec: cmapi.CertificateRequestSpec{
+			IssuerRef: cmmeta.ObjectReference{
+				Name:  "test-name",
+				Kind:  "test-kind",
+				Group: "test-group",
+			},
+		},
+	}
+
+	tests := map[string]struct {
+		policies    []policyapi.CertificateRequestPolicy
+		expPolicies []policyapi.CertificateRequestPolicy
+	}{
+		"if no policies given, return no policies": {
+			policies:    nil,
+			expPolicies: nil,
+		},
+		"if policy given that doesn't match, return no policies": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+					},
+				}},
+			},
+			expPolicies: nil,
+		},
+		"if two policies given that doesn't match, return no policies": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name-2"), Kind: pointer.String("kind-2"), Group: pointer.String("group-2"),
+					},
+				}},
+			},
+			expPolicies: nil,
+		},
+		"if one of two policies match all with all nils, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: new(policyapi.CertificateRequestPolicyIssuerRefSelector),
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+					},
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: new(policyapi.CertificateRequestPolicyIssuerRefSelector),
+				}},
+			},
+		},
+		"if one of two policies match all with wildcard, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+					},
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+			},
+		},
+		"if both of two policies match all with empty, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: new(policyapi.CertificateRequestPolicyIssuerRefSelector),
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: new(policyapi.CertificateRequestPolicyIssuerRefSelector),
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: new(policyapi.CertificateRequestPolicyIssuerRefSelector),
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: new(policyapi.CertificateRequestPolicyIssuerRefSelector),
+				}},
+			},
+		},
+		"if both of two policies match all with wildcard, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+			},
+		},
+		"if one policy matches with, other doesn't, return 1": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+					},
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+					},
+				}},
+			},
+		},
+		"if some polices match with a mix of exact, just wildcard and mix return policies": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-*"), Kind: pointer.String("*-kind"), Group: pointer.String("*up"),
+					},
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-*"), Kind: pointer.String("*-kind"), Group: pointer.String("*up"),
+					},
+				}},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			policies := issuerRefSelector(baseRequest, test.policies)
+			if !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
+				t.Errorf("unexpected policy response:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
+			}
 		})
 	}
 }
