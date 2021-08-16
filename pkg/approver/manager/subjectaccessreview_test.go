@@ -752,6 +752,19 @@ func Test_issuerRefSelector(t *testing.T) {
 			if !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
 				t.Errorf("unexpected policy response:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
 			}
+
+			s := NewSubjectAccessReview(
+				env.AdminClient,
+				[]approver.Evaluator{test.evaluator(t)},
+			)
+
+			response, err := s.Review(context.TODO(), &cmapi.CertificateRequest{
+				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
+				Spec:       cmapi.CertificateRequestSpec{Username: "example"},
+			})
+
+			assert.Equalf(t, test.expErr, err != nil, "%v", err)
+			assert.Equal(t, test.expResponse, response)
 		})
 	}
 }
