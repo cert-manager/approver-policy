@@ -19,7 +19,7 @@ spec:
         - /policy-approver
         image: policy-approver:latest
         name: policy-approver
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         securityContext:
           allowPrivilegeEscalation: false
         readinessProbe:
