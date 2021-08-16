@@ -9,9 +9,11 @@ require (
 	github.com/onsi/gomega v1.14.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.7.0
 	k8s.io/api v0.21.3
 	k8s.io/apiextensions-apiserver v0.21.3
 	k8s.io/apimachinery v0.21.3
+	k8s.io/cli-runtime v0.21.3
 	k8s.io/client-go v0.21.3
 	k8s.io/code-generator v0.21.3
 	k8s.io/component-base v0.21.3

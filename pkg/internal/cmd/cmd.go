@@ -17,9 +17,12 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
@@ -56,7 +59,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("unable to start controller manager: %w", err)
 			}
 
-			if err := controller.AddPolicyController(mgr, controller.Options{
+			if err := controller.AddPolicyController(ctx, mgr, controller.Options{
 				Log: opts.Logr,
 			}); err != nil {
 				return fmt.Errorf("failed to add policy controller: %w", err)
