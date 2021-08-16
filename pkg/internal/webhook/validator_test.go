@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2/klogr"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -133,7 +134,9 @@ func Test_validatorHandle(t *testing.T) {
 		},
 		"a CertificateRequestPolicy which fails validation should return a Denied response": {
 			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: false, Message: "this is a denied message"}, nil
+				return approver.WebhookValidationResponse{
+					Allowed: false, Errors: field.ErrorList{field.Forbidden(field.NewPath("hello-world"), "this is a denied message")},
+				}, nil
 			}),
 			req: admission.Request{
 				AdmissionRequest: admissionv1.AdmissionRequest{
@@ -163,13 +166,13 @@ func Test_validatorHandle(t *testing.T) {
 			expResp: admission.Response{
 				AdmissionResponse: admissionv1.AdmissionResponse{
 					Allowed: false,
-					Result:  &metav1.Status{Reason: "this is a denied message", Code: 403},
+					Result:  &metav1.Status{Reason: "hello-world: Forbidden: this is a denied message", Code: 403},
 				},
 			},
 		},
 		"a CertificateRequestPolicy which succeeds validation should return an Allowed response": {
 			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: true, Message: "this is a allowed message"}, nil
+				return approver.WebhookValidationResponse{Allowed: true}, nil
 			}),
 			req: admission.Request{
 				AdmissionRequest: admissionv1.AdmissionRequest{
