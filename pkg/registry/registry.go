@@ -31,22 +31,37 @@ var (
 // Registry is a store of Approvers. Consumers can store approvers, and load
 // registered evaluators.
 type Registry struct {
-	lock sync.RWMutex
-
-	evaluators []approver.Evaluator
+	lock      sync.RWMutex
+	approvers []approver.Interface
 }
 
 // Store will store an Approver into the shared approver registry.
 func (r *Registry) Store(approver approver.Interface) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	r.evaluators = append(r.evaluators, approver)
+	r.approvers = append(r.approvers, approver)
 }
 
-// Evaluators returns the list of evaluators that have been registered as
-// approvers to the registry.
+// Evaluators returns the list of Evaluators that have been registered as
+// Approvers to the registry.
 func (r *Registry) Evaluators() []approver.Evaluator {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
-	return r.evaluators
+	var evaluators []approver.Evaluator
+	for _, approver := range r.approvers {
+		evaluators = append(evaluators, approver)
+	}
+	return evaluators
+}
+
+// Webhooks returns the list of Webhooks that have been registered as Approvers
+// to the registry.
+func (r *Registry) Webhooks() []approver.Webhook {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+	var webhooks []approver.Webhook
+	for _, approver := range r.approvers {
+		webhooks = append(webhooks, approver)
+	}
+	return webhooks
 }
