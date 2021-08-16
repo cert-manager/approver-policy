@@ -45,10 +45,10 @@ func Test_Validate(t *testing.T) {
 						MaxSize:          pointer.Int(-1),
 					},
 					IssuerRefSelector: nil,
-					Plugins: map[string]cmpapi.CertificateRequestPolicyPluginData{
-						"plugin-1":  cmpapi.CertificateRequestPolicyPluginData{Values: map[string]string{"foo": "bar"}},
-						"plugin-2":  cmpapi.CertificateRequestPolicyPluginData{Values: map[string]string{"bar": "foo"}},
-						"attribute": cmpapi.CertificateRequestPolicyPluginData{Values: map[string]string{"hello": "world"}},
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+						"plugin-1":  policyapi.CertificateRequestPolicyPluginData{Values: map[string]string{"foo": "bar"}},
+						"plugin-2":  policyapi.CertificateRequestPolicyPluginData{Values: map[string]string{"bar": "foo"}},
+						"attribute": policyapi.CertificateRequestPolicyPluginData{Values: map[string]string{"hello": "world"}},
 					},
 				},
 			},

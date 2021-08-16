@@ -66,7 +66,7 @@ func (a attribute) Validate(_ context.Context, policy *policyapi.CertificateRequ
 	}
 
 	var unrecognisedNames []string
-	for name := range crp.Spec.Plugins {
+	for name := range policy.Spec.Plugins {
 		var found bool
 		for _, known := range a.registeredPlugins {
 			if name == known {
@@ -88,7 +88,7 @@ func (a attribute) Validate(_ context.Context, policy *policyapi.CertificateRequ
 		}
 	}
 
-	if crp.Spec.IssuerRefSelector == nil {
+	if policy.Spec.IssuerRefSelector == nil {
 		el = append(el, field.Required(fldPath.Child("issuerRefSelector"), "must be defined, hint: `{}` matches everything"))
 	}
 

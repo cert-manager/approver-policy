@@ -403,7 +403,9 @@ func Test_Review(t *testing.T) {
 			existingObjects: []client.Object{
 				&policyapi.CertificateRequestPolicy{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("not-test-name"), Kind: pointer.String("*"), Group: pointer.String("*"),
+					}},
 				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
@@ -529,10 +531,7 @@ func Test_Review(t *testing.T) {
 				}
 			}
 
-			s := NewSubjectAccessReview(
-				env.AdminClient,
-				test.evaluators(t),
-			)
+			s := NewSubjectAccessReview(env.AdminClient, test.evaluators(t))
 
 			response, err := s.Review(context.TODO(), &cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
@@ -735,226 +734,6 @@ func Test_issuerRefSelector(t *testing.T) {
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("test-*"), Kind: pointer.String("*-kind"), Group: pointer.String("*up"),
-					},
-				}},
-			},
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			policies := issuerRefSelector(baseRequest, test.policies)
-			if !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
-				t.Errorf("unexpected policy response:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
-			}
-
-			s := NewSubjectAccessReview(
-				env.AdminClient,
-				[]approver.Evaluator{test.evaluator(t)},
-			)
-
-			response, err := s.Review(context.TODO(), &cmapi.CertificateRequest{
-				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
-				Spec: cmapi.CertificateRequestSpec{
-					Username: "example",
-					IssuerRef: cmmeta.ObjectReference{
-						Name:  "test-name",
-						Kind:  "test-kind",
-						Group: "test-group",
-					},
-				},
-			})
-
-			assert.Equalf(t, test.expErr, err != nil, "%v", err)
-			assert.Equal(t, test.expResponse, response)
-		})
-	}
-}
-
-func Test_issuerRefSelector(t *testing.T) {
-	baseRequest := &cmapi.CertificateRequest{
-		Spec: cmapi.CertificateRequestSpec{
-			IssuerRef: cmmeta.ObjectReference{
-				Name:  "test-name",
-				Kind:  "test-kind",
-				Group: "test-group",
-			},
-		},
-	}
-
-	tests := map[string]struct {
-		policies    []cmpapi.CertificateRequestPolicy
-		expPolicies []cmpapi.CertificateRequestPolicy
-	}{
-		"if no policies given, return no policies": {
-			policies:    nil,
-			expPolicies: nil,
-		},
-		"if policy given that doesn't match, return no policies": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
-					},
-				}},
-			},
-			expPolicies: nil,
-		},
-		"if two policies given that doesn't match, return no policies": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name-2"), Kind: pointer.String("kind-2"), Group: pointer.String("group-2"),
-					},
-				}},
-			},
-			expPolicies: nil,
-		},
-		"if one of two policies match all with all nils, return policy": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: new(cmpapi.CertificateRequestPolicyIssuerRefSelector),
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
-					},
-				}},
-			},
-			expPolicies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: new(cmpapi.CertificateRequestPolicyIssuerRefSelector),
-				}},
-			},
-		},
-		"if one of two policies match all with wildcard, return policy": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
-					},
-				}},
-			},
-			expPolicies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-			},
-		},
-		"if both of two policies match all with empty, return policy": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: new(cmpapi.CertificateRequestPolicyIssuerRefSelector),
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: new(cmpapi.CertificateRequestPolicyIssuerRefSelector),
-				}},
-			},
-			expPolicies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: new(cmpapi.CertificateRequestPolicyIssuerRefSelector),
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: new(cmpapi.CertificateRequestPolicyIssuerRefSelector),
-				}},
-			},
-		},
-		"if both of two policies match all with wildcard, return policy": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-			},
-			expPolicies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-			},
-		},
-		"if one policy matches with, other doesn't, return 1": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
-					},
-				}},
-			},
-			expPolicies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
-					},
-				}},
-			},
-		},
-		"if some polices match with a mix of exact, just wildcard and mix return policies": {
-			policies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("test-*"), Kind: pointer.String("*-kind"), Group: pointer.String("*up"),
-					},
-				}},
-			},
-			expPolicies: []cmpapi.CertificateRequestPolicy{
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
-					},
-				}},
-				{Spec: cmpapi.CertificateRequestPolicySpec{
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
 						Name: pointer.String("test-*"), Kind: pointer.String("*-kind"), Group: pointer.String("*up"),
 					},
 				}},
