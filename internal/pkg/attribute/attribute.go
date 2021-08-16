@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package base
+package attribute
 
 import (
 	"crypto/ecdsa"
@@ -31,11 +31,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/internal/pkg/base/checks"
+	"github.com/cert-manager/policy-approver/internal/pkg/attribute/checks"
 	"github.com/cert-manager/policy-approver/registry"
 )
 
-// Load the base evaluator checks.
+// Load the attribute evaluator checks.
 func init() {
 	registry.Load(evaluateBaseChecks)
 }

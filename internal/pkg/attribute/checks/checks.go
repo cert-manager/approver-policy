@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	"github.com/cert-manager/policy-approver/internal/pkg/base/checks/wildcard"
+	"github.com/cert-manager/policy-approver/internal/pkg/attribute/checks/wildcard"
 )
 
 // String will match a policy string against a given string value, using
