@@ -53,6 +53,16 @@ users:
 `
 )
 
+// RootDirOrSkip returns the ROOTDIR environment variable, or skips if the
+// variable is undefined or empty.
+func RootDirOrSkip(t *testing.T) string {
+	rootDir := os.Getenv("ROOTDIR")
+	if len(rootDir) == 0 {
+		t.Skip("WARNING: skipping test as 'ROOTDIR' is not defined")
+	}
+	return rootDir
+}
+
 // writeKubeconfig writes a Kubeconfig file using the Kubernetes REST config.
 // Writes file to the given name under a temporary directory which  is removed
 // at the end of the test. Expects the REST client to use certificate
