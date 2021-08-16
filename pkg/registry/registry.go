@@ -25,11 +25,11 @@ import (
 var (
 	// Shared is a registry of approvers. This is intended as a global
 	// shared registry.
-	Shared = Registry{}
+	Shared = &Registry{}
 )
 
 // Registry is a store of Approvers. Consumers can store approvers, and load
-// registered evaluators.
+// all registered approvers. Approvers must be uniquely named.
 type Registry struct {
 	lock      sync.RWMutex
 	approvers []approver.Interface
@@ -39,7 +39,20 @@ type Registry struct {
 func (r *Registry) Store(approver approver.Interface) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+	for _, existing := range r.approvers {
+		if existing.Name() == approver.Name() {
+			panic("approver already registered with same name: " + approver.Name())
+		}
+	}
 	r.approvers = append(r.approvers, approver)
+}
+
+// Approvers returns the list of Approvers that have been registered to the
+// shared registry.
+func (r *Registry) Approvers() []approver.Interface {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+	return r.approvers
 }
 
 // Evaluators returns the list of Evaluators that have been registered as
