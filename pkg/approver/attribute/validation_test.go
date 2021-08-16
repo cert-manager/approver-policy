@@ -1,0 +1,86 @@
+/*
+Copyright 2021 The cert-manager Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package attribute
+
+import (
+	"testing"
+
+	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
+
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/approver"
+)
+
+func Test_Validate(t *testing.T) {
+	badAlg := cmapi.PrivateKeyAlgorithm("bad-alg")
+	goodAlg := cmapi.RSAKeyAlgorithm
+
+	tests := map[string]struct {
+		policy      *cmpapi.CertificateRequestPolicy
+		expResponse approver.WebhookValidationResponse
+	}{
+		"if policy contains validation errors, expect a Allowed=false response": {
+			policy: &cmpapi.CertificateRequestPolicy{
+				Spec: cmpapi.CertificateRequestPolicySpec{
+					AllowedPrivateKey: &cmpapi.CertificateRequestPolicyPrivateKey{
+						AllowedAlgorithm: &badAlg,
+						MinSize:          pointer.Int(9999),
+						MaxSize:          pointer.Int(-1),
+					},
+					IssuerRefSelector: nil,
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Message: field.ErrorList{
+					field.Invalid(field.NewPath("spec.allowedPrivateKey.allowedAlgorithm"), "bad-alg", `must be either one of "RSA", "ECDSA", or "Ed25519"`),
+					field.Invalid(field.NewPath("spec.allowedPrivateKey.maxSize"), -1, "must be between 0 and 8192 inclusive"),
+					field.Invalid(field.NewPath("spec.allowedPrivateKey.minSize"), 9999, "must be between 0 and 8192 inclusive"),
+					field.Invalid(field.NewPath("spec.allowedPrivateKey.maxSize"), -1, "maxSize must be the same value as minSize or larger"),
+					field.Required(field.NewPath("spec.issuerRefSelector"), "must be defined, hint: `{}` matches everything"),
+				}.ToAggregate().Error(),
+			},
+		},
+		"if policy contains no validation errors, expect a Allowed=true response": {
+			policy: &cmpapi.CertificateRequestPolicy{
+				Spec: cmpapi.CertificateRequestPolicySpec{
+					AllowedPrivateKey: &cmpapi.CertificateRequestPolicyPrivateKey{
+						AllowedAlgorithm: &goodAlg,
+						MinSize:          pointer.Int(100),
+						MaxSize:          pointer.Int(500),
+					},
+					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: true,
+				Message: "",
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			response, err := attribute{}.Validate(nil, test.policy)
+			assert.NoError(t, err)
+			assert.Equal(t, response, test.expResponse)
+		})
+	}
+}

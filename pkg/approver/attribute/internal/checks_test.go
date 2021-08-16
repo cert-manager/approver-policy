@@ -23,7 +23,6 @@ import (
 	"time"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
@@ -276,121 +275,6 @@ func TestIPSlice(t *testing.T) {
 
 			if (len(el) > 0) != test.expErr {
 				t.Errorf("IPSlice: unexpected result, policy=%v request=%v exp=%t got=%v",
-					test.policy, test.request, test.expErr, el)
-			}
-		})
-	}
-}
-
-func TestObjectReference(t *testing.T) {
-	tests := map[string]struct {
-		policy  *[]cmmeta.ObjectReference
-		request cmmeta.ObjectReference
-		expErr  bool
-	}{
-		"if policy is nil and request is empty, don't error": {
-			policy:  nil,
-			request: cmmeta.ObjectReference{},
-			expErr:  false,
-		},
-		"if policy is empty list, always error": {
-			policy:  &[]cmmeta.ObjectReference{},
-			request: cmmeta.ObjectReference{},
-			expErr:  true,
-		},
-		"if policy is nil and request is not empty, don't error": {
-			policy: nil,
-			request: cmmeta.ObjectReference{
-				Name:  "foo",
-				Kind:  "bar",
-				Group: "example.com",
-			},
-			expErr: false,
-		},
-		"if single policy with all wildcard and request is not empty, don't error": {
-			policy: &[]cmmeta.ObjectReference{
-				{
-					Name:  "*",
-					Kind:  "*",
-					Group: "*",
-				},
-			},
-			request: cmmeta.ObjectReference{
-				Name:  "foo",
-				Kind:  "bar",
-				Group: "example.com",
-			},
-			expErr: false,
-		},
-		"if two policies with one all wildcard, other random, and request is not empty, don't error": {
-			policy: &[]cmmeta.ObjectReference{
-				{
-					Name:  "policy-name",
-					Kind:  "policy-kind",
-					Group: "policy-group",
-				},
-				{
-					Name:  "*",
-					Kind:  "*",
-					Group: "*",
-				},
-			},
-			request: cmmeta.ObjectReference{
-				Name:  "foo",
-				Kind:  "bar",
-				Group: "example.com",
-			},
-			expErr: false,
-		},
-		"if two policies with one wildcard but one doesn't match, other random, and request is not empty, error": {
-			policy: &[]cmmeta.ObjectReference{
-				{
-					Name:  "policy-name",
-					Kind:  "policy-kind",
-					Group: "policy-group",
-				},
-				{
-					Name:  "*foo",
-					Kind:  "bar*",
-					Group: "*.io",
-				},
-			},
-			request: cmmeta.ObjectReference{
-				Name:  "foo",
-				Kind:  "bar",
-				Group: "example.com",
-			},
-			expErr: true,
-		},
-		"if two policies with one exactly matches, other random, and request is not empty, don't error": {
-			policy: &[]cmmeta.ObjectReference{
-				{
-					Name:  "policy-name",
-					Kind:  "policy-kind",
-					Group: "policy-group",
-				},
-				{
-					Name:  "foo",
-					Kind:  "bar",
-					Group: "example.com",
-				},
-			},
-			request: cmmeta.ObjectReference{
-				Name:  "foo",
-				Kind:  "bar",
-				Group: "example.com",
-			},
-			expErr: false,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			var el field.ErrorList
-			ObjectReference(&el, field.NewPath(""), test.policy, test.request)
-
-			if (len(el) > 0) != test.expErr {
-				t.Errorf("ObjectReference: unexpected result, policy=%v request=%v exp=%t got=%v",
 					test.policy, test.request, test.expErr, el)
 			}
 		})

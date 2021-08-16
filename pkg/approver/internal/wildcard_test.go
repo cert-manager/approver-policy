@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package wildcard
+package internal
 
 import (
 	"fmt"
 	"testing"
 )
 
-func TestSubset(t *testing.T) {
+func Test_WildcardSubset(t *testing.T) {
 	tests := []struct {
 		patterns []string
 		texts    []string
@@ -119,7 +119,7 @@ func TestSubset(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v: %v", test.patterns, test.texts), func(t *testing.T) {
-			if match := Subset(test.patterns, test.texts); match != test.exp {
+			if match := WildcardSubset(test.patterns, test.texts); match != test.exp {
 				t.Errorf("unexpected subset (%v, %v): exp=%t got=%t",
 					test.patterns, test.texts, test.exp, match)
 			}
@@ -127,7 +127,7 @@ func TestSubset(t *testing.T) {
 	}
 }
 
-func TestContains(t *testing.T) {
+func Test_WildcardContains(t *testing.T) {
 	tests := []struct {
 		patterns []string
 		text     string
@@ -220,7 +220,7 @@ func TestContains(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%v: %s", test.patterns, test.text), func(t *testing.T) {
-			if match := Contains(test.patterns, test.text); match != test.exp {
+			if match := WildcardContains(test.patterns, test.text); match != test.exp {
 				t.Errorf("unexpected contains (%v, %q): exp=%t got=%t",
 					test.patterns, test.text, test.exp, match)
 			}
@@ -228,7 +228,7 @@ func TestContains(t *testing.T) {
 	}
 }
 
-func TestMatchs(t *testing.T) {
+func Test_WildcardMatchs(t *testing.T) {
 	tests := map[string]struct {
 		pattern string
 		text    string
@@ -297,7 +297,7 @@ func TestMatchs(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			if match := Matchs(test.pattern, test.text); match != test.exp {
+			if match := WildcardMatchs(test.pattern, test.text); match != test.exp {
 				t.Errorf("unexpected match (%q, %q): exp=%t got=%t",
 					test.pattern, test.text, test.exp, match)
 			}
