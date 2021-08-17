@@ -18,7 +18,16 @@ spec:
     singular: certificaterequestpolicy
   scope: Cluster
   versions:
-    - name: v1alpha1
+    - additionalPrinterColumns:
+        - description: CertificateRequestPolicy is ready for evaluation
+          jsonPath: .status.conditions[?(@.type == "Ready")].status
+          name: Ready
+          type: string
+        - description: Timestamp CertificateRequestPolicy was created
+          jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1alpha1
       schema:
         openAPIV3Schema:
           description: CertificateRequestPolicy is an object for describing a "policy profile" that makes decisions on whether applicable CertificateRequests should be approved or denied.
