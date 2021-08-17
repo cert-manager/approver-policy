@@ -43,5 +43,5 @@ done
 echo "Generating deepcopy funcs"
 ${BIN_DIR}/deepcopy-gen --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" -O zz_generated.deepcopy --bounding-dirs "${APIS_PKG}" -h $BOILERPLATE
 
-echo "Generating CRDs in ./config/crd/bases"
-${BIN_DIR}/controller-gen crd schemapatch:manifests=./config/crd/bases output:dir=./config/crd/bases paths=./pkg/apis/...
+echo "Generating CRDs in ./deploy/charts/policy-approver/templates"
+${BIN_DIR}/controller-gen crd schemapatch:manifests=./deploy/charts/policy-approver/templates/ output:dir=./deploy/charts/policy-approver/templates/ paths=./pkg/apis/...

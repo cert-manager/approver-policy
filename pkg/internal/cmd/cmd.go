@@ -54,21 +54,27 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				LeaderElection:                true,
 				LeaderElectionID:              "policy.cert-manager.io",
 				LeaderElectionReleaseOnCancel: true,
+				LeaderElectionResourceLock:    "leases",
 				ReadinessEndpointName:         "/readyz",
 				HealthProbeBindAddress:        opts.ReadyzAddress,
 				MetricsBindAddress:            opts.MetricsAddress,
+				Port:                          opts.Webhook.Port,
+				Host:                          opts.Webhook.Host,
+				CertDir:                       opts.Webhook.CertDir,
 				Logger:                        opts.Logr.WithName("controller"),
 			})
 			if err != nil {
 				return fmt.Errorf("unable to create controller manager: %w", err)
 			}
 
+			log.Info("preparing approvers...")
 			for _, approver := range registry.Shared.Approvers() {
-				log.Info("preparing approver", "approver", approver.Name())
+				log.Info("preparing approver...", "approver", approver.Name())
 				if err := approver.Prepare(ctx, mgr); err != nil {
 					return fmt.Errorf("failed to prepare approver %q: %w", approver.Name(), err)
 				}
 			}
+			log.Info("all approvers ready...")
 
 			if err := controllers.AddControllers(ctx, controllers.Options{
 				Log:        opts.Logr.WithName("controller"),

@@ -1,0 +1,14 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "cert-manager-policy-approver.name" . }}
+  labels:
+{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["create"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "update"]
+  resourceNames: ["policy.cert-manager.io"]

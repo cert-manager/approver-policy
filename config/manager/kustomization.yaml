@@ -1,8 +1,0 @@
-resources:
-- deployment.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: policy-approver
-  newName: quay.io/jetstack/cert-manager-policy-approver
-  newTag: v0.1.0

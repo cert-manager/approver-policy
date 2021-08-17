@@ -12,13 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Use distroless as minimal base image to package the policy-approver binary
-# Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+FROM gcr.io/distroless/static@sha256:c9f9b040044cc23e1088772814532d90adadfa1b86dcba17d07cb567db18dc4e
+USER 1001
 
-WORKDIR /
-USER 65532:65532
+COPY bin/policy-approver-linux /usr/bin/cert-manager-policy-approver
 
-COPY bin/policy-approver-linux /policy-approver
-
-ENTRYPOINT ["/policy-approver"]
+ENTRYPOINT ["/usr/bin/cert-manager-policy-approver"]

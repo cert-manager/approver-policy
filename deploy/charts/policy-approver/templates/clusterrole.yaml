@@ -1,0 +1,33 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+  name: {{ include "cert-manager-policy-approver.name" . }}
+rules:
+- apiGroups: ["policy.cert-manager.io"]
+  resources: ["certificaterequestpolicies"]
+  verbs: ["list", "watch"]
+
+- apiGroups: ["policy.cert-manager.io"]
+  resources: ["certificaterequestpolicies/status"]
+  verbs: ["update"]
+
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificaterequests"]
+  verbs: ["list", "watch"]
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificaterequests/status"]
+  verbs: ["update"]
+
+- apiGroups: ["cert-manager.io"]
+  resources: ["signers"]
+  verbs: ["approve"]
+  resourceNames:
+  {{- range .Values.app.approveSignerNames }}
+   - "{{ . }}"
+  {{- end  }}
+
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
