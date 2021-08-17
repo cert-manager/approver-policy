@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
