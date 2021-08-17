@@ -34,7 +34,7 @@ import (
 	"github.com/cert-manager/policy-approver/pkg/internal/test/gen"
 )
 
-func TestEvaluateCertificateRequest(t *testing.T) {
+func Test_EvaluateCertificateRequest(t *testing.T) {
 	var ecdaKeyAlg = cmapi.ECDSAKeyAlgorithm
 
 	tests := map[string]struct {

@@ -23,11 +23,13 @@ import (
 	"time"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
 )
 
-func TestStringSlice(t *testing.T) {
+func Test_StringSlice(t *testing.T) {
 	tests := map[string]struct {
 		policy  *[]string
 		request []string
@@ -204,7 +206,7 @@ func TestStringSlice(t *testing.T) {
 	}
 }
 
-func TestIPSlice(t *testing.T) {
+func Test_IPSlice(t *testing.T) {
 	tests := map[string]struct {
 		policy  *[]string
 		request []net.IP
@@ -281,7 +283,7 @@ func TestIPSlice(t *testing.T) {
 	}
 }
 
-func TestMinMax(t *testing.T) {
+func Test_MinMax(t *testing.T) {
 	tests := map[string]struct {
 		policy  *int
 		request int
@@ -301,19 +303,19 @@ func TestMinMax(t *testing.T) {
 			expMaxErr: false,
 		},
 		"if policy is the same as request, should not error": {
-			policy:    intPtr(1),
+			policy:    pointer.Int(1),
 			request:   1,
 			expMinErr: false,
 			expMaxErr: false,
 		},
 		"if policy is larger than request, min should error, max should not error": {
-			policy:    intPtr(2),
+			policy:    pointer.Int(2),
 			request:   1,
 			expMinErr: true,
 			expMaxErr: false,
 		},
 		"if policy is smaller than request, min should not error, max should error": {
-			policy:    intPtr(1),
+			policy:    pointer.Int(1),
 			request:   2,
 			expMinErr: false,
 			expMaxErr: true,
@@ -385,6 +387,48 @@ func TestMinMax(t *testing.T) {
 	}
 }
 
-func intPtr(i int) *int {
-	return &i
+func Test_Bool(t *testing.T) {
+	tests := map[string]struct {
+		policy  *bool
+		request bool
+		expErr  bool
+	}{
+		"if policy is nil and request is false, return nil": {
+			policy:  nil,
+			request: false,
+			expErr:  false,
+		},
+		"if policy is nil and request is true, return error": {
+			policy:  nil,
+			request: true,
+			expErr:  true,
+		},
+		"if policy is false and request is false, return nil ": {
+			policy:  pointer.Bool(false),
+			request: false,
+			expErr:  false,
+		},
+		"if policy is false and request is true, return error": {
+			policy:  pointer.Bool(false),
+			request: true,
+			expErr:  true,
+		},
+		"if policy is true and request is true, return nil": {
+			policy:  pointer.Bool(true),
+			request: true,
+			expErr:  false,
+		},
+		"if policy is true and request is false, return error": {
+			policy:  pointer.Bool(true),
+			request: false,
+			expErr:  true,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			var el field.ErrorList
+			Bool(&el, field.NewPath(""), test.policy, test.request)
+			assert.Equalf(t, test.expErr, len(el) != 0, "%v", el)
+		})
+	}
 }

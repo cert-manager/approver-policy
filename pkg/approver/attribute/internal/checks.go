@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strconv"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -153,18 +154,18 @@ func MaxSize(el *field.ErrorList, path *field.Path, policy *int, request int) {
 	}
 }
 
-// Bool will compare the request is the same as policy
+// Bool will compare the request is the same as policy.
+// If the policy is nil, then the request must be false.
 func Bool(el *field.ErrorList, path *field.Path, policy *bool, request bool) {
-	// Allow all
-	if policy == nil {
-		return
-	}
-
-	if request != *policy {
-		*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%t", *policy)))
+	if policy == nil && request {
+		*el = append(*el, field.Invalid(path, request, "false"))
+	} else if policy != nil && *policy != request {
+		*el = append(*el, field.Invalid(path, request, strconv.FormatBool(*policy)))
 	}
 }
 
+// KeyAlgorithm will compare the request PrivateKeyAlgorithm is the same as the
+// policy.
 func KeyAlgorithm(el *field.ErrorList, path *field.Path, policy *cmapi.PrivateKeyAlgorithm, request cmapi.PrivateKeyAlgorithm) {
 	// Allow all
 	if policy == nil {
