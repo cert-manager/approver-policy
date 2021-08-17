@@ -70,15 +70,3 @@ type Interface interface {
 	//   re-evaluation at a later time.
 	Review(ctx context.Context, cr *cmapi.CertificateRequest) (ReviewResponse, error)
 }
-
-// policyMessage holds the name of the CertificateRequestPolicy and aggregated
-// message when running the evaluators against the CertificateRequest.
-type policyMessage struct {
-	// name is the name of the CertificateRequestPolicy which resulted gave the
-	// response by the evaluators.
-	name string
-
-	// message is the aggregated messages returned from the evaluators for this
-	// policy.
-	message string
-}
