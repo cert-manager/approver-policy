@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
@@ -60,4 +61,9 @@ func (a attribute) Prepare(_ context.Context, _ manager.Manager) error {
 		}
 	}
 	return nil
+}
+
+// Ready always returns ready.
+func (a attribute) Ready(_ context.Context, _ *cmpapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
