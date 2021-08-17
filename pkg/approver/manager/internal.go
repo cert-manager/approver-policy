@@ -25,7 +25,7 @@ import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/approver/manager/predicate"
 )
@@ -74,20 +74,19 @@ func New(lister client.Reader, client client.Client, evaluators []approver.Evalu
 // approved. All evaluators will be called with CertificateRequestPolicys that
 // have passed all of the predicates.
 func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (ReviewResponse, error) {
-	policyList := new(policyapi.CertificateRequestPolicyList)
-	if err := m.lister.List(ctx, policyList); err != nil {
+	crps := new(cmpapi.CertificateRequestPolicyList)
+	if err := m.lister.List(ctx, crps); err != nil {
 		return ReviewResponse{}, err
 	}
 
 	// If no CertificateRequestPolicies exist in the cluster, return
-	// ResultUnprocessed. A CertificateRequest may be re-evaluated at a later
-	// time if a CertificateRequestPolicy is created.
-	if len(policyList.Items) == 0 {
+	// ResultUnprocessed.
+	if len(crps.Items) == 0 {
 		return ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies exist"}, nil
 	}
 
 	var (
-		policies = policyList.Items
+		policies = crps.Items
 		err      error
 	)
 	for _, predicate := range m.predicates {
@@ -97,7 +96,7 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 		}
 	}
 
-	// If no policies are appropriate, return ResultUnprocessed.
+	// If no policies are appropriate, return unprocessed.
 	if len(policies) == 0 {
 		return ReviewResponse{
 			Result:  ResultUnprocessed,
@@ -111,23 +110,21 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 
 	// Run every evaluators against ever policy which is bound to the requesting
 	// user.
-	for _, policy := range policies {
+	for _, crp := range policies {
 		var (
 			evaluatorDenied   bool
 			evaluatorMessages []string
 		)
 
 		for _, evaluator := range m.evaluators {
-			response, err := evaluator.Evaluate(ctx, &policy, cr)
+			response, err := evaluator.Evaluate(ctx, &crp, cr)
 			if err != nil {
 				// if a single evaluator errors, then return early without trying
 				// others.
 				return ReviewResponse{}, err
 			}
 
-			if len(response.Message) > 0 {
-				evaluatorMessages = append(evaluatorMessages, response.Message)
-			}
+			evaluatorMessages = append(evaluatorMessages, response.Message)
 
 			// evaluatorDenied will be set to true if any evaluator denies. We don't
 			// break early so that we can capture the responses from _all_
@@ -141,12 +138,12 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 		if !evaluatorDenied {
 			return ReviewResponse{
 				Result:  ResultApproved,
-				Message: fmt.Sprintf("Approved by CertificateRequestPolicy: %q", policy.Name),
+				Message: fmt.Sprintf("Approved by CertificateRequestPolicy: %q", crp.Name),
 			}, nil
 		}
 
 		// Collect evaluator messages that were executed for this policy.
-		policyMessages = append(policyMessages, policyMessage{name: policy.Name, message: strings.Join(evaluatorMessages, ", ")})
+		policyMessages = append(policyMessages, policyMessage{name: crp.Name, message: strings.Join(evaluatorMessages, ", ")})
 	}
 
 	// Sort messages by policy name and build message string.
