@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"context"
@@ -43,7 +43,7 @@ import (
 	fakemanager "github.com/cert-manager/policy-approver/pkg/approver/manager/fake"
 )
 
-func Test_Reconcile(t *testing.T) {
+func Test_certificaterequests_Reconcile(t *testing.T) {
 	const (
 		requestName             = "test-bundle"
 		requestGeneration int64 = 2
@@ -179,7 +179,7 @@ func Test_Reconcile(t *testing.T) {
 
 			fakerecorder := record.NewFakeRecorder(1)
 
-			c := &controller{
+			c := &certificaterequests{
 				client:   fakeclient,
 				lister:   fakeclient,
 				recorder: fakerecorder,
