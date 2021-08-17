@@ -22,11 +22,10 @@ import (
 
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
-	"github.com/cert-manager/policy-approver/pkg/internal/controller"
+	"github.com/cert-manager/policy-approver/pkg/internal/controllers"
 	"github.com/cert-manager/policy-approver/pkg/internal/webhook"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
@@ -71,11 +70,12 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				}
 			}
 
-			if err := controller.AddPolicyController(ctx, mgr, controller.Options{
-				Log:        opts.Logr,
+			if err := controllers.AddControllers(ctx, controllers.Options{
+				Log:        opts.Logr.WithName("controller"),
+				Manager:    mgr,
 				Evaluators: registry.Shared.Evaluators(),
 			}); err != nil {
-				return fmt.Errorf("failed to add policy controller: %w", err)
+				return fmt.Errorf("failed to add controllers: %w", err)
 			}
 
 			webhook.Register(mgr, webhook.Options{
@@ -83,11 +83,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Webhooks: registry.Shared.Webhooks(),
 			})
 
-			if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-				return fmt.Errorf("unable to set up ready check: %w", err)
-			}
-
-			log.Info("starting policy controller")
+			log.Info("starting policy-approver...")
 			return mgr.Start(ctx)
 		},
 	}
