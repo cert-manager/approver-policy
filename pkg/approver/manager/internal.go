@@ -23,41 +23,59 @@ import (
 	"strings"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	authzv1 "k8s.io/api/authorization/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/approver/internal"
+	"github.com/cert-manager/policy-approver/pkg/approver/manager/predicate"
 )
 
-var _ Interface = &subjectaccessreview{}
+var _ Interface = &manager{}
 
-// subjectaccessreview is a manager that calls evaluators with
-// CertificateRequestPolicys that have been RBAC bound to the user who appears
-// in the passed CertificateRequest to Evaluate.
-type subjectaccessreview struct {
-	client client.Client
-
+// manager is an implementation of an Approver Manager. It will manage
+// filtering CertificiateRequestPolicies based on predicates, and evaluating
+// CertificateRequests using the registered evaluators.
+type manager struct {
+	lister     client.Reader
+	predicates []predicate.Predicate
 	evaluators []approver.Evaluator
 }
 
-// NewSubjectAccessReview constructs a new approver Manager which evaluates
-// whether CertificateRequests should be approved or denied, managing
-// registered evaluators.
-func NewSubjectAccessReview(client client.Client, evaluators []approver.Evaluator) *subjectaccessreview {
-	return &subjectaccessreview{
-		client:     client,
+// policyMessage holds the name of the CertificateRequestPolicy and aggregated
+// message when running the evaluators against the CertificateRequest.
+type policyMessage struct {
+	// name is the name of the CertificateRequestPolicy which resulted gave the
+	// response by the evaluators.
+	name string
+
+	// message is the aggregated messages returned from the evaluators for this
+	// policy.
+	message string
+}
+
+// New constructs a new approver Manager that evaluates whether
+// CertificateRequests should be approved or denied, managing registered
+// evaluators.
+// CertificateRequestPolicies will be filtered on Review for evaluation with the predicates:
+// - CertificateRequestPolicy is ready
+// - CertificateRequestPolicy IssuerRefSelector matches the CertificateRequest
+//   IssuerRef
+// - CertificateRequestPolicy is bound to the user that appears in the
+//   CertificateRequest
+func New(lister client.Reader, client client.Client, evaluators []approver.Evaluator) Interface {
+	return &manager{
+		lister:     lister,
+		predicates: []predicate.Predicate{predicate.Ready, predicate.IssuerRefSelector, predicate.RBACBound(client)},
 		evaluators: evaluators,
 	}
 }
 
 // Review will evaluate whether the incoming CertificateRequest should be
 // approved. All evaluators will be called with CertificateRequestPolicys that
-// have been RBAC bound to the user included in the CertificateRequest.
-func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateRequest) (ReviewResponse, error) {
+// have passed all of the predicates.
+func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (ReviewResponse, error) {
 	crps := new(cmpapi.CertificateRequestPolicyList)
-	if err := s.client.List(ctx, crps); err != nil {
+	if err := m.lister.List(ctx, crps); err != nil {
 		return ReviewResponse{}, err
 	}
 
@@ -67,10 +85,15 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 		return ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies exist"}, nil
 	}
 
-	policies := issuerRefSelector(cr, crps.Items)
-	policies, err := s.boundPolicies(ctx, cr, policies)
-	if err != nil {
-		return ReviewResponse{}, fmt.Errorf("failed to determine bound policies: %w", err)
+	var (
+		policies = crps.Items
+		err      error
+	)
+	for _, predicate := range m.predicates {
+		policies, err = predicate(ctx, cr, policies)
+		if err != nil {
+			return ReviewResponse{}, fmt.Errorf("failed to perform predicate on policies: %w", err)
+		}
 	}
 
 	// If no policies are appropriate, return unprocessed.
@@ -93,7 +116,7 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 			evaluatorMessages []string
 		)
 
-		for _, evaluator := range s.evaluators {
+		for _, evaluator := range m.evaluators {
 			response, err := evaluator.Evaluate(ctx, &crp, cr)
 			if err != nil {
 				// if a single evaluator errors, then return early without trying
@@ -138,70 +161,4 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 		Result:  ResultDenied,
 		Message: fmt.Sprintf("No policy approved this request: %s", strings.Join(messages, " ")),
 	}, nil
-}
-
-// issuerRefSelector returns the subset of given policies that have an
-// `spec.issuerRefSelector` matching the `spec.issuerRef` in the request.
-// issuerRefSelector will match on strings using wilcards "*". Empty selector
-// is equivalent to "*" and will match on anything.
-func issuerRefSelector(cr *cmapi.CertificateRequest, allPolicies []cmpapi.CertificateRequestPolicy) []cmpapi.CertificateRequestPolicy {
-	var matchingPolicies []cmpapi.CertificateRequestPolicy
-
-	for _, crp := range allPolicies {
-		issRefSel := crp.Spec.IssuerRefSelector
-		issRef := cr.Spec.IssuerRef
-
-		if issRefSel.Name != nil && !internal.WildcardMatchs(*issRefSel.Name, issRef.Name) {
-			continue
-		}
-		if issRefSel.Kind != nil && !internal.WildcardMatchs(*issRefSel.Kind, issRef.Kind) {
-			continue
-		}
-		if issRefSel.Group != nil && !internal.WildcardMatchs(*issRefSel.Group, issRef.Group) {
-			continue
-		}
-		matchingPolicies = append(matchingPolicies, crp)
-	}
-
-	return matchingPolicies
-}
-
-// boundPolicies returns the subset of given policies which are RBAC bound to
-// the user defined in the request.
-func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.CertificateRequest, allPolicies []cmpapi.CertificateRequestPolicy) ([]cmpapi.CertificateRequestPolicy, error) {
-	extra := make(map[string]authzv1.ExtraValue)
-	for k, v := range cr.Spec.Extra {
-		extra[k] = v
-	}
-
-	var boundPolicies []cmpapi.CertificateRequestPolicy
-	for _, crp := range allPolicies {
-		// Perform subject access review for this CertificateRequestPolicy
-		rev := &authzv1.SubjectAccessReview{
-			Spec: authzv1.SubjectAccessReviewSpec{
-				User:   cr.Spec.Username,
-				Groups: cr.Spec.Groups,
-				Extra:  extra,
-				UID:    cr.Spec.UID,
-
-				ResourceAttributes: &authzv1.ResourceAttributes{
-					Group:     "policy.cert-manager.io",
-					Resource:  "certificaterequestpolicies",
-					Name:      crp.Name,
-					Namespace: cr.Namespace,
-					Verb:      "use",
-				},
-			},
-		}
-		if err := s.client.Create(ctx, rev); err != nil {
-			return nil, fmt.Errorf("failed to create subjectaccessreview: %w", err)
-		}
-
-		// If the user is bound to this policy then append.
-		if rev.Status.Allowed {
-			boundPolicies = append(boundPolicies, crp)
-		}
-	}
-
-	return boundPolicies, nil
 }
