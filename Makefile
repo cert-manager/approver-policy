@@ -39,16 +39,12 @@ build: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
 
 .PHONY: fmt
-fmt: ## Run go fmt against code.
+fmt:
 	go fmt ./...
 
 .PHONY: vet
-vet: ## Run go vet against code.
+vet:
 	go vet ./...
-
-.PHONY: lint
-lint: ## Run linters against code.
-	./hack/verify-boilerplate.sh
 
 .PHONY: test
 test: depend lint vet ## test policy-approver
