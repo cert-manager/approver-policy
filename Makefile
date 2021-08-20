@@ -48,7 +48,7 @@ lint: ## Run linters against code.
 
 .PHONY: test
 test: depend lint vet ## test policy-approver
-	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v ./cmd/... ./apis/... ./internal/...
+	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v ./cmd/... ./pkg/...
 
 .PHONY: generate
 generate: depend ## generate code

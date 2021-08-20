@@ -17,6 +17,7 @@ limitations under the License.
 package attribute
 
 import (
+	"context"
 	"crypto/x509"
 	"net"
 	"net/url"
@@ -31,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 func TestEvaluateCertificateRequest(t *testing.T) {
@@ -116,7 +117,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, message, err := evaluateBaseChecks(&cmpapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
+			_, message, err := attribute{}.Evaluate(context.TODO(), &cmpapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
 			assert.NoError(t, err)
 
 			expectedMessage := ""

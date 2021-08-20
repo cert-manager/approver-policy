@@ -27,19 +27,16 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	ctrlmgr "sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/cert-manager/policy-approver/internal/pkg/evaluator"
+	"github.com/cert-manager/policy-approver/pkg/approver/manager"
+	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
-// Options hold options for the Policy controller.
+// Options hold options for the policy-approver controller.
 type Options struct {
 	// Log is the Policy controller logger.
 	Log logr.Logger
-
-	// Manager is the policy manager which is responsible for evaluating
-	// CertificateRequests against relevant policies using registered evaluators.
-	Manager *evaluator.Manager
 }
 
 // controller is a controller-runtime Controller which evaluates whether
@@ -60,58 +57,64 @@ type controller struct {
 	// objects.
 	lister client.Reader
 
-	// manager is a evaluator manager responsible for evaluating whether a
-	// CertificateRequest should be approved or denied
-	manager *evaluator.Manager
+	// manager is a Manager that is responsible for reviewing whether a
+	// CertificateRequest should be approved or denied. This manager is expected
+	// to manage all approvers which have been registered and active for this
+	// controller.
+	manager manager.Interface
 }
 
 // AddPolicyController will register the Policy controller with the
 // controller-runtime Manager.
-func AddPolicyController(mgr manager.Manager, opts Options) error {
+func AddPolicyController(mgr ctrlmgr.Manager, opts Options) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(new(cmapi.CertificateRequest)).
 		Complete(&controller{
-			log:      opts.Log.WithName("controller"),
+			log:      opts.Log.WithName("controller").WithName("policy"),
 			recorder: mgr.GetEventRecorderFor("policy.cert-manager.io"),
 			client:   mgr.GetClient(),
 			lister:   mgr.GetCache(),
-			manager:  opts.Manager,
+			manager:  manager.NewSubjectAccessReview(mgr.GetClient(), registry.Shared.Evaluators()),
 		})
 }
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the CertificateRequestPolicy object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
+// Reconcile is the top level function for reconciling over synced
+// CertificateRequests.
+// Reconcile will be called whenever a CertificateRequest event happens. This
+// func will call the evaluator manager to evaluate whether a
+// CertificateRequest should be approved, denied, or left alone.
 func (c *controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := c.log.WithValues("certificaterequestpolicy", req.NamespacedName)
-	log.Info("reconciling")
+	log := c.log.WithValues("certificaterequest", req.NamespacedName.Name)
+	log.V(2).Info("syncing certificaterequest")
 
 	cr := new(cmapi.CertificateRequest)
 	if err := c.lister.Get(ctx, req.NamespacedName, cr); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// If the CertificateRequest has already been approved or denied, we
+	// can ignore.
 	if apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr) {
+		log.V(2).Info("request has already been approved or denied, ignoring")
 		return ctrl.Result{}, nil
 	}
 
-	ok, reason, err := c.manager.Evaluate(ctx, cr)
+	// Pass nil here as the policy object since the controller evaluator is
+	// expected to handle gathering the applicable evaluators for this request.
+	ok, message, err := c.manager.Review(ctx, cr)
 	if err != nil {
+		// If an error occurs when evaluating, we fire an event on the
+		// CertificateRequest and return err to try again.
+		c.recorder.Eventf(cr, corev1.EventTypeWarning, "EvaluationError", "%s: %s", message, err)
 		return ctrl.Result{}, err
 	}
 
 	if ok {
-		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", reason.String())
-		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "policy.cert-manager.io", reason.String())
+		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", message)
+		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "policy.cert-manager.io", message)
 	} else {
-		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", reason.String())
-		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", reason.String())
+		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", message)
+		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", message)
 	}
 
 	if err := c.client.Status().Update(ctx, cr); err != nil {

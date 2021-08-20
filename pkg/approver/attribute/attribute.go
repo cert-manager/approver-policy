@@ -17,6 +17,7 @@ limitations under the License.
 package attribute
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"errors"
@@ -30,15 +31,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/internal/pkg/attribute/checks"
-	"github.com/cert-manager/policy-approver/registry"
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/approver"
+	"github.com/cert-manager/policy-approver/pkg/approver/attribute/internal"
+	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
-// Load the attribute evaluator checks.
-func init() {
-	registry.Load(evaluateBaseChecks)
-}
+var _ approver.Interface = attribute{}
+
+type attribute struct{}
 
 type checkStrategy int
 
@@ -66,11 +67,11 @@ type check struct {
 	strategy checkStrategy
 }
 
-// evaluateBaseChecks evaluates whether the given CertificateRequest passes
-// the 'chain checks' of the CertificateRequestPolicy. If this request is
-// denied by these checks then a string explanation is returned.
-// An error signals that the policy couldn't be evaluated to completion.
-func evaluateBaseChecks(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+// Evaluate evaluates whether the given CertificateRequest passes the 'chain
+// checks' of the CertificateRequestPolicy. If this request is denied by these
+// checks then a string explanation is returned.  An error signals that the
+// policy couldn't be evaluated to completion.
+func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
 		return false, "", err
@@ -84,29 +85,29 @@ func evaluateBaseChecks(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.Certi
 	for _, check := range chain {
 		switch check.strategy {
 		case checkString:
-			checks.String(&el, path.Child(check.path), check.policy.(*string), check.request.(string))
+			internal.String(&el, path.Child(check.path), check.policy.(*string), check.request.(string))
 		case checkStringSlice:
-			checks.StringSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]string))
+			internal.StringSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]string))
 		case checkBool:
-			checks.Bool(&el, path.Child(check.path), check.policy.(*bool), check.request.(bool))
+			internal.Bool(&el, path.Child(check.path), check.policy.(*bool), check.request.(bool))
 		case checkIPs:
-			checks.IPSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]net.IP))
+			internal.IPSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]net.IP))
 		case checkURLs:
-			checks.URLSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]*url.URL))
+			internal.URLSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]*url.URL))
 		case checkUsages:
-			checks.KeyUsageSlice(&el, path.Child(check.path), check.policy.(*[]cmapi.KeyUsage), check.request.([]cmapi.KeyUsage))
+			internal.KeyUsageSlice(&el, path.Child(check.path), check.policy.(*[]cmapi.KeyUsage), check.request.([]cmapi.KeyUsage))
 		case checkObjRef:
-			checks.ObjectReference(&el, path.Child(check.path), check.policy.(*[]cmmeta.ObjectReference), check.request.(cmmeta.ObjectReference))
+			internal.ObjectReference(&el, path.Child(check.path), check.policy.(*[]cmmeta.ObjectReference), check.request.(cmmeta.ObjectReference))
 		case checkMinDur:
-			checks.MinDuration(&el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
+			internal.MinDuration(&el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
 		case checkMaxDur:
-			checks.MaxDuration(&el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
+			internal.MaxDuration(&el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
 		case checkMinSize:
-			checks.MinSize(&el, path.Child(check.path), check.policy.(*int), check.request.(int))
+			internal.MinSize(&el, path.Child(check.path), check.policy.(*int), check.request.(int))
 		case checkMaxSize:
-			checks.MaxSize(&el, path.Child(check.path), check.policy.(*int), check.request.(int))
+			internal.MaxSize(&el, path.Child(check.path), check.policy.(*int), check.request.(int))
 		case checkKeyAlg:
-			checks.KeyAlgorithm(&el, path.Child(check.path), check.policy.(*cmapi.PrivateKeyAlgorithm), check.request.(cmapi.PrivateKeyAlgorithm))
+			internal.KeyAlgorithm(&el, path.Child(check.path), check.policy.(*cmapi.PrivateKeyAlgorithm), check.request.(cmapi.PrivateKeyAlgorithm))
 		default:
 			return false, "", fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
 		}
@@ -201,4 +202,9 @@ func parsePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 	default:
 		return "", -1, parseKeyError
 	}
+}
+
+// Load the attribute evaluator checks.
+func init() {
+	registry.Shared.Store(attribute{})
 }

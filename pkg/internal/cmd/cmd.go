@@ -24,10 +24,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
-	cmpapi "github.com/cert-manager/policy-approver/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/internal/cmd/options"
-	"github.com/cert-manager/policy-approver/internal/pkg/controller"
-	"github.com/cert-manager/policy-approver/internal/pkg/evaluator"
+	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
+	"github.com/cert-manager/policy-approver/pkg/internal/controller"
 )
 
 const (
@@ -61,8 +60,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			}
 
 			if err := controller.AddPolicyController(mgr, controller.Options{
-				Log:     opts.Logr,
-				Manager: evaluator.NewManager(mgr.GetClient(), opts.ApproveWhenNoPolicies),
+				Log: opts.Logr,
 			}); err != nil {
 				return fmt.Errorf("failed to add policy controller: %w", err)
 			}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package app
+package cmd
 
 import (
 	"fmt"
@@ -22,9 +22,12 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/cert-manager/policy-approver/internal/cmd"
+	_ "github.com/cert-manager/policy-approver/pkg/approver/attribute"
+	"github.com/cert-manager/policy-approver/pkg/internal/cmd"
 )
 
+// ExecutePolicyApprover executes the main policy-approver program making use
+// of all Approvers that have been registered.
 func ExecutePolicyApprover() {
 	cmd := cmd.NewCommand(ctrl.SetupSignalHandler())
 	if err := cmd.Execute(); err != nil {

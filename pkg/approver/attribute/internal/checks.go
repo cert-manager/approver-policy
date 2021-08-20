@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package checks
+package internal
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	"github.com/cert-manager/policy-approver/internal/pkg/attribute/checks/wildcard"
+	"github.com/cert-manager/policy-approver/pkg/approver/attribute/internal/wildcard"
 )
 
 // String will match a policy string against a given string value, using
