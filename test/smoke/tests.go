@@ -36,7 +36,7 @@ import (
 )
 
 var _ = Describe("Smoke", func() {
-	It("should create a CertificateRequestPolicy, RBAC bind to all users, deny and approve a request", func() {
+	It("should create a CertificateRequestPolicy, RBAC bind to all users, deny and approver a request", func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -82,7 +82,7 @@ var _ = Describe("Smoke", func() {
 			Expect(cl.Get(ctx, client.ObjectKey{Name: policy.Name}, &policy)).NotTo(HaveOccurred())
 			for _, condition := range policy.Status.Conditions {
 				if condition.Type == policyapi.CertificateRequestPolicyConditionReady {
-					return condition.Status == corev1.ConditionTrue
+					return condition.Status == corev1.ConditionTrue && condition.ObservedGeneration == policy.Generation
 				}
 			}
 			return false

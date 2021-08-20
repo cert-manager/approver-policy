@@ -30,22 +30,6 @@ clean: ## clean up created files
 		$(BINDIR) \
 		_artifacts
 
-.PHONY: fmt
-fmt: ## Run go fmt against code.
-	go fmt ./...
-
-.PHONY: vet
-vet: ## Run go vet against code.
-	go vet ./...
-
-.PHONY: lint
-lint: ## Run linters against code.
-	./hack/verify-boilerplate.sh
-
-.PHONY: test
-test: depend lint vet ## test policy-approver
-	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
-
 .PHONY: generate
 generate: depend ## generate code
 	./hack/update-codegen.sh
@@ -53,6 +37,22 @@ generate: depend ## generate code
 .PHONY: build
 build: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
+
+.PHONY: lint
+lint: fmt vet ## Run linters against code.
+	./hack/verify-boilerplate.sh
+
+.PHONY: fmt
+fmt:
+	go fmt ./...
+
+.PHONY: vet
+vet:
+	go vet ./...
+
+.PHONY: test
+test: depend lint vet ## test policy-approver
+	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
 
 .PHONY: verify
 verify: test build ## Verify repo.
@@ -69,16 +69,6 @@ demo: depend ## create cluster and deploy policy-approver
 .PHONY: smoke
 smoke: demo ## create cluster, deploy policy-approver, run smoke tests
 	REPO_ROOT=$(shell pwd) ./hack/ci/run-smoke-test.sh
-
-.PHONY: deploy-cert-manager
-deploy-cert-manager: depend ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
-	$(BINDIR)/helm repo add jetstack https://charts.jetstack.io --force-update
-	$(BINDIR)/helm upgrade --wait -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
-
-.PHONY: deploy
-deploy: depend ## Install CRDs into the K8s cluster
-	$(BINDIR)/kubectl apply -k config/crd
-	$(BINDIR)/kubectl apply -k config/default
 
 .PHONY: depend
 depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
