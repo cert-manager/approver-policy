@@ -55,7 +55,7 @@ type Options struct {
 	// which will be served on the HTTP path '/readyz'.
 	ReadyzAddress string
 
-	// RestConfig is the shared based rest config to connect to the Kubernetes
+	// RestConfig is the shared base rest config to connect to the Kubernetes
 	// API.
 	RestConfig *rest.Config
 

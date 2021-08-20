@@ -85,7 +85,7 @@ func Test_Validate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			response, err := attribute{[]string{"plugin-2", "plugin-3"}}.Validate(nil, test.policy)
+			response, err := Attribute{[]string{"plugin-2", "plugin-3"}}.Validate(nil, test.policy)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expResponse, response)
 		})

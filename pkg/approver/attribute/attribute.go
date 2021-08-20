@@ -29,31 +29,31 @@ import (
 
 // Load the attribute evaluator checks.
 func init() {
-	registry.Shared.Store(attribute{})
+	registry.Shared.Store(Attribute{})
 }
 
-var _ approver.Interface = attribute{}
+var _ approver.Interface = Attribute{}
 
-// attribute is the "default" Approver that is responsible for the base fields
+// Attribute is the "default" Approver that is responsible for the base fields
 // on the CertificateRequestPolicy. It is expected that attribute must _always_
 // be registered for all policy-approvers.
-type attribute struct {
+type Attribute struct {
 	registeredPlugins []string
 }
 
 // Name of Approver is "attribute"
-func (a attribute) Name() string {
+func (a Attribute) Name() string {
 	return "attribute"
 }
 
 // RegisterFlags is a no-op, attribute doesn't need any flags.
-func (a attribute) RegisterFlags(_ *pflag.FlagSet) {
+func (a Attribute) RegisterFlags(_ *pflag.FlagSet) {
 	return
 }
 
 // Prepare will collect the list of registered plugins to be used in
 // validation.
-func (a attribute) Prepare(_ context.Context, _ manager.Manager) error {
+func (a Attribute) Prepare(_ context.Context, _ manager.Manager) error {
 	for _, approver := range registry.Shared.Approvers() {
 		// Only track plugins, not the attribute approver itself.
 		if approver.Name() != a.Name() {

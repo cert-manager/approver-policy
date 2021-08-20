@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	logf "github.com/jetstack/cert-manager/pkg/logs"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -28,6 +29,7 @@ import (
 	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/pkg/internal/controllers"
 	"github.com/cert-manager/policy-approver/pkg/internal/webhook"
+	"github.com/cert-manager/policy-approver/pkg/internal/webhook/bootstrap"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
@@ -47,6 +49,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			return opts.Complete()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			logf.Log = opts.Logr.WithName("apiutil")
 			log := opts.Logr.WithName("main")
 
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{

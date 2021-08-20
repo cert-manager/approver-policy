@@ -56,6 +56,7 @@ spec:
       volumes:
       - name: webhook-tls
         secret:
+          optional: true
           defaultMode: 420
           secretName: {{ include "cert-manager-policy-approver.name" . }}-tls
       {{- if .Values.volumes }}
