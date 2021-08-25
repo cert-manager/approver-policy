@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 func init() {
@@ -50,7 +50,7 @@ func init() {
 
 	// Since we are going to be creating CRDs in the API server, we need to
 	// register these types.
-	utilruntime.Must(extapi.AddToScheme(cmpapi.GlobalScheme))
+	utilruntime.Must(extapi.AddToScheme(policyapi.GlobalScheme))
 }
 
 // Environment is a struct for holding the active and running
@@ -111,7 +111,7 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 		}
 	})
 
-	t.Log("writing cert-manager webhook")
+	t.Log("writing cert-manager webhook kubeconfig")
 	kubeconifgPath := writeKubeconfig(t, env.Config, "cert-manager-webhook-kubeconfig.yaml")
 	t.Logf("cert-manager webhook kubeconfig written to %q", kubeconifgPath)
 
@@ -131,7 +131,7 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 	}
 	patchCMConversionCRDs(crds, webhookOpts.URL, webhookOpts.CAPEM)
 
-	adminClient, err := client.New(env.Config, client.Options{Scheme: cmpapi.GlobalScheme})
+	adminClient, err := client.New(env.Config, client.Options{Scheme: policyapi.GlobalScheme})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 	}
 
 	userClient, err := client.New(user.Config(), client.Options{
-		Scheme: cmpapi.GlobalScheme,
+		Scheme: policyapi.GlobalScheme,
 	})
 	if err != nil {
 		t.Fatal(err)

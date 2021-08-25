@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -45,7 +45,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 	}
 
 	tests := map[string]struct {
-		policy      cmpapi.CertificateRequestPolicySpec
+		policy      policyapi.CertificateRequestPolicySpec
 		request     *cmapi.CertificateRequest
 		expResponse approver.EvaluationResponse
 	}{
@@ -58,7 +58,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 					Name: "my-issuer",
 				}),
 			),
-			policy: cmpapi.CertificateRequestPolicySpec{},
+			policy: policyapi.CertificateRequestPolicySpec{},
 			expResponse: approver.EvaluationResponse{
 				Result:  approver.ResultNotDenied,
 				Message: "",
@@ -80,7 +80,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				gen.SetCertificateRequestIsCA(true),
 				gen.SetCertificateRequestDuration(&metav1.Duration{Duration: time.Hour * 100}),
 			),
-			policy: cmpapi.CertificateRequestPolicySpec{
+			policy: policyapi.CertificateRequestPolicySpec{
 				AllowedCommonName: pointer.String("not-test"),
 				AllowedIsCA:       pointer.Bool(false),
 				MinDuration: &metav1.Duration{
@@ -95,7 +95,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 				AllowedURIs: &[]string{
 					"world.hello",
 				},
-				AllowedPrivateKey: &cmpapi.PolicyPrivateKey{
+				AllowedPrivateKey: &policyapi.PolicyPrivateKey{
 					AllowedAlgorithm: &ecdaKeyAlg,
 				},
 				AllowedIssuers: &[]cmmeta.ObjectReference{
@@ -124,7 +124,7 @@ func TestEvaluateCertificateRequest(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			response, err := attribute{}.Evaluate(context.TODO(), &cmpapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
+			response, err := attribute{}.Evaluate(context.TODO(), &policyapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expResponse, response, "unexpected evaluation response")
 		})

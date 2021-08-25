@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver/manager"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
@@ -98,7 +98,7 @@ func AddPolicyController(ctx context.Context, mgr ctrlmgr.Manager, opts Options)
 		// Watch CertificateRequestPolicies. If a policy is created or updated,
 		// then we need to process all CertificateRequests that do not yet have an
 		// approved or denied condition since they may be relevant for the policy.
-		Watches(&source.Kind{Type: new(cmpapi.CertificateRequestPolicy)}, handler.EnqueueRequestsFromMapFunc(
+		Watches(&source.Kind{Type: new(policyapi.CertificateRequestPolicy)}, handler.EnqueueRequestsFromMapFunc(
 			func(obj client.Object) []reconcile.Request {
 				// If an error happens here and we do nothing, we run the risk of not
 				// processing CertificateRequests.

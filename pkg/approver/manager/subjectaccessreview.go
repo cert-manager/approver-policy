@@ -26,7 +26,7 @@ import (
 	authzv1 "k8s.io/api/authorization/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -55,18 +55,19 @@ func NewSubjectAccessReview(client client.Client, evaluators []approver.Evaluato
 // approved. All evaluators will be called with CertificateRequestPolicys that
 // have been RBAC bound to the user included in the CertificateRequest.
 func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateRequest) (ReviewResponse, error) {
-	crps := new(cmpapi.CertificateRequestPolicyList)
-	if err := s.client.List(ctx, crps); err != nil {
+	policys := new(policyapi.CertificateRequestPolicyList)
+	if err := s.client.List(ctx, policys); err != nil {
 		return ReviewResponse{}, err
 	}
 
 	// If no CertificateRequestPolicies exist in the cluster, return
-	// ResultUnprocessed.
-	if len(crps.Items) == 0 {
+	// ResultUnprocessed. A CertificateRequest may be re-evaluated at a later
+	// time if a CertificateRequestPolicy is created.
+	if len(policys.Items) == 0 {
 		return ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies exist"}, nil
 	}
 
-	boundPolicies, err := s.boundPolicies(ctx, cr, crps.Items)
+	boundPolicies, err := s.boundPolicies(ctx, cr, policys.Items)
 	if err != nil {
 		return ReviewResponse{}, fmt.Errorf("failed to determine bound policies: %w", err)
 	}
@@ -85,24 +86,26 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 
 	// Run every evaluators against ever policy which is bound to the requesting
 	// user.
-	for _, crp := range boundPolicies {
+	for _, policy := range boundPolicies {
 		var (
 			evaluatorDenied   bool
 			evaluatorMessages []string
 		)
 
 		for _, evaluator := range s.evaluators {
-			response, err := evaluator.Evaluate(ctx, &crp, cr)
+			response, err := evaluator.Evaluate(ctx, &policy, cr)
 			if err != nil {
 				// if a single evaluator errors, then return early without trying
 				// others.
 				return ReviewResponse{}, err
 			}
 
-			evaluatorMessages = append(evaluatorMessages, response.Message)
+			if len(response.Message) > 0 {
+				evaluatorMessages = append(evaluatorMessages, response.Message)
+			}
 
 			// evaluatorDenied will be set to true if any evaluator denies. We don't
-			// break early so that we can capture the responses from _all_
+			// break early so that we can capture the responses from _all_k
 			// evaluators.
 			if response.Result == approver.ResultDenied {
 				evaluatorDenied = true
@@ -113,12 +116,12 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 		if !evaluatorDenied {
 			return ReviewResponse{
 				Result:  ResultApproved,
-				Message: fmt.Sprintf("Approved by CertificateRequestPolicy: %q", crp.Name),
+				Message: fmt.Sprintf("Approved by CertificateRequestPolicy: %q", policy.Name),
 			}, nil
 		}
 
 		// Collect evaluator messages that were executed for this policy.
-		policyMessages = append(policyMessages, policyMessage{name: crp.Name, message: strings.Join(evaluatorMessages, ", ")})
+		policyMessages = append(policyMessages, policyMessage{name: policy.Name, message: strings.Join(evaluatorMessages, ", ")})
 	}
 
 	// Sort messages by policy name and build message string.
@@ -138,15 +141,15 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 	}, nil
 }
 
-func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.CertificateRequest, allPolicies []cmpapi.CertificateRequestPolicy) ([]cmpapi.CertificateRequestPolicy, error) {
+func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.CertificateRequest, allPolicies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 	var (
 		boundPolicyNames = make(map[string]struct{})
-		boundPolicies    []cmpapi.CertificateRequestPolicy
+		boundPolicies    []policyapi.CertificateRequestPolicy
 	)
 
 	// Check namespaced scope, then cluster scope
 	for _, ns := range []string{cr.Namespace, ""} {
-		for _, crp := range allPolicies {
+		for _, policy := range allPolicies {
 
 			extra := make(map[string]authzv1.ExtraValue)
 			for k, v := range cr.Spec.Extra {
@@ -154,7 +157,7 @@ func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.Certi
 			}
 
 			// Don't return the same CertificateRequestPolicy more than once
-			if _, ok := boundPolicyNames[crp.Name]; ok {
+			if _, ok := boundPolicyNames[policy.Name]; ok {
 				continue
 			}
 
@@ -169,7 +172,7 @@ func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.Certi
 					ResourceAttributes: &authzv1.ResourceAttributes{
 						Group:     "policy.cert-manager.io",
 						Resource:  "certificaterequestpolicies",
-						Name:      crp.Name,
+						Name:      policy.Name,
 						Namespace: ns,
 						Verb:      "use",
 					},
@@ -181,8 +184,8 @@ func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.Certi
 
 			// If the user is bound to this policy then append.
 			if rev.Status.Allowed {
-				boundPolicyNames[crp.Name] = struct{}{}
-				boundPolicies = append(boundPolicies, crp)
+				boundPolicyNames[policy.Name] = struct{}{}
+				boundPolicies = append(boundPolicies, policy)
 			}
 		}
 	}

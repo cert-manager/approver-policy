@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver/manager"
 	fakemanager "github.com/cert-manager/policy-approver/pkg/approver/manager/fake"
 )
@@ -173,7 +173,7 @@ func Test_Reconcile(t *testing.T) {
 			apiutil.Clock = fixedclock
 
 			fakeclient := fakeclient.NewClientBuilder().
-				WithScheme(cmpapi.GlobalScheme).
+				WithScheme(policyapi.GlobalScheme).
 				WithRuntimeObjects(test.existingObjects...).
 				Build()
 

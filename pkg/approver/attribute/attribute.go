@@ -31,7 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/approver/attribute/internal"
 	"github.com/cert-manager/policy-approver/pkg/registry"
@@ -77,7 +77,7 @@ type check struct {
 // If this request is denied by these checks then a string explanation is
 // returned.
 // An error signals that the policy couldn't be evaluated to completion.
-func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+func (b attribute) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
 		return approver.EvaluationResponse{}, err
@@ -128,7 +128,7 @@ func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequest
 	return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
 }
 
-func buildChecks(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
+func buildChecks(policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
 	// decode CSR from CertificateRequest
 	csr, err := utilpki.DecodeX509CertificateRequestBytes(cr.Spec.Request)
 	if err != nil {

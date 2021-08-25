@@ -14,6 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// All Approvers include a single Evaluator. An Evaluator is responsible for
+// making decisions on whether a CertificateRequest violates a
+// CertificateRequestPolicy. An Evaluator will either determine the
+// CertificateRequest as Denied, or NotDenied.
+
 package approver
 
 import (
@@ -21,7 +26,7 @@ import (
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 // EvaluationResult is the result of an evaluator evaluating a
@@ -63,5 +68,5 @@ type Evaluator interface {
 	// An error should only be returned if there was an error in the evaluator
 	// attempting to evaluate the request over the policy itself. A policy
 	// manager may re-evaluate an evaluation if an error is returned.
-	Evaluate(context.Context, *cmpapi.CertificateRequestPolicy, *cmapi.CertificateRequest) (EvaluationResponse, error)
+	Evaluate(context.Context, *policyapi.CertificateRequestPolicy, *cmapi.CertificateRequest) (EvaluationResponse, error)
 }

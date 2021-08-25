@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	_ "github.com/cert-manager/policy-approver/pkg/approver/attribute"
 	"github.com/cert-manager/policy-approver/pkg/internal/controller"
 )
@@ -68,7 +68,7 @@ var _ = Context("Policy", func() {
 		By("Created Policy Namespace: " + namespace.Name)
 
 		mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
-			Scheme:                        cmpapi.GlobalScheme,
+			Scheme:                        policyapi.GlobalScheme,
 			LeaderElection:                true,
 			MetricsBindAddress:            "0",
 			LeaderElectionNamespace:       namespace.Name,
@@ -98,11 +98,11 @@ var _ = Context("Policy", func() {
 		Expect(env.AdminClient.Delete(ctx, &namespace)).ToNot(HaveOccurred())
 
 		By("deleting all policies")
-		var polList cmpapi.CertificateRequestPolicyList
+		var polList policyapi.CertificateRequestPolicyList
 		Expect(env.AdminClient.List(ctx, &polList)).ToNot(HaveOccurred())
 
 		if len(polList.Items) > 0 {
-			Expect(env.AdminClient.DeleteAllOf(ctx, new(cmpapi.CertificateRequestPolicy))).ToNot(HaveOccurred())
+			Expect(env.AdminClient.DeleteAllOf(ctx, new(policyapi.CertificateRequestPolicy))).ToNot(HaveOccurred())
 		}
 
 		By("Cleaning up RBAC")
@@ -167,11 +167,11 @@ var _ = Context("Policy", func() {
 		))
 		Expect(err).ToNot(HaveOccurred())
 
-		err = env.AdminClient.Create(ctx, &cmpapi.CertificateRequestPolicy{
+		err = env.AdminClient.Create(ctx, &policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: cmpapi.CertificateRequestPolicySpec{},
+			Spec: policyapi.CertificateRequestPolicySpec{},
 		})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -181,11 +181,11 @@ var _ = Context("Policy", func() {
 	It("if 'allow-all' policy exists and is bound, all requests should be approved", func() {
 		bindAllToPolicy(ctx, env.AdminClient, "allow-all")
 
-		err := env.AdminClient.Create(ctx, &cmpapi.CertificateRequestPolicy{
+		err := env.AdminClient.Create(ctx, &policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: cmpapi.CertificateRequestPolicySpec{},
+			Spec: policyapi.CertificateRequestPolicySpec{},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		time.Sleep(time.Microsecond * 500)
@@ -210,11 +210,11 @@ var _ = Context("Policy", func() {
 	It("if policy exists and is bound, only requests that match should be approved", func() {
 		bindAllToPolicy(ctx, env.AdminClient, "allow-common-name-foo")
 
-		err := env.AdminClient.Create(ctx, &cmpapi.CertificateRequestPolicy{
+		err := env.AdminClient.Create(ctx, &policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-common-name-foo",
 			},
-			Spec: cmpapi.CertificateRequestPolicySpec{
+			Spec: policyapi.CertificateRequestPolicySpec{
 				AllowedDNSNames: &[]string{"foo"},
 			},
 		})
