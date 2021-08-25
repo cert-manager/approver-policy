@@ -18,93 +18,423 @@ package manager
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/approver/fake"
+	"github.com/cert-manager/policy-approver/test/env"
 )
 
 func Test_Review(t *testing.T) {
-	expNoEvaluator := func(t *testing.T) approver.Evaluator {
-		return fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *cmpapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (bool, string, error) {
-			t.Fatal("unexpected evaluator call")
-			return false, "", nil
-		})
+	rootDir := env.RootDirOrSkip(t)
+	env := env.RunControlPlane(t,
+		filepath.Join(rootDir, "bin/cert-manager"),
+		filepath.Join(rootDir, "config/crd/bases"),
+	)
+
+	const (
+		requestUser      = "example"
+		requestNamespace = "test-namespace"
+	)
+
+	if err := env.AdminClient.Create(context.TODO(),
+		&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: requestNamespace}},
+	); err != nil {
+		t.Fatal(err)
 	}
 
-	scheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(cmpapi.AddToScheme(scheme))
+	expNoEvaluation := func(t *testing.T) []approver.Evaluator {
+		return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+			t.Fatal("unexpected evaluator call")
+			return approver.EvaluationResponse{}, nil
+		})}
+	}
 
 	tests := map[string]struct {
-		client    *fakeclient.ClientBuilder
-		evaluator func(t *testing.T) approver.Evaluator
+		evaluators      func(t *testing.T) []approver.Evaluator
+		existingObjects []client.Object
 
-		expOK     bool
-		expReason string
-		expErr    bool
+		expResponse ReviewResponse
+		expErr      bool
 	}{
-		//"if no CertificateRequestPolicies exist, return ok": {
-		//	client:    fakeclient.NewClientBuilder(),
-		//	evaluator: expNoEvaluator,
-		//	expOK:     true,
-		//	expReason: NoCRPExistMessage,
-		//	expErr:    false,
-		//},
-		"if no CertificateRequestPolicies exist, return not ok": {
-			client:    fakeclient.NewClientBuilder(),
-			evaluator: expNoEvaluator,
-			expOK:     false,
-			expReason: MessageNoApplicableCertificateRequestPolicy,
-			expErr:    false,
+		"if no CertificateRequestPolicies exist, return ResultUnrpocessed": {
+			evaluators:      expNoEvaluation,
+			existingObjects: nil,
+			expResponse:     ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies exist"},
+			expErr:          false,
 		},
-		//"test": {
-		//	client: fakeclient.NewClientBuilder().WithLists(
-		//		&cmpolicy.CertificateRequestPolicyList{
-		//			Items: []cmpolicy.CertificateRequestPolicy{
-		//				cmpolicy.CertificateRequestPolicy{
-		//					ObjectMeta: metav1.ObjectMeta{
-		//						Name: "test",
-		//					},
-		//				},
-		//			},
-		//		},
-		//	).
-		//	evaluator: expNoEvaluator,
-		//	expOK:     true,
-		//	expReason: NoCRPExistMessage,
-		//	expErr:    false,
-		//},
+		"if no CertificateRequestPolicies are bound to the user, return ResultDenied": {
+			evaluators: expNoEvaluation,
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No CertificateRequestPolicies bound or applicable"},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at cluster level but returns denied, return ResultDenied": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at namespace level but returns denied, return ResultDenied": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at cluster level and returns not denied, return ResultApproved": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is a not-denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at namespace level and returns not denied, return ResultApproved": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is a not-denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
+			expErr:      false,
+		},
+		"if two CertificateRequestPolicies bound at cluster level and one returns not denied, return ResultApproved": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, policy *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					if policy.Name == "test-policy-b" {
+						return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is an approved response"}, nil
+					}
+					return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
+							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a", "test-policy-b"},
+						},
+					},
+				},
+				&rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-b"`},
+			expErr:      false,
+		},
+		"if two CertificateRequestPolicies bound at namespace level and one returns not denied, return ResultApproved": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, policy *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					if policy.Name == "test-policy-b" {
+						return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is an approved response"}, nil
+					}
+					return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
+							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a", "test-policy-b"},
+						},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-b"`},
+			expErr:      false,
+		},
+		"if two CertificateRequestPolicies bound at cluster level and both returns denied, return ResultDenied": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, policy *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
+							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a", "test-policy-b"},
+						},
+					},
+				},
+				&rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response] [test-policy-b: this is a denied response]"},
+			expErr:      false,
+		},
+		"if two CertificateRequestPolicies bound at namespace level and both return denied response, return ResultDenied": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, policy *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
+							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a", "test-policy-b"},
+						},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-rolebinding"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-role"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response] [test-policy-b: this is a denied response]"},
+			expErr:      false,
+		},
+		"if two CertificateRequestPolicies bound at namespace and cluster level and both return denied response, return ResultDenied": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, policy *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+				})}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"}},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding-namespaced"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
+							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"},
+						},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding-namespaced"},
+				},
+				&rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-binding-cluster"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-b"}},
+					},
+				},
+				&rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding-cluster"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response] [test-policy-b: this is a denied response]"},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at namespace one evaluator returns deined, return Denied": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{
+					fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+						return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
+					}),
+					fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+						return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+					}),
+				}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at namespace, two evaluators returns deined, return Denied": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{
+					fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+						return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+					}),
+					fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+						return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is another denied response"}, nil
+					}),
+				}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response, this is another denied response]"},
+			expErr:      false,
+		},
+		"if single CertificateRequestPolicy bound at cluster level and both evaluators return not denied, return ResultApproved": {
+			evaluators: func(t *testing.T) []approver.Evaluator {
+				return []approver.Evaluator{
+					fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+						return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is a not-denied response"}, nil
+					}),
+					fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+						return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: "this is another not-denied response"}, nil
+					}),
+				}
+			},
+			existingObjects: []client.Object{
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
+					Rules: []rbacv1.PolicyRule{
+						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
+					},
+				},
+				&rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
+					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
+				},
+			},
+			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
+			expErr:      false,
+		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			client := test.client.WithScheme(scheme).Build()
-			s := &subjectaccessreview{
-				client:     client,
-				evaluators: []approver.Evaluator{test.evaluator(t)},
+			t.Cleanup(func() {
+				for _, obj := range test.existingObjects {
+					if err := env.AdminClient.Delete(context.TODO(), obj); err != nil {
+						// Don't Fatal here as a ditch effort to at least try to clean-up
+						// everything.
+						t.Errorf("failed to deleted existing object: %w", err)
+					}
+				}
+			})
+
+			for _, obj := range test.existingObjects {
+				if err := env.AdminClient.Create(context.TODO(), obj); err != nil {
+					t.Fatalf("failed to create new object: %s", err)
+				}
 			}
 
-			ok, reason, err := s.Review(context.TODO(), new(cmapi.CertificateRequest))
-			if ok != test.expOK {
-				t.Errorf("unexpected ok, exp=%t got=%t",
-					test.expOK, ok)
-			}
-			if reason != test.expReason {
-				t.Errorf("unexpected reason, exp=%q got=%q",
-					test.expReason, reason)
-			}
-			if (err != nil) != test.expErr {
-				t.Errorf("unexpected err, exp=%t got=%v",
-					test.expErr, err)
-			}
+			s := NewSubjectAccessReview(
+				env.AdminClient,
+				test.evaluators(t),
+			)
+
+			response, err := s.Review(context.TODO(), &cmapi.CertificateRequest{
+				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
+				Spec:       cmapi.CertificateRequestSpec{Username: "example"},
+			})
+
+			assert.Equalf(t, test.expErr, err != nil, "%v", err)
+			assert.Equal(t, test.expResponse, response)
 		})
 	}
 }

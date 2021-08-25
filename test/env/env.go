@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 func init() {
@@ -50,7 +50,23 @@ func init() {
 
 	// Since we are going to be creating CRDs in the API server, we need to
 	// register these types.
-	utilruntime.Must(extapi.AddToScheme(cmpapi.GlobalScheme))
+	utilruntime.Must(extapi.AddToScheme(policyapi.GlobalScheme))
+}
+
+// Environment is a struct for holding the active and running
+// controller-runtime envtest Environment, as well as policy-approver specific
+// helper resources for running tests.
+type Environment struct {
+	// Environment holds the controller-runtime envtest Environment
+	*envtest.Environment
+
+	// AdminClient is a client that is authenticated as admin which has
+	// permissions to do anything.
+	AdminClient client.Client
+
+	// UserClient is a client that is authenticated as the user "example",
+	// groups ["group-1", "group-2"].
+	UserClient client.Client
 }
 
 // RunSuite runs a Ginkgo test suite, and writes the results to the artefacts
@@ -76,7 +92,7 @@ func RunSuite(t *testing.T, suiteName, artifactsDir string) {
 // resources. Expects CRD directories to both cert-manager, as well as
 // policy-approver. This *MUST* be provided.
 // Returns a controller-runtime envtest which is ready to be run against.
-func RunControlPlane(t *testing.T, crdDirs ...string) *envtest.Environment {
+func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 	env := &envtest.Environment{
 		AttachControlPlaneOutput: false,
 	}
@@ -95,9 +111,9 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *envtest.Environment {
 		}
 	})
 
-	t.Log("writing cert-manager webhook")
+	t.Log("writing cert-manager webhook kubeconfig")
 	kubeconifgPath := writeKubeconfig(t, env.Config, "cert-manager-webhook-kubeconfig.yaml")
-	t.Logf("cert-manager webhook written to %q", kubeconifgPath)
+	t.Logf("cert-manager webhook kubeconfig written to %q", kubeconifgPath)
 
 	webhookOpts, stopWebhook := webhooktesting.StartWebhookServer(t, []string{"--kubeconfig=" + kubeconifgPath})
 	t.Logf("running cert-manager webhook on %q", webhookOpts.URL)
@@ -115,7 +131,7 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *envtest.Environment {
 	}
 	patchCMConversionCRDs(crds, webhookOpts.URL, webhookOpts.CAPEM)
 
-	cl, err := client.New(env.Config, client.Options{Scheme: cmpapi.GlobalScheme})
+	adminClient, err := client.New(env.Config, client.Options{Scheme: policyapi.GlobalScheme})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +142,7 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *envtest.Environment {
 	validationObject := getCMValidatingWebhookConfig(webhookOpts.URL, webhookOpts.CAPEM)
 	mutatationObject := getCMMutatingWebhookConfig(webhookOpts.URL, webhookOpts.CAPEM)
 	for _, crd := range append(crdObjects, validationObject, mutatationObject) {
-		if err := cl.Create(context.TODO(), crd); err != nil {
+		if err := adminClient.Create(context.TODO(), crd); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -138,5 +154,21 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *envtest.Environment {
 		t.Fatal(err)
 	}
 
-	return env
+	user, err := env.AddUser(envtest.User{Name: "example", Groups: []string{"group-1", "group-2"}}, env.Config)
+	if err != nil {
+		t.Fatalf("failed to create example user: %s", err)
+	}
+
+	userClient, err := client.New(user.Config(), client.Options{
+		Scheme: policyapi.GlobalScheme,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return &Environment{
+		Environment: env,
+		AdminClient: adminClient,
+		UserClient:  userClient,
+	}
 }

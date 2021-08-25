@@ -21,7 +21,7 @@ import (
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -30,18 +30,18 @@ var _ approver.Evaluator = &FakeEvaluator{}
 // FakeEvaluator is a testing evaluator designed to mock evaluators with a
 // determined response.
 type FakeEvaluator struct {
-	evaluateFunc func(context.Context, *cmpapi.CertificateRequestPolicy, *cmapi.CertificateRequest) (bool, string, error)
+	evaluateFunc func(context.Context, *policyapi.CertificateRequestPolicy, *cmapi.CertificateRequest) (approver.EvaluationResponse, error)
 }
 
 func NewFakeEvaluator() *FakeEvaluator {
 	return new(FakeEvaluator)
 }
 
-func (f *FakeEvaluator) WithEvaluate(fn func(context.Context, *cmpapi.CertificateRequestPolicy, *cmapi.CertificateRequest) (bool, string, error)) *FakeEvaluator {
+func (f *FakeEvaluator) WithEvaluate(fn func(context.Context, *policyapi.CertificateRequestPolicy, *cmapi.CertificateRequest) (approver.EvaluationResponse, error)) *FakeEvaluator {
 	f.evaluateFunc = fn
 	return f
 }
 
-func (f *FakeEvaluator) Evaluate(ctx context.Context, crp *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
-	return f.evaluateFunc(ctx, crp, cr)
+func (f *FakeEvaluator) Evaluate(ctx context.Context, policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+	return f.evaluateFunc(ctx, policy, cr)
 }

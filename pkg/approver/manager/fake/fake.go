@@ -29,18 +29,18 @@ var _ manager.Interface = &FakeManager{}
 // FakeManager is a testing manager designed to mock managers with a determined
 // response.
 type FakeManager struct {
-	reviewFunc func(context.Context, *cmapi.CertificateRequest) (bool, string, error)
+	reviewFunc func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error)
 }
 
 func NewFakeManager() *FakeManager {
 	return new(FakeManager)
 }
 
-func (f *FakeManager) WithReview(fn func(context.Context, *cmapi.CertificateRequest) (bool, string, error)) *FakeManager {
+func (f *FakeManager) WithReview(fn func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error)) *FakeManager {
 	f.reviewFunc = fn
 	return f
 }
 
-func (f *FakeManager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (bool, string, error) {
+func (f *FakeManager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 	return f.reviewFunc(ctx, cr)
 }

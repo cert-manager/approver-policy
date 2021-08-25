@@ -31,11 +31,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/approver/attribute/internal"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
+
+// Load the attribute evaluator checks.
+func init() {
+	registry.Shared.Store(attribute{})
+}
 
 var _ approver.Interface = attribute{}
 
@@ -68,13 +73,14 @@ type check struct {
 }
 
 // Evaluate evaluates whether the given CertificateRequest passes the 'chain
-// checks' of the CertificateRequestPolicy. If this request is denied by these
-// checks then a string explanation is returned.  An error signals that the
-// policy couldn't be evaluated to completion.
-func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
+// checks' of the CertificateRequestPolicy.
+// If this request is denied by these checks then a string explanation is
+// returned.
+// An error signals that the policy couldn't be evaluated to completion.
+func (b attribute) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
-		return false, "", err
+		return approver.EvaluationResponse{}, err
 	}
 
 	// el will contain a list of policy violations for fields, if there are
@@ -109,20 +115,20 @@ func (b attribute) Evaluate(_ context.Context, policy *cmpapi.CertificateRequest
 		case checkKeyAlg:
 			internal.KeyAlgorithm(&el, path.Child(check.path), check.policy.(*cmapi.PrivateKeyAlgorithm), check.request.(cmapi.PrivateKeyAlgorithm))
 		default:
-			return false, "", fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
+			return approver.EvaluationResponse{}, fmt.Errorf("unrecognised strategy %v: %s", check.strategy, check.path)
 		}
 	}
 
 	// If there are errors, then return not approved and the aggregated errors
 	if len(el) > 0 {
-		return false, el.ToAggregate().Error(), nil
+		return approver.EvaluationResponse{Result: approver.ResultDenied, Message: el.ToAggregate().Error()}, nil
 	}
 
-	// If no evaluation errors resulting from this policy, return approved
-	return true, "", nil
+	// If no evaluation errors resulting from this policy, return not denied
+	return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
 }
 
-func buildChecks(policy *cmpapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
+func buildChecks(policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) ([]check, error) {
 	// decode CSR from CertificateRequest
 	csr, err := utilpki.DecodeX509CertificateRequestBytes(cr.Spec.Request)
 	if err != nil {
@@ -202,9 +208,4 @@ func parsePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 	default:
 		return "", -1, parseKeyError
 	}
-}
-
-// Load the attribute evaluator checks.
-func init() {
-	registry.Shared.Store(attribute{})
 }

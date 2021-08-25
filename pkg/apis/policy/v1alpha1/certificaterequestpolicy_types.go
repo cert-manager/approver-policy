@@ -24,7 +24,7 @@ import (
 
 //+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
-//+kubebuilder:resource:categories=cert-manager,shortName=crp,scope=Cluster
+//+kubebuilder:resource:categories=cert-manager,shortName=policy,scope=Cluster
 //+kubebuilder:subresource:status
 
 // CertificateRequestPolicy is the Schema for the certificaterequestpolicies API

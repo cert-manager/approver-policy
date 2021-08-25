@@ -33,10 +33,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	_ "github.com/cert-manager/policy-approver/pkg/approver/attribute"
 	"github.com/cert-manager/policy-approver/pkg/internal/controller"
 )
@@ -51,40 +50,25 @@ var _ = Context("Policy", func() {
 		ctx    context.Context
 		cancel func()
 
-		rootCl, userCl client.Client
-		userRole       string
-
+		userRole  string
 		namespace corev1.Namespace
 	)
 
 	JustBeforeEach(func() {
 		ctx, cancel = context.WithCancel(context.Background())
 
-		user, err := apienv.AddUser(envtest.User{Name: "example", Groups: []string{"group-1", "group-2"}}, apienv.Config)
-		Expect(err).NotTo(HaveOccurred())
-
-		rootCl, err = client.New(apienv.Config, client.Options{
-			Scheme: cmpapi.GlobalScheme,
-		})
-		Expect(err).NotTo(HaveOccurred())
-
-		userRole = bindAllUsersToCreateCertificateRequest(ctx, rootCl)
-
-		userCl, err = client.New(user.Config(), client.Options{
-			Scheme: cmpapi.GlobalScheme,
-		})
-		Expect(err).NotTo(HaveOccurred())
+		userRole = bindAllUsersToCreateCertificateRequest(ctx, env.AdminClient)
 
 		namespace = corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-policy-",
 			},
 		}
-		Expect(rootCl.Create(ctx, &namespace)).NotTo(HaveOccurred())
+		Expect(env.AdminClient.Create(ctx, &namespace)).NotTo(HaveOccurred())
 		By("Created Policy Namespace: " + namespace.Name)
 
-		mgr, err := ctrl.NewManager(apienv.Config, ctrl.Options{
-			Scheme:                        cmpapi.GlobalScheme,
+		mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
+			Scheme:                        policyapi.GlobalScheme,
 			LeaderElection:                true,
 			MetricsBindAddress:            "0",
 			LeaderElectionNamespace:       namespace.Name,
@@ -94,7 +78,7 @@ var _ = Context("Policy", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(controller.AddPolicyController(mgr, controller.Options{Log: logf.Log})).NotTo(HaveOccurred())
+		Expect(controller.AddPolicyController(ctx, mgr, controller.Options{Log: logf.Log})).NotTo(HaveOccurred())
 
 		By("Running Policy controller")
 		go mgr.Start(ctx)
@@ -107,50 +91,50 @@ var _ = Context("Policy", func() {
 	})
 
 	JustAfterEach(func() {
-		Expect(rootCl.Delete(ctx, &rbacv1.ClusterRole{ObjectMeta: metav1.ObjectMeta{Name: userRole}})).ToNot(HaveOccurred())
-		Expect(rootCl.Delete(ctx, &rbacv1.ClusterRoleBinding{ObjectMeta: metav1.ObjectMeta{Name: userRole}})).ToNot(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRole{ObjectMeta: metav1.ObjectMeta{Name: userRole}})).ToNot(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRoleBinding{ObjectMeta: metav1.ObjectMeta{Name: userRole}})).ToNot(HaveOccurred())
 
 		By("Deleting test policy Namespace: " + namespace.Name)
-		Expect(rootCl.Delete(ctx, &namespace)).ToNot(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &namespace)).ToNot(HaveOccurred())
 
 		By("deleting all policies")
-		var polList cmpapi.CertificateRequestPolicyList
-		Expect(rootCl.List(ctx, &polList)).ToNot(HaveOccurred())
+		var polList policyapi.CertificateRequestPolicyList
+		Expect(env.AdminClient.List(ctx, &polList)).ToNot(HaveOccurred())
 
 		if len(polList.Items) > 0 {
-			Expect(rootCl.DeleteAllOf(ctx, new(cmpapi.CertificateRequestPolicy))).ToNot(HaveOccurred())
+			Expect(env.AdminClient.DeleteAllOf(ctx, new(policyapi.CertificateRequestPolicy))).ToNot(HaveOccurred())
 		}
 
 		By("Cleaning up RBAC")
 		var role rbacv1.ClusterRole
-		err := rootCl.Get(ctx, client.ObjectKey{Name: testRoleName}, &role)
+		err := env.AdminClient.Get(ctx, client.ObjectKey{Name: testRoleName}, &role)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				Expect(err).ToNot(HaveOccurred())
 			}
 		} else {
-			Expect(rootCl.Delete(ctx, &role)).ToNot(HaveOccurred())
+			Expect(env.AdminClient.Delete(ctx, &role)).ToNot(HaveOccurred())
 		}
 
 		var binding rbacv1.ClusterRoleBinding
-		err = rootCl.Get(ctx, client.ObjectKey{Name: testRoleBindingName}, &binding)
+		err = env.AdminClient.Get(ctx, client.ObjectKey{Name: testRoleBindingName}, &binding)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				Expect(err).ToNot(HaveOccurred())
 			}
 		} else {
-			Expect(rootCl.Delete(ctx, &binding)).ToNot(HaveOccurred())
+			Expect(env.AdminClient.Delete(ctx, &binding)).ToNot(HaveOccurred())
 		}
 
 		By("Stopping Policy controller")
 		cancel()
 	})
 
-	It("if no policies exist, then all requests should be denied", func() {
+	It("if no policies exist, then requests should be neither approved or denied", func() {
 		csr, _, err := gen.CSR(x509.RSA)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = userCl.Create(ctx, gen.CertificateRequest("no-policy",
+		err = env.UserClient.Create(ctx, gen.CertificateRequest("no-policy",
 			gen.SetCertificateRequestNamespace(namespace.Name),
 			gen.SetCertificateRequestCSR(csr),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{
@@ -161,14 +145,18 @@ var _ = Context("Policy", func() {
 		))
 		Expect(err).ToNot(HaveOccurred())
 
-		waitForDenial(ctx, rootCl, namespace.Name, "no-policy")
+		Consistently(func() bool {
+			cr := new(cmapi.CertificateRequest)
+			Expect(env.AdminClient.Get(ctx, client.ObjectKey{Namespace: namespace.Name, Name: "no-policy"}, cr)).ToNot(HaveOccurred())
+			return apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr)
+		}, "3s").Should(BeFalse())
 	})
 
 	It("if one policy exists but not bound, then all requests should be denied", func() {
 		csr, _, err := gen.CSR(x509.RSA)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = userCl.Create(ctx, gen.CertificateRequest("no-bind",
+		err = env.UserClient.Create(ctx, gen.CertificateRequest("no-bind",
 			gen.SetCertificateRequestNamespace(namespace.Name),
 			gen.SetCertificateRequestCSR(csr),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{
@@ -179,25 +167,25 @@ var _ = Context("Policy", func() {
 		))
 		Expect(err).ToNot(HaveOccurred())
 
-		err = rootCl.Create(ctx, &cmpapi.CertificateRequestPolicy{
+		err = env.AdminClient.Create(ctx, &policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: cmpapi.CertificateRequestPolicySpec{},
+			Spec: policyapi.CertificateRequestPolicySpec{},
 		})
 		Expect(err).ToNot(HaveOccurred())
 
-		waitForDenial(ctx, rootCl, namespace.Name, "no-bind")
+		waitForDenial(ctx, env.AdminClient, namespace.Name, "no-bind")
 	})
 
 	It("if 'allow-all' policy exists and is bound, all requests should be approved", func() {
-		bindAllToPolicy(ctx, rootCl, "allow-all")
+		bindAllToPolicy(ctx, env.AdminClient, "allow-all")
 
-		err := rootCl.Create(ctx, &cmpapi.CertificateRequestPolicy{
+		err := env.AdminClient.Create(ctx, &policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-all",
 			},
-			Spec: cmpapi.CertificateRequestPolicySpec{},
+			Spec: policyapi.CertificateRequestPolicySpec{},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		time.Sleep(time.Microsecond * 500)
@@ -205,7 +193,7 @@ var _ = Context("Policy", func() {
 		csr, _, err := gen.CSR(x509.RSA)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = userCl.Create(ctx, gen.CertificateRequest("bound",
+		err = env.UserClient.Create(ctx, gen.CertificateRequest("bound",
 			gen.SetCertificateRequestNamespace(namespace.Name),
 			gen.SetCertificateRequestCSR(csr),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{
@@ -216,17 +204,17 @@ var _ = Context("Policy", func() {
 		))
 		Expect(err).ToNot(HaveOccurred())
 
-		waitForApproval(ctx, rootCl, namespace.Name, "bound")
+		waitForApproval(ctx, env.AdminClient, namespace.Name, "bound")
 	})
 
 	It("if policy exists and is bound, only requests that match should be approved", func() {
-		bindAllToPolicy(ctx, rootCl, "allow-common-name-foo")
+		bindAllToPolicy(ctx, env.AdminClient, "allow-common-name-foo")
 
-		err := rootCl.Create(ctx, &cmpapi.CertificateRequestPolicy{
+		err := env.AdminClient.Create(ctx, &policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "allow-common-name-foo",
 			},
-			Spec: cmpapi.CertificateRequestPolicySpec{
+			Spec: policyapi.CertificateRequestPolicySpec{
 				AllowedDNSNames: &[]string{"foo"},
 			},
 		})
@@ -234,7 +222,7 @@ var _ = Context("Policy", func() {
 
 		csr, _, err := gen.CSR(x509.RSA, gen.SetCSRDNSNames("bar"))
 		Expect(err).ToNot(HaveOccurred())
-		err = userCl.Create(ctx, gen.CertificateRequest("bad-dns",
+		err = env.UserClient.Create(ctx, gen.CertificateRequest("bad-dns",
 			gen.SetCertificateRequestNamespace(namespace.Name),
 			gen.SetCertificateRequestCSR(csr),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{
@@ -244,11 +232,11 @@ var _ = Context("Policy", func() {
 			}),
 		))
 		Expect(err).ToNot(HaveOccurred())
-		waitForDenial(ctx, rootCl, namespace.Name, "bad-dns")
+		waitForDenial(ctx, env.AdminClient, namespace.Name, "bad-dns")
 
 		csr, _, err = gen.CSR(x509.RSA, gen.SetCSRDNSNames("foo"))
 		Expect(err).ToNot(HaveOccurred())
-		err = userCl.Create(ctx, gen.CertificateRequest("good-dns",
+		err = env.UserClient.Create(ctx, gen.CertificateRequest("good-dns",
 			gen.SetCertificateRequestNamespace(namespace.Name),
 			gen.SetCertificateRequestCSR(csr),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{
@@ -258,7 +246,7 @@ var _ = Context("Policy", func() {
 			}),
 		))
 		Expect(err).ToNot(HaveOccurred())
-		waitForApproval(ctx, rootCl, namespace.Name, "good-dns")
+		waitForApproval(ctx, env.AdminClient, namespace.Name, "good-dns")
 	})
 })
 

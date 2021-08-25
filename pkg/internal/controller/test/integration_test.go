@@ -17,24 +17,20 @@ limitations under the License.
 package test
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/cert-manager/policy-approver/test/env"
+	testenv "github.com/cert-manager/policy-approver/test/env"
 )
 
 // Test_Integration runs the full suite of tests for the policy-approver
 // controller.
 func Test_Integration(t *testing.T) {
-	rootDir := os.Getenv("ROOTDIR")
-	if len(rootDir) == 0 {
-		t.Skip("WARNING: skipping integration test as 'ROOTDIR' is not defined")
-	}
+	rootDir := testenv.RootDirOrSkip(t)
 
-	apienv = env.RunControlPlane(t,
+	env = testenv.RunControlPlane(t,
 		filepath.Join(rootDir, "bin/cert-manager"),
 		filepath.Join(rootDir, "config/crd/bases"),
 	)
-	env.RunSuite(t, "integration-policy-approver", "../../../../_artifacts")
+	testenv.RunSuite(t, "integration-policy-approver", "../../../../_artifacts")
 }
