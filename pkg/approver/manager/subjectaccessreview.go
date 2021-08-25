@@ -150,8 +150,8 @@ func (s *subjectaccessreview) Review(ctx context.Context, cr *cmapi.CertificateR
 func issuerRefSelector(cr *cmapi.CertificateRequest, allPolicies []policyapi.CertificateRequestPolicy) []policyapi.CertificateRequestPolicy {
 	var matchingPolicies []policyapi.CertificateRequestPolicy
 
-	for _, crp := range allPolicies {
-		issRefSel := crp.Spec.IssuerRefSelector
+	for _, policy := range allPolicies {
+		issRefSel := policy.Spec.IssuerRefSelector
 		issRef := cr.Spec.IssuerRef
 
 		if issRefSel.Name != nil && !internal.WildcardMatchs(*issRefSel.Name, issRef.Name) {
@@ -163,7 +163,7 @@ func issuerRefSelector(cr *cmapi.CertificateRequest, allPolicies []policyapi.Cer
 		if issRefSel.Group != nil && !internal.WildcardMatchs(*issRefSel.Group, issRef.Group) {
 			continue
 		}
-		matchingPolicies = append(matchingPolicies, crp)
+		matchingPolicies = append(matchingPolicies, policy)
 	}
 
 	return matchingPolicies
@@ -178,7 +178,7 @@ func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.Certi
 	}
 
 	var boundPolicies []policyapi.CertificateRequestPolicy
-	for _, crp := range allPolicies {
+	for _, policy := range allPolicies {
 		// Perform subject access review for this CertificateRequestPolicy
 		rev := &authzv1.SubjectAccessReview{
 			Spec: authzv1.SubjectAccessReviewSpec{
@@ -190,7 +190,7 @@ func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.Certi
 				ResourceAttributes: &authzv1.ResourceAttributes{
 					Group:     "policy.cert-manager.io",
 					Resource:  "certificaterequestpolicies",
-					Name:      crp.Name,
+					Name:      policy.Name,
 					Namespace: cr.Namespace,
 					Verb:      "use",
 				},
@@ -202,7 +202,7 @@ func (s *subjectaccessreview) boundPolicies(ctx context.Context, cr *cmapi.Certi
 
 		// If the user is bound to this policy then append.
 		if rev.Status.Allowed {
-			boundPolicies = append(boundPolicies, crp)
+			boundPolicies = append(boundPolicies, policy)
 		}
 	}
 

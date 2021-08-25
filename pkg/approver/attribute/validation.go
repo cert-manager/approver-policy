@@ -23,24 +23,24 @@ import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
 // Validate validates that the processed CertificateRequestPolicy meets the
 // requirements for the base set of attribute fields, and there are no parsing
 // errors in the values.
-func (a attribute) Validate(_ context.Context, crp *cmpapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+func (a attribute) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 	var (
 		el      field.ErrorList
 		fldPath = field.NewPath("spec")
 	)
 
-	if crp.Spec.AllowedPrivateKey != nil {
+	if policy.Spec.AllowedPrivateKey != nil {
 		fldPath := fldPath.Child("allowedPrivateKey")
 
-		if crp.Spec.AllowedPrivateKey.AllowedAlgorithm != nil {
-			switch alg := *crp.Spec.AllowedPrivateKey.AllowedAlgorithm; alg {
+		if policy.Spec.AllowedPrivateKey.AllowedAlgorithm != nil {
+			switch alg := *policy.Spec.AllowedPrivateKey.AllowedAlgorithm; alg {
 			case cmapi.RSAKeyAlgorithm, cmapi.ECDSAKeyAlgorithm, cmapi.Ed25519KeyAlgorithm:
 				break
 			default:
@@ -49,12 +49,12 @@ func (a attribute) Validate(_ context.Context, crp *cmpapi.CertificateRequestPol
 			}
 		}
 
-		maxSize := crp.Spec.AllowedPrivateKey.MaxSize
+		maxSize := policy.Spec.AllowedPrivateKey.MaxSize
 		if maxSize != nil && (*maxSize <= 0 || *maxSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("maxSize"), *maxSize, "must be between 0 and 8192 inclusive"))
 		}
 
-		minSize := crp.Spec.AllowedPrivateKey.MinSize
+		minSize := policy.Spec.AllowedPrivateKey.MinSize
 		if minSize != nil && (*minSize <= 0 || *minSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("minSize"), *minSize, "must be between 0 and 8192 inclusive"))
 		}
@@ -64,7 +64,7 @@ func (a attribute) Validate(_ context.Context, crp *cmpapi.CertificateRequestPol
 		}
 	}
 
-	if crp.Spec.IssuerRefSelector == nil {
+	if policy.Spec.IssuerRefSelector == nil {
 		el = append(el, field.Required(fldPath.Child("issuerRefSelector"), "must be defined, hint: `{}` matches everything"))
 	}
 

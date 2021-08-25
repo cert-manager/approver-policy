@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/cert-manager/policy-approver/pkg/apis/policy"
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -57,10 +57,10 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 
 	switch *req.RequestKind {
 	case metav1.GroupVersionKind{Group: policy.GroupName, Version: "v1alpha1", Kind: "CertificateRequestPolicy"}:
-		var crp cmpapi.CertificateRequestPolicy
+		var policy policyapi.CertificateRequestPolicy
 
 		v.lock.RLock()
-		err := v.decoder.Decode(req, &crp)
+		err := v.decoder.Decode(req, &policy)
 		v.lock.RUnlock()
 
 		if err != nil {
@@ -73,7 +73,7 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 			allowed = true
 		)
 		for _, webhook := range v.webhooks {
-			response, err := webhook.Validate(ctx, &crp)
+			response, err := webhook.Validate(ctx, &policy)
 			if err != nil {
 				log.Error(err, "internal error occurred validating request")
 				return admission.Errored(http.StatusInternalServerError, err)

@@ -19,7 +19,7 @@ package approver
 import (
 	"context"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 // WebhookValidationResponse is the response to a validate request to a
@@ -42,5 +42,5 @@ type Webhook interface {
 	// response with Allowed set to false, the object will not be committed.
 	// Similarly, any error will cause the object not to be committed
 	// immediately, and no other webhooks will be run.
-	Validate(context.Context, *cmpapi.CertificateRequestPolicy) (WebhookValidationResponse, error)
+	Validate(context.Context, *policyapi.CertificateRequestPolicy) (WebhookValidationResponse, error)
 }

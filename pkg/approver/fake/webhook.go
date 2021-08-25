@@ -19,7 +19,7 @@ package fake
 import (
 	"context"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -28,18 +28,18 @@ var _ approver.Webhook = &FakeWebhook{}
 // FakeWebhook is a testing webook designed to mock webhooks with a determined
 // response.
 type FakeWebhook struct {
-	validateFunc func(context.Context, *cmpapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error)
+	validateFunc func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error)
 }
 
 func NewFakeWebhook() *FakeWebhook {
 	return new(FakeWebhook)
 }
 
-func (f *FakeWebhook) WithValidate(fn func(context.Context, *cmpapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error)) *FakeWebhook {
+func (f *FakeWebhook) WithValidate(fn func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error)) *FakeWebhook {
 	f.validateFunc = fn
 	return f
 }
 
-func (f *FakeWebhook) Validate(ctx context.Context, crp *cmpapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-	return f.validateFunc(ctx, crp)
+func (f *FakeWebhook) Validate(ctx context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+	return f.validateFunc(ctx, policy)
 }

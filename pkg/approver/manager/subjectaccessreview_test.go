@@ -375,7 +375,10 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -416,7 +419,7 @@ func Test_Review(t *testing.T) {
 					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
 				},
 			},
-			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
+			expResponse: ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies bound or applicable"},
 			expErr:      false,
 		},
 		"if single CertificateRequestPolicy bound at namespace, two evaluators returns deined, return Denied": {
@@ -431,7 +434,10 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
+				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -487,7 +493,11 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			existingObjects: []client.Object{
-				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"}},
+				&policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
+						Name: pointer.String("test-name"), Kind: pointer.String("*"), Group: pointer.String("*-group"),
+					}},
+				},
 				&rbacv1.ClusterRole{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
 					Rules: []rbacv1.PolicyRule{
@@ -512,7 +522,7 @@ func Test_Review(t *testing.T) {
 					if err := env.AdminClient.Delete(context.TODO(), obj); err != nil {
 						// Don't Fatal here as a ditch effort to at least try to clean-up
 						// everything.
-						t.Errorf("failed to deleted existing object: %w", err)
+						t.Errorf("failed to deleted existing object: %s", err)
 					}
 				}
 			})

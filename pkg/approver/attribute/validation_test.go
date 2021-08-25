@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -33,13 +33,13 @@ func Test_Validate(t *testing.T) {
 	goodAlg := cmapi.RSAKeyAlgorithm
 
 	tests := map[string]struct {
-		policy      *cmpapi.CertificateRequestPolicy
+		policy      *policyapi.CertificateRequestPolicy
 		expResponse approver.WebhookValidationResponse
 	}{
 		"if policy contains validation errors, expect a Allowed=false response": {
-			policy: &cmpapi.CertificateRequestPolicy{
-				Spec: cmpapi.CertificateRequestPolicySpec{
-					AllowedPrivateKey: &cmpapi.CertificateRequestPolicyPrivateKey{
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					AllowedPrivateKey: &policyapi.CertificateRequestPolicyPrivateKey{
 						AllowedAlgorithm: &badAlg,
 						MinSize:          pointer.Int(9999),
 						MaxSize:          pointer.Int(-1),
@@ -59,14 +59,14 @@ func Test_Validate(t *testing.T) {
 			},
 		},
 		"if policy contains no validation errors, expect a Allowed=true response": {
-			policy: &cmpapi.CertificateRequestPolicy{
-				Spec: cmpapi.CertificateRequestPolicySpec{
-					AllowedPrivateKey: &cmpapi.CertificateRequestPolicyPrivateKey{
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					AllowedPrivateKey: &policyapi.CertificateRequestPolicyPrivateKey{
 						AllowedAlgorithm: &goodAlg,
 						MinSize:          pointer.Int(100),
 						MaxSize:          pointer.Int(500),
 					},
-					IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{},
+					IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{},
 				},
 			},
 			expResponse: approver.WebhookValidationResponse{

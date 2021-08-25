@@ -30,7 +30,7 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/approver/fake"
 )
@@ -132,7 +132,7 @@ func Test_validatorHandle(t *testing.T) {
 			},
 		},
 		"a CertificateRequestPolicy which fails validation should return a Denied response": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *cmpapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 				return approver.WebhookValidationResponse{Allowed: false, Message: "this is a denied message"}, nil
 			}),
 			req: admission.Request{
@@ -168,7 +168,7 @@ func Test_validatorHandle(t *testing.T) {
 			},
 		},
 		"a CertificateRequestPolicy which succeeds validation should return an Allowed response": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *cmpapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 				return approver.WebhookValidationResponse{Allowed: true, Message: "this is a allowed message"}, nil
 			}),
 			req: admission.Request{
@@ -204,7 +204,7 @@ func Test_validatorHandle(t *testing.T) {
 			},
 		},
 		"a CertificateRequestPolicy where a webhook returns an error should return an internal error response": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *cmpapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 				return approver.WebhookValidationResponse{}, errors.New("this is an internal error")
 			}),
 			req: admission.Request{
@@ -244,10 +244,10 @@ func Test_validatorHandle(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			fakeclient := fakeclient.NewClientBuilder().
-				WithScheme(cmpapi.GlobalScheme).
+				WithScheme(policyapi.GlobalScheme).
 				Build()
 
-			decoder, err := admission.NewDecoder(cmpapi.GlobalScheme)
+			decoder, err := admission.NewDecoder(policyapi.GlobalScheme)
 			if err != nil {
 				t.Fatal(err)
 			}
