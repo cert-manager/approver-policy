@@ -28,7 +28,7 @@ import (
 var _ approver.Evaluator = &FakeEvaluator{}
 
 // FakeEvaluator is a testing evaluator designed to mock evaluators with a
-// determined response.
+// pre-determined response.
 type FakeEvaluator struct {
 	evaluateFunc func(context.Context, *policyapi.CertificateRequestPolicy, *cmapi.CertificateRequest) (approver.EvaluationResponse, error)
 }

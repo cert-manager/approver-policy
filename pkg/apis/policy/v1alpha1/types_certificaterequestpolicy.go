@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -123,6 +124,13 @@ type CertificateRequestPolicySpec struct {
 	// An omitted field or value of nil permits all.
 	// +optional
 	AllowedPrivateKey *CertificateRequestPolicyPrivateKey `json:"allowedPrivateKey,omitempty"`
+
+	// Plugins define a set of plugins and their configuration that should be
+	// executed when this policy is evaluated against a CertificateRequest. A
+	// plugin must already be built within policy-approver for it to be
+	// available.
+	// +optional
+	Plugins map[string]CertificateRequestPolicyPluginData `json:"plugins,omitempty"`
 
 	// IssuerRefSelector is used to match this CertificateRequestPolicy against
 	// processed CertificateRequests. This policy will only be evaluated against
@@ -255,34 +263,70 @@ type CertificateRequestPolicyIssuerRefSelector struct {
 	// Accepts wildcards "*".
 	// An omitted field or value of nil permits all.
 	// +optional
-	// +optional
 	Group *string `json:"group,omitempty"`
 }
 
-// TODO
-type CertificateRequestPolicyStatus struct {
+// CertificateRequestPolicyPluginData is configuration needed by the plugin
+// approver to evaluate a CertificateRequest on this policy.
+type CertificateRequestPolicyPluginData struct {
+	// Values define a set of well-known, to the plugin, key value pairs that are
+	// required for the plugin to successfully evaluate a request based on this
+	// policy.
 	// +optional
-	//Conditions []CertificateRequestPolicyCondition `json:"conditions,omitempty"`
+	Values map[string]string `json:"values,omitempty"`
 }
 
-//type CertificateRequestPolicyCondition struct {
-//	Type   CertificateRequestPolicyConditionType `json:"type"`
-//	Status cmmeta.ConditionStatus                `json:"status"`
-//
-//	// +optional
-//	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
-//
-//	// +optional
-//	Reason string `json:"reason,omitempty"`
-//
-//	// +optional
-//	Message string `json:"message,omitempty"`
-//
-//	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-//}
-//
-//type CertificateRequestPolicyConditionType string
-//
-//const (
-//	CertificateRequestPolicyConditionReady CertificateRequestPolicyConditionType = "Ready"
-//)
+// CertificateRequestPolicyStatus defines the observed state of the
+// CertificateRequestPolicy.
+type CertificateRequestPolicyStatus struct {
+	// List of status conditions to indicate the status of the
+	// CertificateRequestPolicy.
+	// Known condition types are `Ready`.
+	// +optional
+	Conditions []CertificateRequestPolicyCondition `json:"conditions,omitempty"`
+}
+
+// CertificateRequestPolicyCondition contains condition information for a
+// CertificateRequestPolicyStatus.
+type CertificateRequestPolicyCondition struct {
+	// Type of the condition, known values are (`Ready`).
+	Type CertificateRequestPolicyConditionType `json:"type"`
+
+	// Status of the condition, one of ('True', 'False', 'Unknown').
+	Status corev1.ConditionStatus `json:"status"`
+
+	// LastTransitionTime is the timestamp corresponding to the last status
+	// change of this condition.
+	// +optional
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
+
+	// Reason is a brief machine readable explanation for the condition's last
+	// transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
+
+	// Message is a human readable description of the details of the last
+	// transition, complementing reason.
+	// +optional
+	Message string `json:"message,omitempty"`
+
+	// If set, this represents the .metadata.generation that the condition was
+	// set based upon.
+	// For instance, if .metadata.generation is currently 12, but the
+	// .status.condition[x].observedGeneration is 9, the condition is out of date
+	// with respect to the current state of the CertificateRequestPolicy.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+}
+
+// CertificateRequestPolicyConditionType represents a CertificateRequestPolicy
+// condition value.
+type CertificateRequestPolicyConditionType string
+
+const (
+	// CertificateRequestPolicyConditionReady indicates that the
+	// CertificateRequestPolicy has successfully loaded the policy, and all
+	// configuration including plugin options are accepted and ready for
+	// evaluating CertificateRequests.
+	CertificateRequestPolicyConditionReady CertificateRequestPolicyConditionType = "Ready"
+)

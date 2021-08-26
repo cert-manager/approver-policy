@@ -25,8 +25,8 @@ import (
 
 var _ approver.Webhook = &FakeWebhook{}
 
-// FakeWebhook is a testing webook designed to mock webhooks with a determined
-// response.
+// FakeWebhook is a testing webook designed to mock webhooks with a
+// pre-determined response.
 type FakeWebhook struct {
 	validateFunc func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error)
 }

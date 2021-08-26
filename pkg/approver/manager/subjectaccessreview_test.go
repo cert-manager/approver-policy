@@ -404,7 +404,7 @@ func Test_Review(t *testing.T) {
 				&policyapi.CertificateRequestPolicy{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("name"), Kind: pointer.String("kind "), Group: pointer.String("group"),
+						Name: pointer.String("not-test-name"), Kind: pointer.String("*"), Group: pointer.String("*"),
 					}},
 				},
 				&rbacv1.Role{
@@ -462,9 +462,7 @@ func Test_Review(t *testing.T) {
 			existingObjects: []client.Object{
 				&policyapi.CertificateRequestPolicy{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-					Spec: policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
-						Name: pointer.String("test-name"), Kind: pointer.String("*"), Group: pointer.String("*-group"),
-					}},
+					Spec:       policyapi.CertificateRequestPolicySpec{IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{}},
 				},
 				&rbacv1.Role{
 					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
@@ -533,10 +531,7 @@ func Test_Review(t *testing.T) {
 				}
 			}
 
-			s := NewSubjectAccessReview(
-				env.AdminClient,
-				test.evaluators(t),
-			)
+			s := NewSubjectAccessReview(env.AdminClient, test.evaluators(t))
 
 			response, err := s.Review(context.TODO(), &cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
