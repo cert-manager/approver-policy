@@ -51,7 +51,7 @@ func WildcardContains(patterns []string, member string) bool {
 	return false
 }
 
-// WildcardMatchswill return true if the given string matches the pattern.
+// WildcardMatchs will return true if the given string matches the pattern.
 // Pattern is a string which supports wildcards ('*').
 func WildcardMatchs(pattern, str string) bool {
 	if len(pattern) == 0 {
