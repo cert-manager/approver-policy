@@ -30,7 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -66,7 +66,7 @@ type certificaterequestpolicies struct {
 // certificaterequestpolicies controller with the controller-runtime Manager.
 func addCertificateRequestPolicyController(ctx context.Context, opts Options) error {
 	return ctrl.NewControllerManagedBy(opts.Manager).
-		For(new(cmpapi.CertificateRequestPolicy)).
+		For(new(policyapi.CertificateRequestPolicy)).
 		Complete(&certificaterequestpolicies{
 			log:         opts.Log.WithName("certificaterequestpolicies"),
 			clock:       clock.RealClock{},
@@ -86,8 +86,8 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 	log := c.log.WithValues("name", req.NamespacedName.Name)
 	log.V(2).Info("syncing")
 
-	crp := new(cmpapi.CertificateRequestPolicy)
-	if err := c.lister.Get(ctx, req.NamespacedName, crp); err != nil {
+	policy := new(policyapi.CertificateRequestPolicy)
+	if err := c.lister.Get(ctx, req.NamespacedName, policy); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
@@ -101,7 +101,7 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Capture the ready response from each Reconciler.
 	for _, reconciler := range c.reconcilers {
-		response, err := reconciler.Ready(ctx, crp)
+		response, err := reconciler.Ready(ctx, policy)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to evaluate ready state of CertificateRequestPolicy %q: %w",
 				req.NamespacedName.Name, err)
@@ -146,19 +146,19 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 		message = fmt.Sprintf("CertificateRequestPolicy is not ready for evaluation: %s", el.ToAggregate().Error())
 	}
 
-	needsUpdate := c.setCertificateRequestPolicyCondition(crp, cmpapi.CertificateRequestPolicyCondition{
-		Type:    cmpapi.CertificateRequestPolicyConditionReady,
+	needsUpdate := c.setCertificateRequestPolicyCondition(policy, policyapi.CertificateRequestPolicyCondition{
+		Type:    policyapi.CertificateRequestPolicyConditionReady,
 		Status:  status,
 		Reason:  reason,
 		Message: message,
 	})
 
 	log.V(2).Info("successfully synced")
-	c.recorder.Event(crp, eventtype, reason, message)
+	c.recorder.Event(policy, eventtype, reason, message)
 
 	if needsUpdate {
 		log.Info("updating ready condition status")
-		return result, c.client.Status().Update(ctx, crp)
+		return result, c.client.Status().Update(ctx, policy)
 	}
 
 	return result, nil
@@ -173,12 +173,12 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 // Type and Status already exists.
 // Returns true if the condition has been updated or an existing condition has
 // been updated. Returns false otherwise.
-func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(crp *cmpapi.CertificateRequestPolicy, condition cmpapi.CertificateRequestPolicyCondition) bool {
+func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(policy *policyapi.CertificateRequestPolicy, condition policyapi.CertificateRequestPolicyCondition) bool {
 	condition.LastTransitionTime = &metav1.Time{Time: c.clock.Now()}
-	condition.ObservedGeneration = crp.Generation
+	condition.ObservedGeneration = policy.Generation
 
-	var updatedConditions []cmpapi.CertificateRequestPolicyCondition
-	for _, existingCondition := range crp.Status.Conditions {
+	var updatedConditions []policyapi.CertificateRequestPolicyCondition
+	for _, existingCondition := range policy.Status.Conditions {
 		// Ignore any existing conditions which don't match the incoming type and
 		// add back to set.
 		if existingCondition.Type != condition.Type {
@@ -198,7 +198,7 @@ func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(crp *c
 		}
 	}
 
-	crp.Status.Conditions = append(updatedConditions, condition)
+	policy.Status.Conditions = append(updatedConditions, condition)
 
 	return true
 }

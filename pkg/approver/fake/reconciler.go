@@ -19,7 +19,7 @@ package fake
 import (
 	"context"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
@@ -28,18 +28,18 @@ var _ approver.Reconciler = &FakeReconciler{}
 // FakeReconciler is a testing reconciler designed to mock Reconcilers with a
 // pre-determined response.
 type FakeReconciler struct {
-	readyFunc func(context.Context, *cmpapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)
+	readyFunc func(context.Context, *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)
 }
 
 func NewFakeReconciler() *FakeReconciler {
 	return new(FakeReconciler)
 }
 
-func (f *FakeReconciler) WithReady(fn func(context.Context, *cmpapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)) *FakeReconciler {
+func (f *FakeReconciler) WithReady(fn func(context.Context, *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)) *FakeReconciler {
 	f.readyFunc = fn
 	return f
 }
 
-func (f *FakeReconciler) Ready(ctx context.Context, crp *cmpapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-	return f.readyFunc(ctx, crp)
+func (f *FakeReconciler) Ready(ctx context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+	return f.readyFunc(ctx, policy)
 }

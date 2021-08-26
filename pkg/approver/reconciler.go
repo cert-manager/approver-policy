@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 // ReconcilerReadyResponse is the response to this Reconciler evaluating
@@ -55,5 +55,5 @@ type Reconciler interface {
 	// to this Reconciler.
 	// A returned error means that there was an error when trying to evaluate the
 	// Ready state. A returned error will have Ready be retried.
-	Ready(context.Context, *cmpapi.CertificateRequestPolicy) (ReconcilerReadyResponse, error)
+	Ready(context.Context, *policyapi.CertificateRequestPolicy) (ReconcilerReadyResponse, error)
 }
