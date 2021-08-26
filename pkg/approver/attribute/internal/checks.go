@@ -22,11 +22,10 @@ import (
 	"net/url"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	"github.com/cert-manager/policy-approver/pkg/approver/attribute/internal/wildcard"
+	"github.com/cert-manager/policy-approver/pkg/approver/internal"
 )
 
 // String will match a policy string against a given string value, using
@@ -37,7 +36,7 @@ func String(el *field.ErrorList, path *field.Path, policy *string, request strin
 		return
 	}
 
-	if !wildcard.Matchs(*policy, request) {
+	if !internal.WildcardMatchs(*policy, request) {
 		*el = append(*el, field.Invalid(path, request, *policy))
 	}
 }
@@ -50,7 +49,7 @@ func Strings(el *field.ErrorList, path *field.Path, policy *[]string, request st
 		return
 	}
 
-	if !wildcard.Contains(*policy, request) {
+	if !internal.WildcardContains(*policy, request) {
 		*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%v", *policy)))
 	}
 }
@@ -63,7 +62,7 @@ func StringSlice(el *field.ErrorList, path *field.Path, policy *[]string, reques
 		return
 	}
 
-	if !wildcard.Subset(*policy, request) {
+	if !internal.WildcardSubset(*policy, request) {
 		*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%v", *policy)))
 	}
 }
@@ -104,33 +103,6 @@ func KeyUsageSlice(el *field.ErrorList, path *field.Path, policy *[]cmapi.KeyUsa
 	}
 
 	StringSlice(el, path, &policyS, requestS)
-}
-
-// ObjectReference will match a policy object reference slice against a given
-// object reference, using wildcard matches for each field. A request must
-// wildcard match a single policy slice element in its entirety.
-func ObjectReference(el *field.ErrorList, path *field.Path, policy *[]cmmeta.ObjectReference, request cmmeta.ObjectReference) {
-	// Allow all
-	if policy == nil {
-		return
-	}
-
-	for _, policyI := range *policy {
-		if !wildcard.Matchs(policyI.Name, request.Name) {
-			continue
-		}
-		if !wildcard.Matchs(policyI.Kind, request.Kind) {
-			continue
-		}
-		if !wildcard.Matchs(policyI.Group, request.Group) {
-			continue
-		}
-
-		// This policy matched, return
-		return
-	}
-
-	*el = append(*el, field.Invalid(path, request, fmt.Sprintf("%v", *policy)))
 }
 
 // MinDuration will compare the policy duration being larger than the request.

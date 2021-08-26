@@ -17,20 +17,20 @@ limitations under the License.
 // !!
 // Modified from https://github.com/minio/minio/blob/RELEASE.2020-06-22T03-12-50Z.hotfix/pkg/wildcard/match.go
 
-package wildcard
+package internal
 
 // Wildcards '*' in patterns represent any string which has a length of 0 or
 // more. A pattern containing only "*" will match anything. A pattern
 // containing "*foo" will match "foo" as well as any string which ends in "foo"
 // (e.g. "bar-foo").
 
-// Subset returns whether the members is a subset of patterns which can include
-// wildcards ('*'). Members is a subset of patterns if all members can be
-// expressed by at least one passed pattern. The slice length of patterns can
-// be less than members.
-func Subset(patterns, members []string) bool {
+// WildcardSubset returns whether the members is a subset of patterns which can
+// include wildcards ('*'). Members is a subset of patterns if all members can
+// be expressed by at least one passed pattern. The slice length of patterns
+// can be less than members.
+func WildcardSubset(patterns, members []string) bool {
 	for _, member := range members {
-		if !Contains(patterns, member) {
+		if !WildcardContains(patterns, member) {
 			return false
 		}
 	}
@@ -38,11 +38,12 @@ func Subset(patterns, members []string) bool {
 	return true
 }
 
-// Contains will return true if the given string matches at least one of the
-// passed patterns. Patterns is a string slice which supports wildcards ('*').
-func Contains(patterns []string, member string) bool {
+// WildcardContains will return true if the given string matches at least one
+// of the passed patterns. Patterns is a string slice which supports wildcards
+// ('*').
+func WildcardContains(patterns []string, member string) bool {
 	for _, pattern := range patterns {
-		if Matchs(pattern, member) {
+		if WildcardMatchs(pattern, member) {
 			return true
 		}
 	}
@@ -50,9 +51,9 @@ func Contains(patterns []string, member string) bool {
 	return false
 }
 
-// Matches will return true if the given string matches the pattern. Pattern is
-// a string which supports wildcards ('*').
-func Matchs(pattern, str string) bool {
+// WildcardMatchs will return true if the given string matches the pattern.
+// Pattern is a string which supports wildcards ('*').
+func WildcardMatchs(pattern, str string) bool {
 	if len(pattern) == 0 {
 		return len(str) == 0
 	}

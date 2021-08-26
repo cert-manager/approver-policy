@@ -39,14 +39,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/approver/manager"
-	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
 // Options hold options for the policy-approver controller.
 type Options struct {
 	// Log is the Policy controller logger.
 	Log logr.Logger
+
+	// Evaluators is the list of registered Approver Evaluators that  will be
+	// used to build the approver manager.
+	Evaluators []approver.Evaluator
 }
 
 // controller is a controller-runtime Controller which evaluates whether
@@ -82,7 +86,7 @@ func AddPolicyController(ctx context.Context, mgr ctrlmgr.Manager, opts Options)
 		recorder: mgr.GetEventRecorderFor("policy.cert-manager.io"),
 		client:   mgr.GetClient(),
 		lister:   mgr.GetCache(),
-		manager:  manager.NewSubjectAccessReview(mgr.GetClient(), registry.Shared.Evaluators()),
+		manager:  manager.NewSubjectAccessReview(mgr.GetClient(), opts.Evaluators),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).

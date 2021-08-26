@@ -26,7 +26,6 @@ import (
 	"net/url"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	utilpki "github.com/jetstack/cert-manager/pkg/util/pki"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -44,6 +43,9 @@ func init() {
 
 var _ approver.Interface = attribute{}
 
+// attribute is the "default" Approver that is responsible for the base fields
+// on the CertificateRequestPolicy. It is expected that attribute must _always_
+// be registered for all policy-approvers.
 type attribute struct{}
 
 type checkStrategy int
@@ -55,7 +57,6 @@ const (
 	checkIPs
 	checkURLs
 	checkUsages
-	checkObjRef
 	checkMinDur
 	checkMaxDur
 	checkMinSize
@@ -102,8 +103,6 @@ func (b attribute) Evaluate(_ context.Context, policy *policyapi.CertificateRequ
 			internal.URLSlice(&el, path.Child(check.path), check.policy.(*[]string), check.request.([]*url.URL))
 		case checkUsages:
 			internal.KeyUsageSlice(&el, path.Child(check.path), check.policy.(*[]cmapi.KeyUsage), check.request.([]cmapi.KeyUsage))
-		case checkObjRef:
-			internal.ObjectReference(&el, path.Child(check.path), check.policy.(*[]cmmeta.ObjectReference), check.request.(cmmeta.ObjectReference))
 		case checkMinDur:
 			internal.MinDuration(&el, path.Child(check.path), check.policy.(*metav1.Duration), check.request.(*metav1.Duration))
 		case checkMaxDur:
@@ -162,7 +161,6 @@ func buildChecks(policy *policyapi.CertificateRequestPolicy, cr *cmapi.Certifica
 		{"allowedIPAddresses", policy.Spec.AllowedIPAddresses, csr.IPAddresses, checkIPs},
 		{"allowedURIs", policy.Spec.AllowedURIs, csr.URIs, checkURLs},
 		{"allowedEmailAddresses", policy.Spec.AllowedEmailAddresses, csr.EmailAddresses, checkStringSlice},
-		{"allowedIssuers", policy.Spec.AllowedIssuers, cr.Spec.IssuerRef, checkObjRef},
 		{"allowedIsCA", policy.Spec.AllowedIsCA, cr.Spec.IsCA, checkBool},
 		// TODO: append x509 encoded usages
 		{"allowedKeyUsages", policy.Spec.AllowedUsages, cr.Spec.Usages, checkUsages},
@@ -208,4 +206,9 @@ func parsePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 	default:
 		return "", -1, parseKeyError
 	}
+}
+
+// Load the base evaluator checks.
+func init() {
+	registry.Shared.Store(attribute{})
 }
