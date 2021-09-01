@@ -55,11 +55,11 @@ func Test_Review(t *testing.T) {
 		expResponse ReviewResponse
 		expErr      bool
 	}{
-		"if no CertificateRequestPolicies exist, return ResultUnrpocessed": {
+		"if no CertificateRequestPolicies exist, return ResultUnprocessed": {
 			evaluator: expNoEvaluation,
 			predicate: func(t *testing.T) predicate.Predicate {
 				return func(_ context.Context, _ *cmapi.CertificateRequest, _ []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
-					t.Fatal("unexpected predicate  call")
+					t.Fatal("unexpected predicate call")
 					return nil, nil
 				}
 			},

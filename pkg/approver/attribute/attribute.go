@@ -63,7 +63,8 @@ func (a attribute) Prepare(_ context.Context, _ manager.Manager) error {
 	return nil
 }
 
-// Ready always returns ready.
+// Ready always returns ready. Attribute can never be in a non-Ready state
+// since it doesn't have any dependencies.
 func (a attribute) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
