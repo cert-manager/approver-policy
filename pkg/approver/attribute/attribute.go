@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
@@ -54,10 +55,16 @@ func (a attribute) RegisterFlags(_ *pflag.FlagSet) {
 // validation.
 func (a attribute) Prepare(_ context.Context, _ manager.Manager) error {
 	for _, approver := range registry.Shared.Approvers() {
-		// Don't allow plugins with the same name as the base attribute approver.
+		// Only track plugins, not the attribute approver itself.
 		if approver.Name() != a.Name() {
 			a.registeredPlugins = append(a.registeredPlugins, approver.Name())
 		}
 	}
 	return nil
+}
+
+// Ready always returns ready. Attribute can never be in a non-Ready state
+// since it doesn't have any dependencies.
+func (a attribute) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }

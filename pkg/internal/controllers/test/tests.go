@@ -37,7 +37,7 @@ import (
 
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	_ "github.com/cert-manager/policy-approver/pkg/approver/attribute"
-	"github.com/cert-manager/policy-approver/pkg/internal/controller"
+	"github.com/cert-manager/policy-approver/pkg/internal/controllers"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
@@ -79,8 +79,8 @@ var _ = Context("Policy", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(controller.AddPolicyController(ctx, mgr,
-			controller.Options{Log: logf.Log, Evaluators: registry.Shared.Evaluators()},
+		Expect(controllers.AddControllers(ctx, controllers.Options{
+			Log: logf.Log, Manager: mgr, Evaluators: registry.Shared.Evaluators()},
 		)).NotTo(HaveOccurred())
 
 		By("Running Policy controller")

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"context"
@@ -33,31 +33,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	ctrlmgr "sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/approver/manager"
 )
 
-// Options hold options for the policy-approver controller.
-type Options struct {
-	// Log is the Policy controller logger.
-	Log logr.Logger
-
-	// Evaluators is the list of registered Approver Evaluators that  will be
-	// used to build the approver manager.
-	Evaluators []approver.Evaluator
-}
-
-// controller is a controller-runtime Controller which evaluates whether
-// reconciled CertificateRequests should be Approved or Denied based on
+// certificaterequests is a controller-runtime Reconciler which evaluates
+// whether reconciled CertificateRequests should be Approved or Denied based on
 // registered policy evaluators.
-type controller struct {
-	// log is a shared logger for the policy controller.
+type certificaterequests struct {
+	// log is logger for the certificaterequests controller.
 	log logr.Logger
 
 	// recorder is used for creating Kubernetes events on resources.
@@ -78,18 +66,18 @@ type controller struct {
 	manager manager.Interface
 }
 
-// AddPolicyController will register the Policy controller with the
-// controller-runtime Manager.
-func AddPolicyController(ctx context.Context, mgr ctrlmgr.Manager, opts Options) error {
-	c := &controller{
-		log:      opts.Log.WithName("controller").WithName("certificaterequest"),
-		recorder: mgr.GetEventRecorderFor("policy.cert-manager.io"),
-		client:   mgr.GetClient(),
-		lister:   mgr.GetCache(),
-		manager:  manager.NewSubjectAccessReview(mgr.GetClient(), opts.Evaluators),
+// addCertificateRequestController will register the certificaterequests
+// controller with the controller-runtime Manager.
+func addCertificateRequestController(ctx context.Context, opts Options) error {
+	c := &certificaterequests{
+		log:      opts.Log.WithName("certificaterequests"),
+		recorder: opts.Manager.GetEventRecorderFor("policy.cert-manager.io"),
+		client:   opts.Manager.GetClient(),
+		lister:   opts.Manager.GetCache(),
+		manager:  manager.New(opts.Manager.GetCache(), opts.Manager.GetClient(), opts.Evaluators),
 	}
 
-	return ctrl.NewControllerManagedBy(mgr).
+	return ctrl.NewControllerManagedBy(opts.Manager).
 		For(new(cmapi.CertificateRequest), builder.WithPredicates(
 			// Only process CertificateRequests which have not yet got an approval
 			// status.
@@ -135,9 +123,9 @@ func AddPolicyController(ctx context.Context, mgr ctrlmgr.Manager, opts Options)
 // Reconcile is the top level function for reconciling over synced
 // CertificateRequests.
 // Reconcile will be called whenever a CertificateRequest event happens. This
-// func will call the evaluator manager to evaluate whether a
+// function will call the approver manager to evaluate whether a
 // CertificateRequest should be approved, denied, or left alone.
-func (c *controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := c.log.WithValues("namespace", req.NamespacedName.Namespace, "name", req.NamespacedName.Name)
 	log.V(2).Info("syncing certificaterequest")
 

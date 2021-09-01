@@ -45,4 +45,8 @@ type Interface interface {
 	// Webhook implements admission functions for CertificateRequestPolicy
 	// resources.
 	Webhook
+
+	// Reconciler is responsible for determining the status of a
+	// CertificateRequestPolicy according to this Approver.
+	Reconciler
 }

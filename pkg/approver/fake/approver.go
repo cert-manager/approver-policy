@@ -35,6 +35,7 @@ type FakeApprover struct {
 	prepareFn       func(context.Context, manager.Manager) error
 	*FakeEvaluator
 	*FakeWebhook
+	*FakeReconciler
 }
 
 func NewFakeApprover() *FakeApprover {

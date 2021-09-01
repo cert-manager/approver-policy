@@ -57,8 +57,9 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 
 	switch *req.RequestKind {
 	case metav1.GroupVersionKind{Group: policy.GroupName, Version: "v1alpha1", Kind: "CertificateRequestPolicy"}:
-		var policy policyapi.CertificateRequestPolicy
+		log = log.WithValues("kind", "CertificateRequestPolicy")
 
+		var policy policyapi.CertificateRequestPolicy
 		v.lock.RLock()
 		err := v.decoder.Decode(req, &policy)
 		v.lock.RUnlock()
