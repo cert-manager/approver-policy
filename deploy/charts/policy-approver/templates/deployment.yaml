@@ -40,21 +40,21 @@ spec:
 
           - "--webhook-host={{.Values.app.webhook.host}}"
           - "--webhook-port={{.Values.app.webhook.port}}"
-          - "--webhook-certificate-dir=/tls"
+          - "--webhook-certificate-dir=/var/run/secrets/policy-approver"
 
         volumeMounts:
-        - mountPath: /tls
-          name: tls
+        - mountPath: /var/run/secrets/policy-approver
+          name: webhook-tls
           readOnly: true
         {{- if .Values.volumeMounts }}
 {{ toYaml .Values.volumeMounts | indent 10 }}
-       {{- end }}
+        {{- end }}
 
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
 
       volumes:
-      - name: tls
+      - name: webhook-tls
         secret:
           defaultMode: 420
           secretName: {{ include "cert-manager-policy-approver.name" . }}-tls

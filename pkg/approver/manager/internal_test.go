@@ -38,7 +38,7 @@ func Test_Review(t *testing.T) {
 	rootDir := env.RootDirOrSkip(t)
 	env := env.RunControlPlane(t,
 		filepath.Join(rootDir, "bin/cert-manager"),
-		filepath.Join(rootDir, "config/crd/bases"),
+		filepath.Join(rootDir, "deploy/charts/policy-approver/templates/crds"),
 	)
 
 	expNoEvaluation := func(t *testing.T) approver.Evaluator {

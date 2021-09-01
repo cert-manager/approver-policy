@@ -30,7 +30,7 @@ func Test_Integration(t *testing.T) {
 
 	env = testenv.RunControlPlane(t,
 		filepath.Join(rootDir, "bin/cert-manager"),
-		filepath.Join(rootDir, "config/crd/bases"),
+		filepath.Join(rootDir, "deploy/charts/policy-approver/templates/crds"),
 	)
 	testenv.RunSuite(t, "integration-policy-approver", "../../../../_artifacts")
 }

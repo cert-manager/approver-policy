@@ -50,7 +50,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 				Scheme:                        policyapi.GlobalScheme,
-				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
 				LeaderElection:                true,
 				LeaderElectionID:              "policy.cert-manager.io",
 				LeaderElectionReleaseOnCancel: true,

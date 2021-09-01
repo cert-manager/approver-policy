@@ -26,6 +26,7 @@ GROUPS_WITH_VERSIONS="policy:v1alpha1"
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 BIN_DIR=${SCRIPT_ROOT}/bin
+CRDS_DIR=${SCRIPT_ROOT}/deploy/charts/policy-approver/templates/crds/
 
 function codegen::join() { local IFS="$1"; shift; echo "$*"; }
 
@@ -43,5 +44,5 @@ done
 echo "Generating deepcopy funcs"
 ${BIN_DIR}/deepcopy-gen --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" -O zz_generated.deepcopy --bounding-dirs "${APIS_PKG}" -h $BOILERPLATE
 
-echo "Generating CRDs in ./deploy/charts/policy-approver/templates"
-${BIN_DIR}/controller-gen crd schemapatch:manifests=./deploy/charts/policy-approver/templates/ output:dir=./deploy/charts/policy-approver/templates/ paths=./pkg/apis/...
+echo "Generating CRDs in $CRDS_DIR"
+${BIN_DIR}/controller-gen crd schemapatch:manifests=$CRDS_DIR output:dir=$CRDS_DIR paths=./pkg/apis/...
