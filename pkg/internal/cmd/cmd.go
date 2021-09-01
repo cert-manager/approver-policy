@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/policy-approver/pkg/approver/attribute"
 	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/pkg/internal/controllers"
 	"github.com/cert-manager/policy-approver/pkg/internal/webhook"
@@ -51,6 +52,18 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logf.Log = opts.Logr.WithName("apiutil")
 			log := opts.Logr.WithName("main")
+
+			log.Info("running policy-approver webhook bootstrap process...")
+			err := bootstrap.Run(ctx, bootstrap.Options{
+				Log:                    opts.Logr,
+				RestConfig:             opts.RestConfig,
+				Evaluator:              attribute.Attribute{},
+				WebhookCertificatesDir: opts.Webhook.CertDir,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to run bootstrap process")
+			}
+			log.Info("policy-approver webhook bootstrap process complete")
 
 			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 				Scheme:                        policyapi.GlobalScheme,

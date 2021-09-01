@@ -31,7 +31,7 @@ import (
 // Validate validates that the processed CertificateRequestPolicy meets the
 // requirements for the base set of attribute fields, and there are no parsing
 // errors in the values.
-func (a attribute) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+func (a Attribute) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 	var (
 		el      field.ErrorList
 		fldPath = field.NewPath("spec")

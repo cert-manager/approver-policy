@@ -32,12 +32,12 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/klog/klogr"
+	"k8s.io/klog/v2/klogr"
 	fakeclock "k8s.io/utils/clock/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	fakeapprover "github.com/cert-manager/policy-approver/pkg/approver/fake"
 )
@@ -225,7 +225,7 @@ func Test_evaluateWebhookCertificateRequest(t *testing.T) {
 					Name: "cert-manager-policy-approver", Kind: "Issuer", Group: "cert-manager.io",
 				}),
 			),
-			evaluator: fakeapprover.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *cmpapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+			evaluator: fakeapprover.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 				return approver.EvaluationResponse{}, errors.New("this is an error")
 			}),
 			expObject: gen.CertificateRequestFrom(baseRequest,
@@ -241,7 +241,7 @@ func Test_evaluateWebhookCertificateRequest(t *testing.T) {
 					Name: "cert-manager-policy-approver", Kind: "Issuer", Group: "cert-manager.io",
 				}),
 			),
-			evaluator: fakeapprover.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *cmpapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+			evaluator: fakeapprover.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 				return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "This is a denied message"}, nil
 			}),
 			expObject: gen.CertificateRequestFrom(baseRequest,
@@ -266,7 +266,7 @@ func Test_evaluateWebhookCertificateRequest(t *testing.T) {
 					Name: "cert-manager-policy-approver", Kind: "Issuer", Group: "cert-manager.io",
 				}),
 			),
-			evaluator: fakeapprover.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *cmpapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+			evaluator: fakeapprover.NewFakeEvaluator().WithEvaluate(func(_ context.Context, _ *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 				return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
 			}),
 			expObject: gen.CertificateRequestFrom(baseRequest,
@@ -291,7 +291,7 @@ func Test_evaluateWebhookCertificateRequest(t *testing.T) {
 			apiutil.Clock = fixedclock
 
 			fakeclient := fakeclient.NewClientBuilder().
-				WithScheme(cmpapi.GlobalScheme).
+				WithScheme(policyapi.GlobalScheme).
 				WithRuntimeObjects(test.request).
 				Build()
 

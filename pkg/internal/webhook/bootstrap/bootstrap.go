@@ -29,34 +29,15 @@ import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/rest"
 	kcache "k8s.io/client-go/tools/cache"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
-
-// webhookCertificateRequestSelector is a client.ListOptions  used for listing
-// CertificateRequests in the cert-manager namespace that have been labelled as
-// being used for the Webhook.
-var (
-	webhookCertificateRequestListOptions *client.ListOptions
-)
-
-func init() {
-	r, err := labels.NewRequirement("policy.cert-manager.io/webhook", selection.Equals, []string{"bootstrap"})
-	if err != nil {
-		panic(err)
-	}
-	webhookCertificateRequestListOptions = &client.ListOptions{
-		LabelSelector: labels.NewSelector().Add(*r),
-		Namespace:     "cert-manager",
-	}
-}
 
 // Options hold options for the policy-approver Webhook Bootstraper.
 type Options struct {
@@ -102,9 +83,9 @@ type bootstrapper struct {
 
 // Run will start the Webhook bootstrap operation for policy-approver. Start
 // will block until all needed resources for the policy-approver are made
-// available.  Start will continue to manage these resources in the background.
+// available. Run will continue to manage these resources in the background.
 func Run(ctx context.Context, opts Options) error {
-	client, err := client.New(opts.RestConfig, client.Options{Scheme: cmpapi.GlobalScheme})
+	client, err := client.New(opts.RestConfig, client.Options{Scheme: policyapi.GlobalScheme})
 	if err != nil {
 		return fmt.Errorf("failed to build bootstrapper client: %w", err)
 	}
@@ -118,7 +99,7 @@ func Run(ctx context.Context, opts Options) error {
 	}
 
 	cache, err := cache.New(opts.RestConfig, cache.Options{
-		Scheme: cmpapi.GlobalScheme, Namespace: "cert-manager",
+		Scheme: policyapi.GlobalScheme, Namespace: "cert-manager",
 		SelectorsByObject: cache.SelectorsByObject{
 			&cmapi.CertificateRequest{}: {Label: labels.SelectorFromSet(labels.Set{"policy.cert-manager.io/webhook": "bootstrap"})},
 		},
@@ -274,13 +255,13 @@ func (b *bootstrapper) evaluateWebhookCertificateRequest(ctx context.Context, lo
 // webhookPolicy returns the CertificateRequestPolicy that is used to evaluate
 // whether a CertificateRequest should be approved to be used as a
 // policy-approver webhook serving certificate.
-func webhookPolicy() *cmpapi.CertificateRequestPolicy {
+func webhookPolicy() *policyapi.CertificateRequestPolicy {
 	alg := cmapi.ECDSAKeyAlgorithm
-	return &cmpapi.CertificateRequestPolicy{
-		Spec: cmpapi.CertificateRequestPolicySpec{
+	return &policyapi.CertificateRequestPolicy{
+		Spec: policyapi.CertificateRequestPolicySpec{
 			AllowedDNSNames: &[]string{"cert-manager-policy-approver.cert-manager.svc"},
 			AllowedUsages:   &[]cmapi.KeyUsage{cmapi.UsageServerAuth},
-			AllowedPrivateKey: &cmpapi.CertificateRequestPolicyPrivateKey{
+			AllowedPrivateKey: &policyapi.CertificateRequestPolicyPrivateKey{
 				AllowedAlgorithm: &alg,
 				MinSize:          pointer.Int(521),
 				MaxSize:          pointer.Int(521),
