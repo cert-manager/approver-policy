@@ -36,7 +36,7 @@ import (
 )
 
 var _ = Describe("Smoke", func() {
-	It("should create a CertificateRequestPolicy, RBAC bind to all users, deny and approver a request", func() {
+	It("should create a CertificateRequestPolicy, RBAC bind to all users, deny and approve a request", func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
