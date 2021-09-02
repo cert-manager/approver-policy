@@ -137,21 +137,9 @@ def file_extension(filename):
 
 
 skipped_dirs = [
-    'Godeps',
-    'third_party',
-    '_gopath',
-    '_output',
     '.git',
-    'cluster/env.sh',
-    "vendor",
     "docs/venv",
     "hack",
-    "pkg/tarmak/mocks",
-    "pkg/tarmak/assets",
-    "puppet/modules",
-    "pkg/wing/mocks",
-    "docs/generated",
-    "docs/_build/html/node_modules",
     "bin",
 ]
 
@@ -202,9 +190,11 @@ def get_regexs():
     regexs["year"] = re.compile('YEAR')
     # dates can be 2014, 2015, 2016, or 2017; company holder names can be anything
     regexs["date"] = re.compile('(2014|2015|2016|2017)')
-    # strip // +build \n\n build constraints
-    regexs["go_build_constraints"] = re.compile(r"^(// \+build.*\n)+\n",
-                                                re.MULTILINE)
+    # strip the following build constraints/tags:
+    # //go:build
+    # // +build \n\n
+    regexs["go_build_constraints"] = re.compile(
+        r"^(//(go:build| \+build).*\n)+\n", re.MULTILINE)
     # strip #!.* from shell scripts
     regexs["shebang"] = re.compile(r"^(#!.*\n)\n*", re.MULTILINE)
     return regexs
