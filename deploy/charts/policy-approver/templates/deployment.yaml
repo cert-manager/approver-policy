@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cert-manager-policy-approver.name" . }}
+  labels:
+{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "cert-manager-policy-approver.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "cert-manager-policy-approver.name" . }}
+    spec:
+      serviceAccountName: {{ include "cert-manager-policy-approver.name" . }}
+      containers:
+      - name: {{ include "cert-manager-policy-approver.name" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.app.webhook.port }}
+        - containerPort: {{ .Values.app.metrics.port }}
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.app.readinessProbe.port }}
+            path: "/readyz"
+          initialDelaySeconds: 3
+          periodSeconds: 7
+        command: ["cert-manager-policy-approver"]
+        args:
+          - "--log-level={{.Values.app.logLevel}}"
+          {{- range .Values.app.extraArgs }}
+          - "{{ . }}"
+          {{- end  }}
+
+          - "--metrics-bind-address=:{{.Values.app.metrics.port}}"
+          - "--readiness-probe-bind-address=:{{.Values.app.readinessProbe.port}}"
+
+          - "--webhook-host={{.Values.app.webhook.host}}"
+          - "--webhook-port={{.Values.app.webhook.port}}"
+          - "--webhook-certificate-dir=/var/run/secrets/policy-approver"
+
+        volumeMounts:
+        - mountPath: /var/run/secrets/policy-approver
+          name: webhook-tls
+          readOnly: true
+        {{- if .Values.volumeMounts }}
+{{ toYaml .Values.volumeMounts | indent 10 }}
+        {{- end }}
+
+        resources:
+          {{- toYaml .Values.resources | indent 12 }}
+
+      volumes:
+      - name: webhook-tls
+        secret:
+          defaultMode: 420
+          secretName: {{ include "cert-manager-policy-approver.name" . }}-tls
+      {{- if .Values.volumes }}
+{{ toYaml .Values.volumes | indent 6 }}
+      {{- end }}
