@@ -39,16 +39,28 @@ build: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
 
 .PHONY: fmt
-fmt:
+fmt: ## Run go fmt against code.
 	go fmt ./...
 
 .PHONY: vet
-vet:
+vet: ## Run go vet against code.
 	go vet ./...
+
+.PHONY: lint
+lint: ## Run linters against code.
+	./hack/verify-boilerplate.sh
 
 .PHONY: test
 test: depend lint vet ## test policy-approver
 	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
+
+.PHONY: generate
+generate: depend ## generate code
+	./hack/update-codegen.sh
+
+.PHONY: build
+build: ## Build manager binary.
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
 
 .PHONY: verify
 verify: test build ## Verify repo.
