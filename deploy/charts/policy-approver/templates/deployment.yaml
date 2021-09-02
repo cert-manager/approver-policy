@@ -51,7 +51,7 @@ spec:
         {{- end }}
 
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+          {{- toYaml .Values.resources | indent 12 }}
 
       volumes:
       - name: webhook-tls
