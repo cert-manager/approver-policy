@@ -24,6 +24,28 @@ K8S_CLUSTER_NAME ?= policy-approver
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+.PHONY: clean
+clean: ## clean up created files
+	rm -rf \
+		$(BINDIR) \
+		_artifacts
+
+.PHONY: fmt
+fmt: ## Run go fmt against code.
+	go fmt ./...
+
+.PHONY: vet
+vet: ## Run go vet against code.
+	go vet ./...
+
+.PHONY: lint
+lint: ## Run linters against code.
+	./hack/verify-boilerplate.sh
+
+.PHONY: test
+test: depend lint vet ## test policy-approver
+	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
+
 .PHONY: generate
 generate: depend ## generate code
 	./hack/update-codegen.sh
@@ -31,22 +53,6 @@ generate: depend ## generate code
 .PHONY: build
 build: ## Build manager binary.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
-
-.PHONY: lint
-lint: fmt vet ## Run linters against code.
-	./hack/verify-boilerplate.sh
-
-.PHONY: fmt
-fmt:
-	go fmt ./...
-
-.PHONY: vet
-vet:
-	go vet ./...
-
-.PHONY: test
-test: depend lint vet ## test policy-approver
-	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
 
 .PHONY: verify
 verify: test build ## Verify repo.

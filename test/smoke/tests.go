@@ -19,7 +19,6 @@ package smoke
 import (
 	"context"
 	"crypto/x509"
-	"fmt"
 
 	apiutil "github.com/jetstack/cert-manager/pkg/api/util"
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
@@ -33,16 +32,16 @@ import (
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	cmpapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
 var _ = Describe("Smoke", func() {
-	It("should create a CertificateRequestPolicy, RBAC bind to all users, deny and approver a request", func() {
+	It("should create a CertificateRequestPolicy, RBAC bind to all users, deny and approve a request", func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
 		cl, err := client.New(cnf.RestConfig, client.Options{
-			Scheme: cmpapi.GlobalScheme,
+			Scheme: policyapi.GlobalScheme,
 		})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -65,24 +64,24 @@ var _ = Describe("Smoke", func() {
 		Expect(cl.Create(ctx, &issuer)).NotTo(HaveOccurred())
 
 		By("Creating CertificateRequestPolicy for test")
-		crp := cmpapi.CertificateRequestPolicy{
+		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "smoke-test-policy-",
 			},
-			Spec: cmpapi.CertificateRequestPolicySpec{
+			Spec: policyapi.CertificateRequestPolicySpec{
 				AllowedCommonName: pointer.String("*.test.policy"),
-				IssuerRefSelector: &cmpapi.CertificateRequestPolicyIssuerRefSelector{
+				IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
 					Name: pointer.String(issuer.Name),
 				},
 			},
 		}
-		Expect(cl.Create(ctx, &crp)).NotTo(HaveOccurred())
+		Expect(cl.Create(ctx, &policy)).NotTo(HaveOccurred())
 
 		By("Waiting for CertificateRequestPolicy to become ready")
 		Eventually(func() bool {
-			Expect(cl.Get(ctx, client.ObjectKey{Name: crp.Name}, &crp)).NotTo(HaveOccurred())
-			for _, condition := range crp.Status.Conditions {
-				if condition.Type == cmpapi.CertificateRequestPolicyConditionReady {
+			Expect(cl.Get(ctx, client.ObjectKey{Name: policy.Name}, &policy)).NotTo(HaveOccurred())
+			for _, condition := range policy.Status.Conditions {
+				if condition.Type == policyapi.CertificateRequestPolicyConditionReady {
 					return condition.Status == corev1.ConditionTrue
 				}
 			}
@@ -132,13 +131,11 @@ var _ = Describe("Smoke", func() {
 		By("Waiting for CertificateRequest to be denied")
 		Eventually(func() bool {
 			Expect(cl.Get(ctx, client.ObjectKey{Namespace: namespace.Name, Name: certificateRequest.Name}, &certificateRequest)).NotTo(HaveOccurred())
-			fmt.Printf(">>%#+v\n", certificateRequest)
 			return apiutil.CertificateRequestIsDenied(&certificateRequest)
 		}, "5s", "100ms").Should(BeTrue())
-
-		By("Creating CertificateRequest that passes policy")
 		Expect(cl.Delete(ctx, &certificateRequest)).NotTo(HaveOccurred())
 
+		By("Creating CertificateRequest that passes policy")
 		csrPEM, _, err = gen.CSR(x509.RSA, gen.SetCSRCommonName("foo.test.policy"))
 		Expect(err).NotTo(HaveOccurred())
 
@@ -162,7 +159,7 @@ var _ = Describe("Smoke", func() {
 
 		By("Cleaning up test resources")
 		Expect(cl.Delete(ctx, &namespace)).NotTo(HaveOccurred())
-		Expect(cl.Delete(ctx, &crp)).NotTo(HaveOccurred())
+		Expect(cl.Delete(ctx, &policy)).NotTo(HaveOccurred())
 		Expect(cl.Delete(ctx, &role)).NotTo(HaveOccurred())
 		Expect(cl.Delete(ctx, &rolebinding)).NotTo(HaveOccurred())
 		Expect(cl.Delete(ctx, &issuer)).NotTo(HaveOccurred())

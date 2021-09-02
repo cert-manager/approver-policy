@@ -24,5 +24,5 @@ import (
 
 // Test_Smoke runs the full suite of smoke tests against policy-approver
 func Test_Smoke(t *testing.T) {
-	env.RunSuite(t, "smoke-policy-approver", "../../_artifacts")
+	env.RunSuite(t, "policy-approver-smoke", "../../_artifacts")
 }

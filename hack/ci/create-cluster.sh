@@ -8,6 +8,7 @@ KIND_BIN="${KIND_BIN:-$REPO_ROOT/bin/kind}"
 POLICY_APPROVER_TAG="${POLICY_APPROVER_TAG:-smoke}"
 POLICY_APPROVER_REPO="${POLICY_APPROVER_REPO:-quay.io/jetstack/cert-manager-policy-approver}"
 POLICY_APPROVER_IMAGE="$POLICY_APPROVER_REPO:$POLICY_APPROVER_TAG"
+
 echo ">> building policy-approver binary..."
 GOARCH=$(go env GOARCH) GOOS=linux CGO_ENABLED=0 go build -o $REPO_ROOT/bin/policy-approver-linux $REPO_ROOT/cmd/.
 
