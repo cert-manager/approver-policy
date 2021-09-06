@@ -150,7 +150,7 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 		"Port to serve webhook.")
 
 	fs.StringVar(&o.Webhook.CertDir,
-		"webhook-certificate-dir", "/tls",
+		"webhook-certificate-dir", "/tmp",
 		"Directory where the Webhook certificate and private key are located. "+
 			"Certificate and private key must be named 'tls.crt' and 'tls.key' "+
 			"respectively.")

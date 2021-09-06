@@ -23,14 +23,11 @@ import (
 	logf "github.com/jetstack/cert-manager/pkg/logs"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver/attribute"
 	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
 	"github.com/cert-manager/policy-approver/pkg/internal/controllers"
 	"github.com/cert-manager/policy-approver/pkg/internal/webhook"
-	"github.com/cert-manager/policy-approver/pkg/internal/webhook/bootstrap"
 	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
@@ -53,19 +50,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			logf.Log = opts.Logr.WithName("apiutil")
 			log := opts.Logr.WithName("main")
 
-			log.Info("running policy-approver webhook bootstrap process...")
-			err := bootstrap.Run(ctx, bootstrap.Options{
-				Log:                    opts.Logr,
-				RestConfig:             opts.RestConfig,
-				Evaluator:              attribute.Attribute{},
-				WebhookCertificatesDir: opts.Webhook.CertDir,
-			})
-			if err != nil {
-				return fmt.Errorf("failed to run bootstrap process")
-			}
-			log.Info("policy-approver webhook bootstrap process complete")
-
-			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+			mgr, err := ctrl.NewManager(opts.RestConfig, ctrl.Options{
 				Scheme:                        policyapi.GlobalScheme,
 				LeaderElection:                true,
 				LeaderElectionID:              "policy.cert-manager.io",
@@ -81,6 +66,15 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			})
 			if err != nil {
 				return fmt.Errorf("unable to create controller manager: %w", err)
+			}
+
+			if err := webhook.Register(ctx, webhook.Options{
+				Log:                    opts.Logr,
+				Webhooks:               registry.Shared.Webhooks(),
+				WebhookCertificatesDir: opts.Webhook.CertDir,
+				Manager:                mgr,
+			}); err != nil {
+				return fmt.Errorf("failed to register webhook: %w", err)
 			}
 
 			log.Info("preparing approvers...")
@@ -99,11 +93,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			}); err != nil {
 				return fmt.Errorf("failed to add controllers: %w", err)
 			}
-
-			webhook.Register(mgr, webhook.Options{
-				Log:      opts.Logr,
-				Webhooks: registry.Shared.Webhooks(),
-			})
 
 			log.Info("starting policy-approver...")
 			return mgr.Start(ctx)
