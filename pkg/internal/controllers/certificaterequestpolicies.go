@@ -139,11 +139,14 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 		reason = "Ready"
 		message = "CertificateRequestPolicy is ready for approval evaluation"
 	} else {
-		log = log.WithValues("errors", el.ToAggregate().Error())
 		status = corev1.ConditionFalse
 		eventtype = corev1.EventTypeWarning
 		reason = "NotReady"
-		message = fmt.Sprintf("CertificateRequestPolicy is not ready for evaluation: %s", el.ToAggregate().Error())
+		message = "CertificateRequestPolicy is not ready for approval evaluation"
+		if len(el) > 0 {
+			message = fmt.Sprintf("%s: %s", message, el.ToAggregate().Error())
+			log = log.WithValues("errors", el.ToAggregate().Error())
+		}
 	}
 
 	needsUpdate := c.setCertificateRequestPolicyCondition(policy, policyapi.CertificateRequestPolicyCondition{
