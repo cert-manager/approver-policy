@@ -58,14 +58,14 @@ type policyMessage struct {
 // evaluators.
 // CertificateRequestPolicies will be filtered on Review for evaluation with the predicates:
 // - CertificateRequestPolicy is ready
-// - CertificateRequestPolicy IssuerRefSelector matches the CertificateRequest
-//   IssuerRef
+// - CertificateRequestPolicy Selector.IssuerRef matches the CertificateRequest
+// IssuerRef
 // - CertificateRequestPolicy is bound to the user that appears in the
 //   CertificateRequest
 func New(lister client.Reader, client client.Client, evaluators []approver.Evaluator) Interface {
 	return &manager{
 		lister:     lister,
-		predicates: []predicate.Predicate{predicate.Ready, predicate.IssuerRefSelector, predicate.RBACBound(client)},
+		predicates: []predicate.Predicate{predicate.Ready, predicate.SelectorIssuerRef, predicate.RBACBound(client)},
 		evaluators: evaluators,
 	}
 }

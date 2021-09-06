@@ -26,8 +26,8 @@ import (
 // Interface is an Approver.
 // An Approver implements an Evaluator and Webhook.
 type Interface interface {
-	// Name is name of this Approver. Name must be unique to the policy-approver
-	// instance.
+	// Name is name of this Approver. Name must be unique to the
+	// policy-approver instance.
 	Name() string
 
 	// RegisterFlags can be used by Approvers for registering CLI flags which are
