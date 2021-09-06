@@ -262,7 +262,7 @@ type CertificateRequestPolicyConstraintsPrivateKey struct {
 	// requestor for their private key in their request.
 	// An omitted field or value of `nil` permits any Algorithm.
 	// +optional
-	Algorithm *cmapi.PrivateKeyAlgorithm `json:"Algorithm,omitempty"`
+	Algorithm *cmapi.PrivateKeyAlgorithm `json:"algorithm,omitempty"`
 
 	// MinSize defines the minimum key size a requestor may use for their private
 	// key.

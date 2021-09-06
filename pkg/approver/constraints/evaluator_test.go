@@ -130,7 +130,7 @@ func Test_Evaluate(t *testing.T) {
 				Result: approver.ResultDenied,
 				Message: field.ErrorList{
 					field.Invalid(field.NewPath("spec.constraints.privateKey.algorithm"), "RSA", "ECDSA"),
-					field.Invalid(field.NewPath("spec.constraints.privateKey.minSize"), "256", "4000"),
+					field.Invalid(field.NewPath("spec.constraints.privateKey.minSize"), "2048", "4000"),
 				}.ToAggregate().Error(),
 			},
 		},

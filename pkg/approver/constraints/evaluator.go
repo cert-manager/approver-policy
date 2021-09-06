@@ -116,7 +116,7 @@ func decodePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 		if !ok {
 			return "", -1, errors.New("failed to decode RSA public key")
 		}
-		return cmapi.RSAKeyAlgorithm, rsapub.Size(), nil
+		return cmapi.RSAKeyAlgorithm, rsapub.N.BitLen(), nil
 
 	case *ecdsa.PublicKey:
 		ecdsapub, ok := pub.(*ecdsa.PublicKey)

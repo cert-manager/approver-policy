@@ -163,7 +163,7 @@ spec:
                       description: PrivateKey defines the shape of permissible private keys that may be used for the request with this policy. An omitted field or value of `nil` permits the use of any private key by the requestor.
                       type: object
                       properties:
-                        Algorithm:
+                        algorithm:
                           description: Algorithm defines the allowed crypto algorithm that is used by the requestor for their private key in their request. An omitted field or value of `nil` permits any Algorithm.
                           type: string
                           enum:
