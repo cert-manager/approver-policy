@@ -69,9 +69,13 @@ var _ = Describe("Smoke", func() {
 				GenerateName: "smoke-test-policy-",
 			},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				AllowedCommonName: pointer.String("*.test.policy"),
-				IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
-					Name: pointer.String(issuer.Name),
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					CommonName: pointer.String("*.test.policy"),
+				},
+				Selector: policyapi.CertificateRequestPolicySelector{
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: pointer.String(issuer.Name),
+					},
 				},
 			},
 		}

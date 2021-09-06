@@ -18,8 +18,6 @@ package test
 
 import (
 	. "github.com/onsi/ginkgo"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	testenv "github.com/cert-manager/policy-approver/test/env"
 )
@@ -29,7 +27,6 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 }, 60)
 
 var _ = AfterSuite(func() {

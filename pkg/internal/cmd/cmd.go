@@ -88,9 +88,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			log.Info("all approvers ready...")
 
 			if err := controllers.AddControllers(ctx, controllers.Options{
-				Log:        opts.Logr.WithName("controller"),
-				Manager:    mgr,
-				Evaluators: registry.Shared.Evaluators(),
+				Log:         opts.Logr.WithName("controller"),
+				Manager:     mgr,
+				Evaluators:  registry.Shared.Evaluators(),
+				Reconcilers: registry.Shared.Reconcilers(),
 			}); err != nil {
 				return fmt.Errorf("failed to add controllers: %w", err)
 			}
