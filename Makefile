@@ -28,7 +28,6 @@ help: ## Display this help.
 manifests: controller-gen ## Generate CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
-.PHONY: clean
 clean: ## clean up created files
 	rm -rf \
 		$(BINDIR) \
