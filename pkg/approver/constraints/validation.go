@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package attribute
+package constraints
 
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -28,34 +27,50 @@ import (
 	"github.com/cert-manager/policy-approver/pkg/approver"
 )
 
-// Validate validates that the processed CertificateRequestPolicy meets the
-// requirements for the base set of attribute fields, and there are no parsing
-// errors in the values.
-func (a Attribute) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+// Validate validates that the processed CertificateRequestPolicy has valid
+// constraint fields defined and there are no parsing errors in the values.
+func (c Constraints) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+	// If no constraints are defined we can exit early
+	if policy.Spec.Constraints == nil {
+		return approver.WebhookValidationResponse{
+			Allowed: true,
+			Errors:  nil,
+		}, nil
+	}
+
 	var (
 		el      field.ErrorList
-		fldPath = field.NewPath("spec")
+		consts  = policy.Spec.Constraints
+		fldPath = field.NewPath("spec", "constraints")
 	)
 
-	if policy.Spec.AllowedPrivateKey != nil {
-		fldPath := fldPath.Child("allowedPrivateKey")
+	if consts.PrivateKey != nil {
+		fldPath := fldPath.Child("privateKey")
 
-		if policy.Spec.AllowedPrivateKey.AllowedAlgorithm != nil {
-			switch alg := *policy.Spec.AllowedPrivateKey.AllowedAlgorithm; alg {
+		if consts.PrivateKey.Algorithm != nil {
+			switch alg := *consts.PrivateKey.Algorithm; alg {
 			case cmapi.RSAKeyAlgorithm, cmapi.ECDSAKeyAlgorithm, cmapi.Ed25519KeyAlgorithm:
 				break
 			default:
-				el = append(el, field.Invalid(fldPath.Child("allowedAlgorithm"), alg, fmt.Sprintf("must be either one of %q, %q, or %q",
-					cmapi.RSAKeyAlgorithm, cmapi.ECDSAKeyAlgorithm, cmapi.Ed25519KeyAlgorithm)))
+				el = append(el, field.NotSupported(fldPath.Child("algorithm"), alg, []string{string(cmapi.RSAKeyAlgorithm), string(cmapi.ECDSAKeyAlgorithm), string(cmapi.Ed25519KeyAlgorithm)}))
+			}
+
+			if *consts.PrivateKey.Algorithm == cmapi.Ed25519KeyAlgorithm {
+				if consts.PrivateKey.MaxSize != nil {
+					el = append(el, field.Invalid(fldPath.Child("maxSize"), *consts.PrivateKey.MaxSize, fmt.Sprintf("maxSize cannot be defined with algorithm constraint %s", cmapi.Ed25519KeyAlgorithm)))
+				}
+				if consts.PrivateKey.MinSize != nil {
+					el = append(el, field.Invalid(fldPath.Child("minSize"), *consts.PrivateKey.MinSize, fmt.Sprintf("minSize cannot be defined with algorithm constraint %s", cmapi.Ed25519KeyAlgorithm)))
+				}
 			}
 		}
 
-		maxSize := policy.Spec.AllowedPrivateKey.MaxSize
+		maxSize := consts.PrivateKey.MaxSize
 		if maxSize != nil && (*maxSize <= 0 || *maxSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("maxSize"), *maxSize, "must be between 0 and 8192 inclusive"))
 		}
 
-		minSize := policy.Spec.AllowedPrivateKey.MinSize
+		minSize := consts.PrivateKey.MinSize
 		if minSize != nil && (*minSize <= 0 || *minSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("minSize"), *minSize, "must be between 0 and 8192 inclusive"))
 		}
@@ -63,33 +78,6 @@ func (a Attribute) Validate(_ context.Context, policy *policyapi.CertificateRequ
 		if maxSize != nil && minSize != nil && *maxSize < *minSize {
 			el = append(el, field.Invalid(fldPath.Child("maxSize"), *maxSize, "maxSize must be the same value as minSize or larger"))
 		}
-	}
-
-	var unrecognisedNames []string
-	for name := range policy.Spec.Plugins {
-		var found bool
-		for _, known := range a.registeredPlugins {
-			if name == known {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			unrecognisedNames = append(unrecognisedNames, name)
-		}
-	}
-
-	if len(unrecognisedNames) > 0 {
-		// Sort list so testing is deterministic.
-		sort.Strings(unrecognisedNames)
-		for _, name := range unrecognisedNames {
-			el = append(el, field.NotSupported(fldPath.Child("plugins"), name, a.registeredPlugins))
-		}
-	}
-
-	if policy.Spec.IssuerRefSelector == nil {
-		el = append(el, field.Required(fldPath.Child("issuerRefSelector"), "must be defined, hint: `{}` matches everything"))
 	}
 
 	return approver.WebhookValidationResponse{
