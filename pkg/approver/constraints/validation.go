@@ -80,6 +80,16 @@ func (c Constraints) Validate(_ context.Context, policy *policyapi.CertificateRe
 		}
 	}
 
+	if consts.MaxDuration != nil && consts.MinDuration != nil && consts.MaxDuration.Duration < consts.MinDuration.Duration {
+		el = append(el, field.Invalid(fldPath.Child("maxDuration"), consts.MaxDuration.Duration.String(), "maxDuration must be the same value as minDuration or larger"))
+	}
+	if consts.MaxDuration != nil && consts.MaxDuration.Duration < 0 {
+		el = append(el, field.Invalid(fldPath.Child("maxDuration"), consts.MaxDuration.Duration.String(), "maxDuration must be a value greater or equal to 0"))
+	}
+	if consts.MinDuration != nil && consts.MinDuration.Duration < 0 {
+		el = append(el, field.Invalid(fldPath.Child("minDuration"), consts.MinDuration.Duration.String(), "minDuration must be a value greater or equal to 0"))
+	}
+
 	return approver.WebhookValidationResponse{
 		Allowed: len(el) == 0,
 		Errors:  el,

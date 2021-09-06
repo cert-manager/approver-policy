@@ -19,9 +19,11 @@ package constraints
 import (
 	"context"
 	"testing"
+	"time"
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 
@@ -58,6 +60,8 @@ func Test_Validate(t *testing.T) {
 							MinSize:   pointer.Int(9999),
 							MaxSize:   pointer.Int(-1),
 						},
+						MinDuration: &metav1.Duration{Duration: -time.Minute},
+						MaxDuration: &metav1.Duration{Duration: -2 * time.Minute},
 					},
 				},
 			},
@@ -68,6 +72,9 @@ func Test_Validate(t *testing.T) {
 					field.Invalid(field.NewPath("spec.constraints.privateKey.maxSize"), -1, "must be between 0 and 8192 inclusive"),
 					field.Invalid(field.NewPath("spec.constraints.privateKey.minSize"), 9999, "must be between 0 and 8192 inclusive"),
 					field.Invalid(field.NewPath("spec.constraints.privateKey.maxSize"), -1, "maxSize must be the same value as minSize or larger"),
+					field.Invalid(field.NewPath("spec.constraints.maxDuration"), "-2m0s", "maxDuration must be the same value as minDuration or larger"),
+					field.Invalid(field.NewPath("spec.constraints.maxDuration"), "-2m0s", "maxDuration must be a value greater or equal to 0"),
+					field.Invalid(field.NewPath("spec.constraints.minDuration"), "-1m0s", "minDuration must be a value greater or equal to 0"),
 				},
 			},
 		},
@@ -100,6 +107,8 @@ func Test_Validate(t *testing.T) {
 							MinSize:   pointer.Int(100),
 							MaxSize:   pointer.Int(500),
 						},
+						MinDuration: &metav1.Duration{Duration: 0},
+						MaxDuration: &metav1.Duration{Duration: 2 * time.Minute},
 					},
 				},
 			},
