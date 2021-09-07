@@ -66,18 +66,28 @@ func (c Constraints) Validate(_ context.Context, policy *policyapi.CertificateRe
 		}
 
 		maxSize := consts.PrivateKey.MaxSize
-		if maxSize != nil && (*maxSize <= 0 || *maxSize > 8192) {
+		if maxSize != nil && (*maxSize < 0 || *maxSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("maxSize"), *maxSize, "must be between 0 and 8192 inclusive"))
 		}
 
 		minSize := consts.PrivateKey.MinSize
-		if minSize != nil && (*minSize <= 0 || *minSize > 8192) {
+		if minSize != nil && (*minSize < 0 || *minSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("minSize"), *minSize, "must be between 0 and 8192 inclusive"))
 		}
 
 		if maxSize != nil && minSize != nil && *maxSize < *minSize {
 			el = append(el, field.Invalid(fldPath.Child("maxSize"), *maxSize, "maxSize must be the same value as minSize or larger"))
 		}
+	}
+
+	if consts.MaxDuration != nil && consts.MinDuration != nil && consts.MaxDuration.Duration < consts.MinDuration.Duration {
+		el = append(el, field.Invalid(fldPath.Child("maxDuration"), consts.MaxDuration.Duration.String(), "maxDuration must be the same value as minDuration or larger"))
+	}
+	if consts.MaxDuration != nil && consts.MaxDuration.Duration < 0 {
+		el = append(el, field.Invalid(fldPath.Child("maxDuration"), consts.MaxDuration.Duration.String(), "maxDuration must be a value greater or equal to 0"))
+	}
+	if consts.MinDuration != nil && consts.MinDuration.Duration < 0 {
+		el = append(el, field.Invalid(fldPath.Child("minDuration"), consts.MinDuration.Duration.String(), "minDuration must be a value greater or equal to 0"))
 	}
 
 	return approver.WebhookValidationResponse{

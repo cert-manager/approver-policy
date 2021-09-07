@@ -1,51 +1,88 @@
-# Policy Approver
+<p align="center"><img src="https://github.com/jetstack/cert-manager/blob/master/logo/logo.png" width="250x" /></p>
+</a>
+<a href="https://godoc.org/github.com/cert-manager/approver-policy"><img src="https://godoc.org/github.com/cert-manager/approver-policy?status.svg"></a>
+<a href="https://goreportcard.com/report/github.com/cert-manager/approver-policy"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/cert-manager/approver-policy" /></a></p>
 
-Policy Approver is a cert-manager approver that is responsible for [Approving
-or Denying
-CertificateRequests](https://cert-manager.io/docs/concepts/certificaterequest/#approval).
+# policy-approver
+
+policy-approver is a [cert-manager](https://cert-manager.io) approver that is responsible for
+[Approving or Denying CertificateRequests](https://cert-manager.io/docs/concepts/certificaterequest/#approval).
+
+policy-approver exposes the CertificateRequestPolicy resource which
+administrators use to define policy over what, who, and how certificates are
+signed by cert-manager.
 
 ---
 
 
-# Installation
+## Installation
 
-To install policy-approver, first cert-manager must be configured so that its
-[internal approver is
-disabled](https://cert-manager.io/docs/concepts/certificaterequest/#approver-controller).
-This can be done via helm using:
+[cert-manager](https://cert-manager.io) is required to be installed with policy-approver.
 
-```bash
-$ helm upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
+> :warning:
+>
+> It is important that the
+> [default approver is disabled in cert-manager](https://cert-manager.io/docs/concepts/certificaterequest/#approver-controller).
+> If the default approver is not disabled in cert-manager, policy-approver will
+> race with cert-manager and thus policy becomes useless.
+>
+> ```terminal
+> $ helm upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
+> ```
+>
+> :warning:
+
+To install policy-approver:
+
+```terminal
+$ helm repo add jetstack https://charts.jetstack.io --force-update
+$ helm upgrade -i -n cert-manager cert-manager-policy-approver jetstack/cert-manager-policy-approver --wait
 ```
 
-Next, install policy-approver:
+If you are using policy-approver with [external
+issuers](https://cert-manager.io/docs/configuration/external/), you _must_
+include their signer names so that policy-approver has permissions to approve
+and deny CertificateRequests that
+[reference them](https://cert-manager.io/docs/concepts/certificaterequest/#rbac-syntax).
+For example, if using policy-approver for the internal issuer types, along with
+[google-ca-issuer](https://github.com/jetstack/google-cas-issuer), and
+[aws-privateca-issuer](https://github.com/cert-manager/aws-privateca-issuer),
+set the following values when installing:
 
-```bash
-make deploy
+```terminal
+$ helm upgrade -i -n cert-manager cert-manager-policy-approver jetstack/cert-manager-policy-approver --wait \
+  --set app.approveSignerNames="{\
+issuers.cert-manager.io/*,clusterissuers.cert-manager.io/*,\
+googlecasclusterissuers.cas-issuer.jetstack.io/*,googlecasissuers.cas-issuer.jetstack.io/*,\
+awspcaclusterissuers.awspca.cert-manager.io/*,awspcaissuers.awspca.cert-manager.io/*\
+}"
 ```
 
-For policy-approver to approve or deny CertificateRequests that reference
-[external issuers](https://cert-manager.io/docs/configuration/external/), add
-them to the ClusterRole defined in `config/rbac/approver_clusterrole.yaml` using
-the syntax detailed
-[here](https://cert-manager.io/docs/concepts/certificaterequest/#rbac-syntax).
+---
 
+## Configuration
 
-# Configuration
+> Example policy resources can be found [here](./docs/examples/).
 
-When a CertificateRequest is created, the policy-approver will evaluate whether
-the request should be approved or denied. This is done by testing whether the
-requester is bound to a `CertificateRequestPolicy` that permits that request.
+When a CertificateRequest is created, policy-approver will evaluate whether the
+request is appropriate for any exiting policy, and if so, evaluate whether it
+should be approved or denied.
 
-If at least one policy permits the request, the request is approved. If no
-policies permits the request, the request is denied.
+For a CertificateRequest to be appropriate for a policy and therefore be
+evaluated by it, it must be both bound via RBAC _and_ be selected by the policy
+selector. CertificateRequestPolicy currently only supports `issuerRef` as a
+selector.
+
+**If at least one policy permits the request, the request is approved. If at
+least one policy is appropriate for the request but none of those permit the
+request, the request is denied.**
 
 CertificateRequestPolicies are cluster scoped resources that can be thought of
-as a "policy profile". They describe any request which is approved by that
+as "policy profiles". They describe any request that is approved by that
 policy. Policies are bound to Kubernetes users and ServiceAccounts using RBAC.
+
 Below is an example of a policy that is bound to all Kubernetes users who may
-only request certificates that have the common name of "hello.world". Anything
-else in the request is permitted.
+only request certificates that have the common name of "hello.world".
 
 ```yaml
 apiVersion: policy.cert-manager.io/v1alpha1
@@ -53,7 +90,11 @@ kind: CertificateRequestPolicy
 metadata:
   name: test-policy
 spec:
-  allowedCommonName: "hello.world"
+  allowed:
+    commonName: "hello.world"
+  selector:
+    # Select all IssuerRef
+    issuerRef: {}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -63,6 +104,7 @@ rules:
   - apiGroups: ["policy.cert-manager.io"]
     resources: ["certificaterequestpolicies"]
     verbs: ["use"]
+    # Name of the CertificateRequestPolicies to be used.
     resourceNames: ["test-policy"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -70,40 +112,64 @@ kind: ClusterRoleBinding
 metadata:
   name: cert-manager-policy:hello-world
 roleRef:
+# ClusterRole or Role _must_ be bound to a user for the policy to be considered.
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cert-manager-policy:hello-world
 subjects:
+# The users who should be bound to the policies defined.
+# Note that in the case of users creating Certificate resources, cert-manager is
+# the entity that is creating the actual CertificateRequests, and so should be
+# bound instead.
 - kind: Group
   name: system:authenticated
   apiGroup: rbac.authorization.k8s.io
 ```
 
-Users must be bound at the cluster scope to match against a
-CertificateRequestPolicy.
-
+---
 
 ## Behaviour
 
-Every field of a policy represents a pattern which must match against that of
-the request to be permitted.
+CertificateRequestPolicy are split into 4 parts; `allowed`, `contraints`,
+`selector`, and `plugins`.
 
-If a field is omitted from the policy, then it is considered as "allow all",
-meaning anything is permissible in the request.
+### Allowed
 
-Policy fields that are strings allow for wildcards "\*". Wildcards "\*" in
-patterns represent any string which has a length of 0 or more. A pattern
-containing only "\*" will match anything. A pattern containing "\*foo" will match
-"foo" as well as any string which ends in "foo" (e.g. "bar-foo"). A pattern
-containing "\*.foo" will match "bar-123.foo", but not "barfoo".
+Allowed is the block that defines attributes that match against the
+corresponding attribute in the request. A request is permitted by the policy if
+the request omits an allowed attribute, but will _deny_ the request if it
+contains an attribute which is _not_ present in the allowed block.
 
-Policy fields that are lists will permit requests that are a subset of that
-list. This means that if `allowedUsages` contains `["server auth", "client
-auth"]`, then a request containing only `["server auth"]` would be permitted,
-but not `["server auth", "cert sign"]`.
+In the following CertificateRequestPolicy, a request will be permitted if it
+does not request a DNS name, requests the DNS name "example.com", but will
+be denied when requesting "bar.example.com".
 
+```yaml
+spec:
+  ...
+  allowed:
+    dnsNames:
+    - "example.com"
+    - "foo.example.com"
+  ...
+```
 
-Below is a list of all supported fields of CertificateRequestPolicy.
+If an allowed field is omitted, that attribute is considered "deny all" for
+requests.
+
+Allowed string fields accept wildcards "\*" within its values. Wildcards "\*" in
+patterns represent any string that has a length of 0 or more. A pattern
+containing only "\*" will match anything. A pattern containing `"\*foo"` will
+match `"foo"` as well as any string which ends in `"foo"` (e.g. `"bar-foo"`). A
+pattern containing `"\*.foo"` will match `"bar-123.foo"`, but not `"barfoo"`.
+
+Allowed fields that are lists will permit requests that are a subset of that
+list. This means that if `usages` contains `["server auth", "client auth"]`,
+then a request containing only `["server auth"]` would be permitted, but not
+`["server auth", "cert sign"]`.
+
+Below is an example including all supported allowed fields of
+CertificateRequestPolicy.
 
 ```yaml
 apiVersion: policy.cert-manager.io/v1alpha1
@@ -111,93 +177,101 @@ kind: CertificateRequestPolicy
 metadata:
   name: my-policy
 spec:
-  allowedSubject:
-    allowedOrganizations: #["abc", "123"]
-    allowedCountries: #["abc", "123"]
-    allowedOrganizationalUnits: #["abc", "123"]
-    allowedLocalities: #["abc", "123"]
-    allowedProvinces: #["abc", "123"]
-    allowedStreetAddresses: #["abc", "123"]
-    allowedPostalCodes: #["abc", "123"]
-    allowedSerialNumber: #"1234"
-
-  allowedCommonName: # "*-istio-ca"
-
-  # Values are inclusive (i.e. a min value with 24h will accept a duration
-  # with 25h). minDuration and maxDuration may be the same value.
-  minDuration: # "24h"
-  maxDuration: # "720h"
-
-  allowedDNSNames:
-  #- "*.example.com"
-  #- "*.example.net"
-
-  allowedIPAddresses:
-  #- "1.2.3.4"
-  #- "168.192.3.*"
-
-  allowedURIs:
-  #- "spiffe://cluster.local/ns/*/sa/*"
-  #- "*.root.com"
-
-  allowedEmailAddresses:
-  #- "joshua.vanleeuwen@jetstack.io"
-  #- "*@example.com"
-
-  allowedIssuer:
-  #- group: cert-manager.io
-  #  kind: Issuer
-  #  name: my-issuer
-  #- group: cas-issuer.jetstack.io
-  #  kind: GoogleCASIssuer
-  #  name: my-other-issuer
-
-  allowedIsCA: # false
-
-  allowedUsages:
-  #- "server auth"
-  #- "client auth"
-
-  allowedPrivateKey:
-    allowedAlgorithm: # "RSA"
-    # Values are inclusive (i.e. a min value with 2048 will accept a size of
-    # 2048). MinSize and MaxSize may be the same.
-    minSize: # 2048
-    maxSize: # 2048
+  allowed:
+    commonName: "example.com"
+    dnsNames:
+    - "example.com"
+    - "*.example.com"
+    ipAddresses:
+    - "1.2.3.4"
+    - "10.0.1.*"
+    uris:
+    - "spiffe://example.org/ns/*/sa/*"
+    emailAddresses:
+    - "*@example.com"
+    isCA: false
+    usages:
+    - "server auth"
+    - "client auth"
+    subject:
+      organizations: ["hello-world"]
+      countries: ["*"]
+      organizationalUnits: ["*"]
+      localities: ["*"]
+      provinces: ["*"]
+      streetAddresses: ["*"]
+      postalCodes: ["*"]
+      serialNumber: "*"
+  ...
 ```
 
+### Constraints
 
-# Custom Evaluators
+Constraints is the block that is used to limit what attributes the request can
+have. If a constraint is not defined, then the attribute is considered "allow
+all".
 
-It's possible to add custom evaluator logic. This logic should be added to a
-new package.
+Below is an example containing all supported constraints fields of
+CertificateRequestPolicy.
 
-First, create a new package with a function to perform evaluation. This takes a
-`CertificateRequestPolicy` and a `CertificateRequest`.
-
-It must return three values:
-* a boolean approve/deny value (return true to approve a `CertificateRequest`)
-* a string message explaining the decision (can be blank)
-* an error representing any evaluation issues that should be retried (optional)
-
-```go
-func myEvaluateFunction(policy *cmpolicy.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (bool, string, error) {
-	...
-}
+```yaml
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: my-policy
+spec:
+  ...
+  constraints:
+    minDuration: 1h
+    maxDuration: 24h
+    privateKey:
+      algorithm: RSA
+      minSize: 2048
+      maxSize: 4096
+  ...
 ```
 
-Next, import your new package with a blank identifier:
+### Selector
 
-```go
-# main.go
-_ "github.com/ORG/policy-approver/pkg/policy/PACKAGE"
+Selector is a required field that is used for matching
+CertificateRequestPolicies against a CertificateRequest for evaluation.
+policy-approver currently only supports selecting over the `issuerRef` of a
+request.
+
+`issuerRef` values accept wildcards "\*". If an `issuerRef` is set to an empty
+object "{}", then the policy will match against _all_ RBAC bound requests.
+
+```yaml
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: my-policy
+spec:
+  ...
+  selector:
+    issuerRef:
+    - name: "my-ca"
+      kind: "*Issuer"
+      group: "cert-manager.io"
 ```
 
-Finally, create an `init` function to load your package into the policy evaluation
-for the approver.
-
-```go
-func init() {
-	policy.Load(myEvaluateFunction)
-}
+```yaml
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: match-all-requests
+spec:
+  ...
+  selector:
+    issuerRef: {}
 ```
+
+> :warning: Note that the user must still be bound by [RBAC](#Configuration) for
+> the policy to be considered for evaluation against a request.
+
+### Plugins
+
+Plugins are built into the policy-approver image at compile time. For more
+information on plugins and how to develop them, go [here](./docs/plugins.md).
+
+----
