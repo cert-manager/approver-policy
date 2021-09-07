@@ -92,6 +92,7 @@ deploy: depend ## Install CRDs into the K8s cluster
 
 .PHONY: smoke
 smoke:
+	echo "not implemented"
 
 .PHONY: e2e
 e2e:
