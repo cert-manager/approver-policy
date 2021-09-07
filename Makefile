@@ -15,6 +15,7 @@
 
 BINDIR ?= $(CURDIR)/bin
 ARCH   ?= $(shell go env GOARCH)
+
 OS     ?= $(shell go env GOOS)
 
 HELM_VERSION ?= 3.6.3
