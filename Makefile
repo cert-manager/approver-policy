@@ -90,6 +90,9 @@ deploy: depend ## Install CRDs into the K8s cluster
 	$(BINDIR)/kubectl apply -k config/crd
 	$(BINDIR)/kubectl apply -k config/default
 
+.PHONY: smoke
+smoke:
+
 .PHONY: e2e
 e2e:
 
