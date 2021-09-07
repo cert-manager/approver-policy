@@ -66,12 +66,12 @@ func (c Constraints) Validate(_ context.Context, policy *policyapi.CertificateRe
 		}
 
 		maxSize := consts.PrivateKey.MaxSize
-		if maxSize != nil && (*maxSize <= 0 || *maxSize > 8192) {
+		if maxSize != nil && (*maxSize < 0 || *maxSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("maxSize"), *maxSize, "must be between 0 and 8192 inclusive"))
 		}
 
 		minSize := consts.PrivateKey.MinSize
-		if minSize != nil && (*minSize <= 0 || *minSize > 8192) {
+		if minSize != nil && (*minSize < 0 || *minSize > 8192) {
 			el = append(el, field.Invalid(fldPath.Child("minSize"), *minSize, "must be between 0 and 8192 inclusive"))
 		}
 

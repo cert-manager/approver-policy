@@ -163,7 +163,7 @@ func Test_Evaluate(t *testing.T) {
 		"if all allowed defined, all attributes set in request and match exactly, return Not-Denied": {
 			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
 				gen.SetCSRCommonName("hello-world"),
-				gen.SetCSRDNSNames("example.com", "foo.bar"),
+				gen.SetCSRDNSNames("example.com", "foo.bar", "*.example.com"),
 				gen.SetCSRIPAddresses(net.ParseIP("1.1.1.1"), net.ParseIP("2.3.4.5")),
 				gen.SetCSRURIs(uri1, uri2),
 				gen.SetCSREmails([]string{"foo@example.com", "bar@example.com"}),
@@ -182,7 +182,7 @@ func Test_Evaluate(t *testing.T) {
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
 					CommonName:     pointer.String("hello-world"),
-					DNSNames:       &[]string{"example.com", "foo.bar"},
+					DNSNames:       &[]string{"example.com", "foo.bar", "*.example.com"},
 					IPAddresses:    &[]string{"1.1.1.1", "2.3.4.5"},
 					URIs:           &[]string{"spiffe://cluster.local/ns/foo/sa/bar", "foo.bar.com"},
 					EmailAddresses: &[]string{"foo@example.com", "bar@example.com"},
