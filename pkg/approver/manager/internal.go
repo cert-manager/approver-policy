@@ -97,7 +97,7 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 		}
 	}
 
-	// If no policies are appropriate, return unprocessed.
+	// If no policies are appropriate, return ResultUnprocessed.
 	if len(policies) == 0 {
 		return ReviewResponse{
 			Result:  ResultUnprocessed,
@@ -130,7 +130,7 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 			}
 
 			// evaluatorDenied will be set to true if any evaluator denies. We don't
-			// break early so that we can capture the responses from _all_k
+			// break early so that we can capture the responses from _all_
 			// evaluators.
 			if response.Result == approver.ResultDenied {
 				evaluatorDenied = true

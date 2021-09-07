@@ -26,13 +26,13 @@ metadata:
     app: {{ include "cert-manager-policy-approver.name" . }}
 {{ include "cert-manager-policy-approver.labels" . | indent 4 }}
   annotations:
-    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ include "cert-manager-policy-approver.name" . }}"
+    cert-manager.io/inject-ca-from-secret: "{{ .Release.Namespace }}/{{ include "cert-manager-policy-approver.name" . }}-tls"
 
 webhooks:
-  - name: policy-approver.cert-manager.io
+  - name: policy.cert-manager.io
     rules:
       - apiGroups:
-          - "policy-approver.cert-manager.io"
+          - "policy.cert-manager.io"
         apiVersions:
           - "*"
         operations:
@@ -49,3 +49,13 @@ webhooks:
         name: {{ include "cert-manager-policy-approver.name" . }}
         namespace: {{ .Release.Namespace | quote }}
         path: /validate
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "cert-manager-policy-approver.name" . }}-tls
+  annotations:
+    cert-manager.io/allow-direct-injection: "true"
+  labels:
+    app: {{ include "cert-manager-policy-approver.name" . }}
+{{ include "cert-manager-policy-approver.labels" . | indent 4 }}

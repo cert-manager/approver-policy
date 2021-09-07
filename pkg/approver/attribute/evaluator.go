@@ -65,7 +65,7 @@ type check struct {
 // If this request is denied by these checks then a string explanation is
 // returned.
 // An error signals that the policy couldn't be evaluated to completion.
-func (a attribute) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+func (a Attribute) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, cr *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 	chain, err := buildChecks(policy, cr)
 	if err != nil {
 		return approver.EvaluationResponse{}, err

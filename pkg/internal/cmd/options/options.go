@@ -55,7 +55,7 @@ type Options struct {
 	// which will be served on the HTTP path '/readyz'.
 	ReadyzAddress string
 
-	// RestConfig is the shared based rest config to connect to the Kubernetes
+	// RestConfig is the shared base rest config to connect to the Kubernetes
 	// API.
 	RestConfig *rest.Config
 
@@ -69,9 +69,19 @@ type Options struct {
 // Webhook holds options specific to running the policy-approver Webhook
 // service.
 type Webhook struct {
-	Host    string
-	Port    int
+	// Host is the host that the Webhook will be served on.
+	Host string
+
+	// Port is the TCP port that the Webhook will be served on.
+	Port int
+
+	// CertDir is the directory where the Webhook's TLS certificate and key are
+	// stored with the names `tls.crt` and `tls.key` respectively.
 	CertDir string
+
+	// CASecretNamespace is the namespace that the
+	// cert-manager-policy-approver-tls Secret is stored.
+	CASecretNamespace string
 }
 
 func New() *Options {
@@ -149,8 +159,12 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 		"webhook-port", 6443,
 		"Port to serve webhook.")
 
+	fs.StringVar(&o.Webhook.CASecretNamespace,
+		"webhook-ca-secret-namespace", "cert-manager",
+		"Namespace that the cert-manager-policy-approver-tls Secret is stored..")
+
 	fs.StringVar(&o.Webhook.CertDir,
-		"webhook-certificate-dir", "/tls",
+		"webhook-certificate-dir", "/tmp",
 		"Directory where the Webhook certificate and private key are located. "+
 			"Certificate and private key must be named 'tls.crt' and 'tls.key' "+
 			"respectively.")
