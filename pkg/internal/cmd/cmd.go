@@ -72,6 +72,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Log:                    opts.Logr,
 				Webhooks:               registry.Shared.Webhooks(),
 				WebhookCertificatesDir: opts.Webhook.CertDir,
+				CASecretNamespace:      opts.Webhook.CASecretNamespace,
 				Manager:                mgr,
 			}); err != nil {
 				return fmt.Errorf("failed to register webhook: %w", err)

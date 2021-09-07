@@ -49,6 +49,10 @@ type Options struct {
 	// TLS proivder waits for these files to become available before returning
 	// from New().
 	WebhookCertificatesDir string
+
+	// CASecretNamespace is the namespace that the
+	// cert-manager-policy-approver-tls Secret is stored.
+	CASecretNamespace string
 }
 
 // TLS is a TLS provider which is used for populating a serving key and
@@ -78,7 +82,7 @@ func New(ctx context.Context, opts Options) (*TLS, error) {
 		nextRenewCh:            make(chan time.Time, 1),
 		authorityErrChan:       make(chan error),
 		caManager: &authority.DynamicAuthority{
-			SecretNamespace: "cert-manager",
+			SecretNamespace: opts.CASecretNamespace,
 			SecretName:      "cert-manager-policy-approver-tls",
 			RESTConfig:      opts.RestConfig,
 			Log:             log.WithName("certificate-authority"),

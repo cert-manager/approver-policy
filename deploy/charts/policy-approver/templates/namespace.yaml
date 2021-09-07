@@ -1,3 +1,0 @@
-{{- if ne .Release.Namespace "cert-manager" }}
-{{- fail "namespace (--namespace, -n) must equal 'cert-manager'" }}
-{{- end }}

@@ -40,6 +40,7 @@ spec:
 
           - "--webhook-host={{.Values.app.webhook.host}}"
           - "--webhook-port={{.Values.app.webhook.port}}"
+          - "--webhook-ca-secret-namespace={{.Release.Namespace}}"
 
         {{- if .Values.volumeMounts }}
         volumeMounts:

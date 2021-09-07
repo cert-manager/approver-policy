@@ -43,6 +43,10 @@ type Options struct {
 	// from New().
 	WebhookCertificatesDir string
 
+	// CASecretNamespace is the namespace that the
+	// cert-manager-policy-approver-tls Secret is stored.
+	CASecretNamespace string
+
 	// Manager is the shared controller-runtime manager used by this
 	// policy-approver instance. The webhook will register its endpoints and
 	// runnables against.
@@ -59,6 +63,7 @@ func Register(ctx context.Context, opts Options) error {
 		Log:                    log,
 		RestConfig:             opts.Manager.GetConfig(),
 		WebhookCertificatesDir: opts.WebhookCertificatesDir,
+		CASecretNamespace:      opts.CASecretNamespace,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to run webhook tls bootstrap process: %w", err)
