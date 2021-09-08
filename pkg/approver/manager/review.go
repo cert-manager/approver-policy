@@ -25,9 +25,9 @@ import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/approver/manager/predicate"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver/manager/predicate"
 )
 
 var _ Interface = &manager{}

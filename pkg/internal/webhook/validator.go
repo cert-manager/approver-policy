@@ -30,9 +30,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	"github.com/cert-manager/policy-approver/pkg/apis/policy"
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/apis/policy"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
 )
 
 // validator validates against policy.cert-manager.io resources.

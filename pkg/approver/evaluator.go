@@ -26,7 +26,7 @@ import (
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 )
 
 // EvaluationResult is the result of an evaluator evaluating a

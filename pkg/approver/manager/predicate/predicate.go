@@ -25,8 +25,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver/internal"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver/internal"
 )
 
 // Predicate is a func called by the Approver Manager to filter the set of

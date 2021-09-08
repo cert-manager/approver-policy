@@ -24,9 +24,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/internal/webhook/tls"
-	"github.com/cert-manager/policy-approver/pkg/registry"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/internal/webhook/tls"
+	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
 // Options are options for running the wehook.
@@ -45,16 +45,16 @@ type Options struct {
 	WebhookCertificatesDir string
 
 	// CASecretNamespace is the namespace that the
-	// cert-manager-policy-approver-tls Secret is stored.
+	// cert-manager-approver-policy-tls Secret is stored.
 	CASecretNamespace string
 
 	// Manager is the shared controller-runtime manager used by this
-	// policy-approver instance. The webhook will register its endpoints and
+	// approver-policy instance. The webhook will register its endpoints and
 	// runnables against.
 	Manager manager.Manager
 }
 
-// Register the policy-approver Webhook endpoints against the
+// Register the approver-policy Webhook endpoints against the
 // controller-manager Manager.
 func Register(ctx context.Context, opts Options) error {
 	log := opts.Log.WithName("webhook")

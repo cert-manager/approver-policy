@@ -2,19 +2,19 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "cert-manager-policy-approver.name" . }}
+  name: {{ include "cert-manager-approver-policy.name" . }}
   labels:
-    app: {{ include "cert-manager-policy-approver.name" . }}
-{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+    app: {{ include "cert-manager-approver-policy.name" . }}
+{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
     prometheus: {{ .Values.app.metrics.service.servicemonitor.prometheusInstance }}
 {{- if .Values.app.metrics.service.servicemonitor.labels }}
 {{ toYaml .Values.app.metrics.service.servicemonitor.labels | indent 4}}
 {{- end }}
 spec:
-  jobLabel: {{ include "cert-manager-policy-approver.name" . }}
+  jobLabel: {{ include "cert-manager-approver-policy.name" . }}
   selector:
     matchLabels:
-      app: {{ include "cert-manager-policy-approver.name" . }}
+      app: {{ include "cert-manager-approver-policy.name" . }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}

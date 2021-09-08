@@ -1,4 +1,4 @@
-module github.com/cert-manager/policy-approver
+module github.com/cert-manager/approver-policy
 
 go 1.17
 

@@ -24,23 +24,23 @@ import (
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/internal/cmd/options"
-	"github.com/cert-manager/policy-approver/pkg/internal/controllers"
-	"github.com/cert-manager/policy-approver/pkg/internal/webhook"
-	"github.com/cert-manager/policy-approver/pkg/registry"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/internal/cmd/options"
+	"github.com/cert-manager/approver-policy/pkg/internal/controllers"
+	"github.com/cert-manager/approver-policy/pkg/internal/webhook"
+	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
 const (
 	helpOutput = "A cert-manager CertificateRequest approver that bases decisions on CertificateRequestPolicies"
 )
 
-// NewCommand returns an new command instance of policy-approver.
+// NewCommand returns an new command instance of approver-policy.
 func NewCommand(ctx context.Context) *cobra.Command {
 	opts := new(options.Options)
 
 	cmd := &cobra.Command{
-		Use:   "policy-approver",
+		Use:   "approver-policy",
 		Short: helpOutput,
 		Long:  helpOutput,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -96,7 +96,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("failed to add controllers: %w", err)
 			}
 
-			log.Info("starting policy-approver...")
+			log.Info("starting approver-policy...")
 			return mgr.Start(ctx)
 		},
 	}

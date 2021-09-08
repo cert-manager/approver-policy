@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-POLICY_PKG="github.com/cert-manager/policy-approver"
+POLICY_PKG="github.com/cert-manager/approver-policy"
 BOILERPLATE="hack/boilerplate/boilerplate.go.txt"
 
 APIS_PKG="$POLICY_PKG/pkg/apis"
@@ -26,7 +26,7 @@ GROUPS_WITH_VERSIONS="policy:v1alpha1"
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 BIN_DIR=${SCRIPT_ROOT}/bin
-CRDS_DIR=${SCRIPT_ROOT}/deploy/charts/policy-approver/templates/crds/
+CRDS_DIR=${SCRIPT_ROOT}/deploy/charts/approver-policy/templates/crds/
 
 function codegen::join() { local IFS="$1"; shift; echo "$*"; }
 

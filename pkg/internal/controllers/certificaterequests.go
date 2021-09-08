@@ -37,8 +37,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver/manager"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver/manager"
 )
 
 // certificaterequests is a controller-runtime Reconciler which evaluates
@@ -142,7 +142,7 @@ func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (
 		// Here we don't send the error context in the Kubernetes Event to protect
 		// information about the approver configuration being exposed to the
 		// client.
-		c.recorder.Eventf(cr, corev1.EventTypeWarning, "EvaluationError", "policy-approver failed to review the request and will retry")
+		c.recorder.Eventf(cr, corev1.EventTypeWarning, "EvaluationError", "approver-policy failed to review the request and will retry")
 		return ctrl.Result{}, err
 	}
 
@@ -164,7 +164,7 @@ func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	default:
 		log.Error(errors.New(response.Message), "manager responded with an unknown result", "result", response.Result)
-		c.recorder.Event(cr, corev1.EventTypeWarning, "UnknownResponse", "Policy returned an unknown result. This is a bug. Please check the policy-approver logs and file an issue")
+		c.recorder.Event(cr, corev1.EventTypeWarning, "UnknownResponse", "Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue")
 
 		// We can do nothing but keep retrying the review here.
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil

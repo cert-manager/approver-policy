@@ -19,7 +19,7 @@ package test
 import (
 	. "github.com/onsi/ginkgo"
 
-	testenv "github.com/cert-manager/policy-approver/test/env"
+	testenv "github.com/cert-manager/approver-policy/test/env"
 )
 
 var (

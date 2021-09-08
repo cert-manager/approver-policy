@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 )
 
 const (
@@ -58,7 +58,7 @@ func init() {
 }
 
 // Environment is a struct for holding the active and running
-// controller-runtime envtest Environment, as well as policy-approver specific
+// controller-runtime envtest Environment, as well as approver-policy specific
 // helper resources for running tests.
 type Environment struct {
 	// Environment holds the controller-runtime envtest Environment
@@ -94,7 +94,7 @@ func RunSuite(t *testing.T, suiteName, artifactsDir string) {
 // RunControlPlane runs a local API server and makes it ready for running tests
 // against. Also runs the cert-manager webhook for operating over cert-manager
 // resources. Expects CRD directories to both cert-manager, as well as
-// policy-approver. This *MUST* be provided.
+// approver-policy. This *MUST* be provided.
 // Returns a controller-runtime envtest which is ready to be run against.
 func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 	env := &envtest.Environment{

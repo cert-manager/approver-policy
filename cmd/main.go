@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/cert-manager/policy-approver/pkg/cmd"
+	"github.com/cert-manager/approver-policy/pkg/cmd"
 )
 
 func main() {

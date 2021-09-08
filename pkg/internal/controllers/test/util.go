@@ -31,9 +31,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/internal/controllers"
-	"github.com/cert-manager/policy-approver/pkg/registry"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/internal/controllers"
+	"github.com/cert-manager/approver-policy/pkg/registry"
 	"github.com/jetstack/cert-manager/test/unit/gen"
 )
 
@@ -115,7 +115,7 @@ func waitForNotReady(ctx context.Context, cl client.Client, name string, interva
 	}, intervals...).Should(BeTrue(), "expected policy to become not-ready")
 }
 
-// startControllers will create a test Namespace and start the policy-approver
+// startControllers will create a test Namespace and start the approver-policy
 // controllers and ensure they are active and ready. This function is intended
 // to be run in a JustBefore block before any test logic has started. The
 // created namespace as well as a shutdown function to stop the controllers is
@@ -150,7 +150,7 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 		LeaderElection:                true,
 		MetricsBindAddress:            "0",
 		LeaderElectionNamespace:       namespace.Name,
-		LeaderElectionID:              "cert-manager-policy-approver",
+		LeaderElectionID:              "cert-manager-approver-policy",
 		LeaderElectionReleaseOnCancel: true,
 		Logger:                        log,
 	})

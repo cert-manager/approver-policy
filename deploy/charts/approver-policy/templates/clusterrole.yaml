@@ -2,8 +2,8 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   labels:
-{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
-  name: {{ include "cert-manager-policy-approver.name" . }}
+{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
+  name: {{ include "cert-manager-approver-policy.name" . }}
 rules:
 - apiGroups: ["policy.cert-manager.io"]
   resources: ["certificaterequestpolicies"]

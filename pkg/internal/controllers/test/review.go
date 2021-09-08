@@ -29,13 +29,13 @@ import (
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/approver/allowed"
-	"github.com/cert-manager/policy-approver/pkg/approver/constraints"
-	"github.com/cert-manager/policy-approver/pkg/approver/fake"
-	"github.com/cert-manager/policy-approver/pkg/registry"
-	testenv "github.com/cert-manager/policy-approver/test/env"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver/allowed"
+	"github.com/cert-manager/approver-policy/pkg/approver/constraints"
+	"github.com/cert-manager/approver-policy/pkg/approver/fake"
+	"github.com/cert-manager/approver-policy/pkg/registry"
+	testenv "github.com/cert-manager/approver-policy/test/env"
 )
 
 var _ = Context("Review", func() {

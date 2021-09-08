@@ -3,12 +3,12 @@
 <a href="https://godoc.org/github.com/cert-manager/approver-policy"><img src="https://godoc.org/github.com/cert-manager/approver-policy?status.svg"></a>
 <a href="https://goreportcard.com/report/github.com/cert-manager/approver-policy"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/cert-manager/approver-policy" /></a></p>
 
-# policy-approver
+# approver-policy
 
-policy-approver is a [cert-manager](https://cert-manager.io) approver that is responsible for
+approver-policy is a [cert-manager](https://cert-manager.io) approver that is responsible for
 [Approving or Denying CertificateRequests](https://cert-manager.io/docs/concepts/certificaterequest/#approval).
 
-policy-approver exposes the CertificateRequestPolicy resource which
+approver-policy exposes the CertificateRequestPolicy resource which
 administrators use to define policy over what, who, and how certificates are
 signed by cert-manager.
 
@@ -17,13 +17,13 @@ signed by cert-manager.
 
 ## Installation
 
-[cert-manager](https://cert-manager.io) is required to be installed with policy-approver.
+[cert-manager](https://cert-manager.io) is required to be installed with approver-policy.
 
 > :warning:
 >
 > It is important that the
 > [default approver is disabled in cert-manager](https://cert-manager.io/docs/concepts/certificaterequest/#approver-controller).
-> If the default approver is not disabled in cert-manager, policy-approver will
+> If the default approver is not disabled in cert-manager, approver-policy will
 > race with cert-manager and thus policy becomes useless.
 >
 > ```terminal
@@ -32,25 +32,25 @@ signed by cert-manager.
 >
 > :warning:
 
-To install policy-approver:
+To install approver-policy:
 
 ```terminal
 $ helm repo add jetstack https://charts.jetstack.io --force-update
-$ helm upgrade -i -n cert-manager cert-manager-policy-approver jetstack/cert-manager-policy-approver --wait
+$ helm upgrade -i -n cert-manager cert-manager-approver-policy jetstack/cert-manager-approver-policy --wait
 ```
 
-If you are using policy-approver with [external
+If you are using approver-policy with [external
 issuers](https://cert-manager.io/docs/configuration/external/), you _must_
-include their signer names so that policy-approver has permissions to approve
+include their signer names so that approver-policy has permissions to approve
 and deny CertificateRequests that
 [reference them](https://cert-manager.io/docs/concepts/certificaterequest/#rbac-syntax).
-For example, if using policy-approver for the internal issuer types, along with
+For example, if using approver-policy for the internal issuer types, along with
 [google-ca-issuer](https://github.com/jetstack/google-cas-issuer), and
 [aws-privateca-issuer](https://github.com/cert-manager/aws-privateca-issuer),
 set the following values when installing:
 
 ```terminal
-$ helm upgrade -i -n cert-manager cert-manager-policy-approver jetstack/cert-manager-policy-approver --wait \
+$ helm upgrade -i -n cert-manager cert-manager-approver-policy jetstack/cert-manager-approver-policy --wait \
   --set app.approveSignerNames="{\
 issuers.cert-manager.io/*,clusterissuers.cert-manager.io/*,\
 googlecasclusterissuers.cas-issuer.jetstack.io/*,googlecasissuers.cas-issuer.jetstack.io/*,\
@@ -64,7 +64,7 @@ awspcaclusterissuers.awspca.cert-manager.io/*,awspcaissuers.awspca.cert-manager.
 
 > Example policy resources can be found [here](./docs/examples/).
 
-When a CertificateRequest is created, policy-approver will evaluate whether the
+When a CertificateRequest is created, approver-policy will evaluate whether the
 request is appropriate for any existing policy, and if so, evaluate whether it
 should be approved or denied.
 
@@ -236,7 +236,7 @@ spec:
 
 Selector is a required field that is used for matching
 CertificateRequestPolicies against a CertificateRequest for evaluation.
-policy-approver currently only supports selecting over the `issuerRef` of a
+approver-policy currently only supports selecting over the `issuerRef` of a
 request.
 
 `issuerRef` values accept wildcards "\*". If an `issuerRef` is set to an empty
@@ -272,7 +272,7 @@ spec:
 
 ### Plugins
 
-Plugins are built into the policy-approver image at compile time. For more
+Plugins are built into the approver-policy image at compile time. For more
 information on plugins and how to develop them, go [here](./docs/plugins.md).
 
 ----

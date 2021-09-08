@@ -19,7 +19,7 @@ package registry
 import (
 	"sync"
 
-	"github.com/cert-manager/policy-approver/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver"
 )
 
 var (

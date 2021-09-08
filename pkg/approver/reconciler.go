@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 )
 
 // ReconcilerReadyResponse is the response to this Reconciler evaluating

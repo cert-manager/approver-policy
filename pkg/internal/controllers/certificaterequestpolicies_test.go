@@ -35,9 +35,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	fakeapprover "github.com/cert-manager/policy-approver/pkg/approver/fake"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	fakeapprover "github.com/cert-manager/approver-policy/pkg/approver/fake"
 )
 
 func Test_certificaterequestpolicies_Reconcile(t *testing.T) {

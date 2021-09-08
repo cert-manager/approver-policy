@@ -23,10 +23,10 @@ import (
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/cert-manager/policy-approver/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver"
 )
 
-// Options hold options for the internal policy-approver controllers.
+// Options hold options for the internal approver-policy controllers.
 type Options struct {
 	// Log is the shared logger used by controllers.
 	Log logr.Logger

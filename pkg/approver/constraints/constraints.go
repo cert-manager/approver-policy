@@ -22,9 +22,9 @@ import (
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/registry"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
 // Load the Constraints approver.
@@ -32,10 +32,10 @@ func init() {
 	registry.Shared.Store(Constraints{})
 }
 
-// Constraints is a base policy-approver Approver that is responsible for
+// Constraints is a base approver-policy Approver that is responsible for
 // ensuring incoming requests satisfy the Constraints defined on
 // CertificateRequestPolicies. It is expected that constraints must _always_ be
-// registered for all policy-approver builds.
+// registered for all approver-policy builds.
 type Constraints struct{}
 
 // Name of Approver is "constraints"

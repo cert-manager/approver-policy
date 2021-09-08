@@ -20,17 +20,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	testenv "github.com/cert-manager/policy-approver/test/env"
+	testenv "github.com/cert-manager/approver-policy/test/env"
 )
 
-// Test_Controllers runs the full suite of tests for the policy-approver
+// Test_Controllers runs the full suite of tests for the approver-policy
 // controllers.
 func Test_Controllers(t *testing.T) {
 	rootDir := testenv.RootDirOrSkip(t)
 
 	env = testenv.RunControlPlane(t,
 		filepath.Join(rootDir, "bin/cert-manager"),
-		filepath.Join(rootDir, "deploy/charts/policy-approver/templates/crds"),
+		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
 	)
-	testenv.RunSuite(t, "policy-approver-controllers", "../../../../_artifacts")
+	testenv.RunSuite(t, "approver-policy-controllers", "../../../../_artifacts")
 }

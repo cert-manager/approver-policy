@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "cert-manager-policy-approver.name" . }}
+  name: {{ include "cert-manager-approver-policy.name" . }}
   labels:
-    app: {{ include "cert-manager-policy-approver.name" . }}
-{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+    app: {{ include "cert-manager-approver-policy.name" . }}
+{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
 spec:
   type: {{ .Values.app.webhook.service.type }}
   ports:
@@ -16,17 +16,17 @@ spec:
       protocol: TCP
       name: webhook
   selector:
-    app: {{ include "cert-manager-policy-approver.name" . }}
+    app: {{ include "cert-manager-approver-policy.name" . }}
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: {{ include "cert-manager-policy-approver.name" . }}
+  name: {{ include "cert-manager-approver-policy.name" . }}
   labels:
-    app: {{ include "cert-manager-policy-approver.name" . }}
-{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+    app: {{ include "cert-manager-approver-policy.name" . }}
+{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
   annotations:
-    cert-manager.io/inject-ca-from-secret: "{{ .Release.Namespace }}/{{ include "cert-manager-policy-approver.name" . }}-tls"
+    cert-manager.io/inject-ca-from-secret: "{{ .Release.Namespace }}/{{ include "cert-manager-approver-policy.name" . }}-tls"
 
 webhooks:
   - name: policy.cert-manager.io
@@ -46,16 +46,16 @@ webhooks:
     sideEffects: None
     clientConfig:
       service:
-        name: {{ include "cert-manager-policy-approver.name" . }}
+        name: {{ include "cert-manager-approver-policy.name" . }}
         namespace: {{ .Release.Namespace | quote }}
         path: /validate
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ include "cert-manager-policy-approver.name" . }}-tls
+  name: {{ include "cert-manager-approver-policy.name" . }}-tls
   annotations:
     cert-manager.io/allow-direct-injection: "true"
   labels:
-    app: {{ include "cert-manager-policy-approver.name" . }}
-{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+    app: {{ include "cert-manager-approver-policy.name" . }}
+{{ include "cert-manager-approver-policy.labels" . | indent 4 }}

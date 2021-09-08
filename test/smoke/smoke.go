@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/cert-manager/policy-approver/test/smoke/config"
+	"github.com/cert-manager/approver-policy/test/smoke/config"
 )
 
 var (
