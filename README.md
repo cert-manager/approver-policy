@@ -65,7 +65,7 @@ awspcaclusterissuers.awspca.cert-manager.io/*,awspcaissuers.awspca.cert-manager.
 > Example policy resources can be found [here](./docs/examples/).
 
 When a CertificateRequest is created, policy-approver will evaluate whether the
-request is appropriate for any exiting policy, and if so, evaluate whether it
+request is appropriate for any existing policy, and if so, evaluate whether it
 should be approved or denied.
 
 For a CertificateRequest to be appropriate for a policy and therefore be
@@ -118,9 +118,10 @@ roleRef:
   name: cert-manager-policy:hello-world
 subjects:
 # The users who should be bound to the policies defined.
-# Note that in the case of users creating Certificate resources, cert-manager is
-# the entity that is creating the actual CertificateRequests, and so should be
-# bound instead.
+# Note that in the case of users creating Certificate resources, cert-manager
+# is the entity that is creating the actual CertificateRequests, and so the
+# cert-manager controller's
+# Service Account should be bound instead.
 - kind: Group
   name: system:authenticated
   apiGroup: rbac.authorization.k8s.io

@@ -12,8 +12,6 @@ import "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 
 - [Variables](<#variables>)
 - [func Resource(resource string) schema.GroupResource](<#func-resource>)
-- [func addKnownTypes(scheme *runtime.Scheme) error](<#func-addknowntypes>)
-- [func init()](<#func-init>)
 - [type CertificateRequestPolicy](<#type-certificaterequestpolicy>)
   - [func (in *CertificateRequestPolicy) DeepCopy() *CertificateRequestPolicy](<#func-certificaterequestpolicy-deepcopy>)
   - [func (in *CertificateRequestPolicy) DeepCopyInto(out *CertificateRequestPolicy)](<#func-certificaterequestpolicy-deepcopyinto>)
@@ -59,9 +57,9 @@ import "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 
 ```go
 var (
-    SchemeBuilder      runtime.SchemeBuilder
-    localSchemeBuilder = &SchemeBuilder
-    AddToScheme        = localSchemeBuilder.AddToScheme
+    SchemeBuilder runtime.SchemeBuilder
+
+    AddToScheme = localSchemeBuilder.AddToScheme
 
     GlobalScheme *runtime.Scheme
 )
@@ -80,20 +78,6 @@ func Resource(resource string) schema.GroupResource
 ```
 
 Resource takes an unqualified resource and returns a Group qualified GroupResource
-
-## func [addKnownTypes](<https://github.com/cert-manager/policy-approver/blob/master/pkg/apis/policy/v1alpha1/register.go#L66>)
-
-```go
-func addKnownTypes(scheme *runtime.Scheme) error
-```
-
-Adds the list of known types to api\.Scheme\.
-
-## func [init](<https://github.com/cert-manager/policy-approver/blob/master/pkg/apis/policy/v1alpha1/register.go#L47>)
-
-```go
-func init()
-```
 
 ## type [CertificateRequestPolicy](<https://github.com/cert-manager/policy-approver/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L35-L41>)
 
