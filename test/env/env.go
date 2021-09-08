@@ -143,12 +143,12 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 	mutatationObject := getCMMutatingWebhookConfig(webhookOpts.URL, webhookOpts.CAPEM)
 	for _, crd := range append(crdObjects, validationObject, mutatationObject) {
 		if err := adminClient.Create(context.TODO(), crd); err != nil {
-			t.Fatal(err)
+			t.Fatalf("%s: %s", crd.GetName(), err)
 		}
 	}
 
 	// Wait for CRDs to become ready
-	if err := envtest.WaitForCRDs(env.Config, crdsToRuntimeObjects(crds),
+	if err := envtest.WaitForCRDs(env.Config, crds,
 		envtest.CRDInstallOptions{MaxTime: 5 * time.Second, PollInterval: 15 * time.Millisecond},
 	); err != nil {
 		t.Fatal(err)
