@@ -69,9 +69,13 @@ var _ = Describe("Smoke", func() {
 				GenerateName: "smoke-test-policy-",
 			},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				AllowedCommonName: pointer.String("*.test.policy"),
-				IssuerRefSelector: &policyapi.CertificateRequestPolicyIssuerRefSelector{
-					Name: pointer.String(issuer.Name),
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					CommonName: pointer.String("*.test.policy"),
+				},
+				Selector: policyapi.CertificateRequestPolicySelector{
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: pointer.String(issuer.Name),
+					},
 				},
 			},
 		}
@@ -82,7 +86,7 @@ var _ = Describe("Smoke", func() {
 			Expect(cl.Get(ctx, client.ObjectKey{Name: policy.Name}, &policy)).NotTo(HaveOccurred())
 			for _, condition := range policy.Status.Conditions {
 				if condition.Type == policyapi.CertificateRequestPolicyConditionReady {
-					return condition.Status == corev1.ConditionTrue
+					return condition.Status == corev1.ConditionTrue && condition.ObservedGeneration == policy.Generation
 				}
 			}
 			return false

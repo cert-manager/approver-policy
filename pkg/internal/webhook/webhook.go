@@ -26,6 +26,7 @@ import (
 
 	"github.com/cert-manager/policy-approver/pkg/approver"
 	"github.com/cert-manager/policy-approver/pkg/internal/webhook/tls"
+	"github.com/cert-manager/policy-approver/pkg/registry"
 )
 
 // Options are options for running the wehook.
@@ -74,11 +75,19 @@ func Register(ctx context.Context, opts Options) error {
 		return fmt.Errorf("failed to add webhook tls manager as a runnable: %w", err)
 	}
 
+	var registerdPlugins []string
+	for _, approver := range registry.Shared.Approvers() {
+		if name := approver.Name(); name != "allowed" && name != "constraints" {
+			registerdPlugins = append(registerdPlugins, name)
+		}
+	}
+
 	log.Info("registering webhook endpoints")
 	validator := &validator{
-		log:      log.WithName("validation"),
-		lister:   opts.Manager.GetCache(),
-		webhooks: opts.Webhooks,
+		log:               log.WithName("validation"),
+		lister:            opts.Manager.GetCache(),
+		webhooks:          opts.Webhooks,
+		registeredPlugins: registerdPlugins,
 	}
 
 	opts.Manager.GetWebhookServer().Register("/validate", &webhook.Admission{Handler: validator})

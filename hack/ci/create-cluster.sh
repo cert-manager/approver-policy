@@ -28,7 +28,7 @@ kubeadmConfigPatches:
     metadata:
       name: config
     networking:
-      serviceSubnet: 10.0.0.0/16
+      serviceSubnet: 10.0.0.0/24
 EOF
 
 echo ">> loading docker image..."

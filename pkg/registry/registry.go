@@ -36,15 +36,18 @@ type Registry struct {
 }
 
 // Store will store an Approver into the shared approver registry.
-func (r *Registry) Store(approver approver.Interface) {
+func (r *Registry) Store(approvers ...approver.Interface) *Registry {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	for _, existing := range r.approvers {
-		if existing.Name() == approver.Name() {
-			panic("approver already registered with same name: " + approver.Name())
+		for _, toStore := range approvers {
+			if existing.Name() == toStore.Name() {
+				panic("approver already registered with same name: " + toStore.Name())
+			}
 		}
 	}
-	r.approvers = append(r.approvers, approver)
+	r.approvers = append(r.approvers, approvers...)
+	return r
 }
 
 // Approvers returns the list of Approvers that have been registered to the
@@ -77,4 +80,16 @@ func (r *Registry) Webhooks() []approver.Webhook {
 		webhooks = append(webhooks, approver)
 	}
 	return webhooks
+}
+
+// Reconcilers returns the list of Reconcilers that have been registered as
+// Approvers to the registry.
+func (r *Registry) Reconcilers() []approver.Reconciler {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+	var reconcilers []approver.Reconciler
+	for _, reconciler := range r.approvers {
+		reconcilers = append(reconcilers, reconciler)
+	}
+	return reconcilers
 }

@@ -30,7 +30,6 @@ var _ approver.Interface = &FakeApprover{}
 // FakeApprover is a testing approver designed to mock approvers with a
 // pre-determined response.
 type FakeApprover struct {
-	name            string
 	registerFlagsFn func(*pflag.FlagSet)
 	prepareFn       func(context.Context, manager.Manager) error
 	*FakeEvaluator
@@ -39,11 +38,20 @@ type FakeApprover struct {
 }
 
 func NewFakeApprover() *FakeApprover {
-	return new(FakeApprover)
+	return &FakeApprover{
+		FakeEvaluator:  NewFakeEvaluator(),
+		FakeWebhook:    NewFakeWebhook(),
+		FakeReconciler: NewFakeReconciler(),
+	}
 }
 
-func (f *FakeApprover) WithName(name string) *FakeApprover {
-	f.name = name
+func (f *FakeApprover) WithEvaluator(evaluator *FakeEvaluator) *FakeApprover {
+	f.FakeEvaluator = evaluator
+	return f
+}
+
+func (f *FakeApprover) WithReconciler(reconciler *FakeReconciler) *FakeApprover {
+	f.FakeReconciler = reconciler
 	return f
 }
 
@@ -55,10 +63,6 @@ func (f *FakeApprover) WithRegisterFlags(fn func(*pflag.FlagSet)) *FakeApprover 
 func (f *FakeApprover) WithPrepare(fn func(context.Context, manager.Manager) error) *FakeApprover {
 	f.prepareFn = fn
 	return f
-}
-
-func (f *FakeApprover) Name() string {
-	return f.name
 }
 
 func (f *FakeApprover) RegisterFlags(pf *pflag.FlagSet) {

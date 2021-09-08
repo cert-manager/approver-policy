@@ -38,6 +38,10 @@ import (
 	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
 )
 
+const (
+	UserClientName = "me@example.com"
+)
+
 func init() {
 	// Turn on verbose by default to get spec names
 	ginkgoconfig.DefaultReporterConfig.Verbose = true
@@ -64,7 +68,7 @@ type Environment struct {
 	// permissions to do anything.
 	AdminClient client.Client
 
-	// UserClient is a client that is authenticated as the user "example",
+	// UserClient is a client that is authenticated as the user "me@example.com",
 	// groups ["group-1", "group-2"].
 	UserClient client.Client
 }
@@ -154,9 +158,9 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 		t.Fatal(err)
 	}
 
-	user, err := env.AddUser(envtest.User{Name: "example", Groups: []string{"group-1", "group-2"}}, env.Config)
+	user, err := env.AddUser(envtest.User{Name: UserClientName, Groups: []string{"group-1", "group-2"}}, env.Config)
 	if err != nil {
-		t.Fatalf("failed to create example user: %s", err)
+		t.Fatalf("failed to create user %q: %s", UserClientName, err)
 	}
 
 	userClient, err := client.New(user.Config(), client.Options{

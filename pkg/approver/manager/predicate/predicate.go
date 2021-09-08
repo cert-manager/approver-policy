@@ -51,15 +51,15 @@ func Ready(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.
 	return readyPolicies, nil
 }
 
-// IssuerRefSelector is a Predicate that returns the subset of given policies
-// that have an `spec.issuerRefSelector` matching the `spec.issuerRef` in the
-// request.  PredicateIssuerRefSelector will match on strings using wilcards
+// SelectorIssuerRef is a Predicate that returns the subset of given policies
+// that have an `spec.selector.issuerRef` matching the `spec.issuerRef` in the
+// request. PredicateSelectorIssuerRef will match on strings using wilcards
 // "*". Empty selector is equivalent to "*" and will match on anything.
-func IssuerRefSelector(_ context.Context, cr *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 	var matchingPolicies []policyapi.CertificateRequestPolicy
 
 	for _, policy := range policies {
-		issRefSel := policy.Spec.IssuerRefSelector
+		issRefSel := policy.Spec.Selector.IssuerRef
 		issRef := cr.Spec.IssuerRef
 
 		if issRefSel.Name != nil && !internal.WildcardMatchs(*issRefSel.Name, issRef.Name) {

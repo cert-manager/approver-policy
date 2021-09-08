@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 
 	"github.com/go-logr/logr"
@@ -39,7 +40,8 @@ type validator struct {
 	lock sync.RWMutex
 	log  logr.Logger
 
-	webhooks []approver.Webhook
+	registeredPlugins []string
+	webhooks          []approver.Webhook
 
 	lister  client.Reader
 	decoder *admission.Decoder
@@ -69,24 +71,14 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 			return admission.Errored(http.StatusBadRequest, err)
 		}
 
-		var (
-			el      field.ErrorList
-			allowed = true
-		)
-		for _, webhook := range v.webhooks {
-			response, err := webhook.Validate(ctx, &policy)
-			if err != nil {
-				log.Error(err, "internal error occurred validating request")
-				return admission.Errored(http.StatusInternalServerError, err)
-			}
-			if !response.Allowed {
-				allowed = false
-				el = append(el, response.Errors...)
-			}
+		el, err := v.certificateRequestPolicy(ctx, &policy)
+		if err != nil {
+			log.Error(err, "internal error occurred validating request")
+			return admission.Errored(http.StatusInternalServerError, err)
 		}
 
-		if !allowed {
-			v.log.V(2).Info("denied admission", "errors", el.ToAggregate().Error())
+		if len(el) > 0 {
+			v.log.V(2).Info("denied admission", "errors", err)
 			return admission.Denied(el.ToAggregate().Error())
 		}
 
@@ -96,6 +88,55 @@ func (v *validator) Handle(ctx context.Context, req admission.Request) admission
 	default:
 		return admission.Denied(fmt.Sprintf("validation request for unrecognised resource type: %s/%s %s", req.RequestKind.Group, req.RequestKind.Version, req.RequestKind.Kind))
 	}
+}
+
+// certificateRequestPolicy validates the given CertificateRequestPolicy with
+// the base validations, along with all webhook validations registered.
+func (v *validator) certificateRequestPolicy(ctx context.Context, policy *policyapi.CertificateRequestPolicy) (field.ErrorList, error) {
+	var (
+		el      field.ErrorList
+		fldPath = field.NewPath("spec")
+	)
+
+	// Ensure no plugin has been defined which is not registered.
+	var unrecognisedNames []string
+	for name := range policy.Spec.Plugins {
+		var found bool
+		for _, known := range v.registeredPlugins {
+			if name == known {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			unrecognisedNames = append(unrecognisedNames, name)
+		}
+	}
+
+	if len(unrecognisedNames) > 0 {
+		// Sort list so testing is deterministic.
+		sort.Strings(unrecognisedNames)
+		for _, name := range unrecognisedNames {
+			el = append(el, field.NotSupported(fldPath.Child("plugins"), name, v.registeredPlugins))
+		}
+	}
+
+	if policy.Spec.Selector.IssuerRef == nil {
+		el = append(el, field.Required(fldPath.Child("selector", "issuerRef"), "must be defined, hint: `{}` matches everything"))
+	}
+
+	for _, webhook := range v.webhooks {
+		response, err := webhook.Validate(ctx, policy)
+		if err != nil {
+			return nil, err
+		}
+		if !response.Allowed {
+			el = append(el, response.Errors...)
+		}
+	}
+
+	return el, nil
 }
 
 // InjectDecoder is used by the controller-runtime manager to inject an object

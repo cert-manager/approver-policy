@@ -28,6 +28,7 @@ var _ approver.Reconciler = &FakeReconciler{}
 // FakeReconciler is a testing reconciler designed to mock Reconcilers with a
 // pre-determined response.
 type FakeReconciler struct {
+	name      string
 	readyFunc func(context.Context, *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)
 }
 
@@ -35,9 +36,18 @@ func NewFakeReconciler() *FakeReconciler {
 	return new(FakeReconciler)
 }
 
+func (f *FakeReconciler) WithName(name string) *FakeReconciler {
+	f.name = name
+	return f
+}
+
 func (f *FakeReconciler) WithReady(fn func(context.Context, *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)) *FakeReconciler {
 	f.readyFunc = fn
 	return f
+}
+
+func (f *FakeReconciler) Name() string {
+	return f.name
 }
 
 func (f *FakeReconciler) Ready(ctx context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
