@@ -62,7 +62,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Port:                          opts.Webhook.Port,
 				Host:                          opts.Webhook.Host,
 				CertDir:                       opts.Webhook.CertDir,
-				Logger:                        opts.Logr.WithName("controller"),
+				Logger:                        opts.Logr.WithName("controller-manager"),
 			})
 			if err != nil {
 				return fmt.Errorf("unable to create controller manager: %w", err)
