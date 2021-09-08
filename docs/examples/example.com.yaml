@@ -1,0 +1,51 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: example-com
+spec:
+  allowed:
+    commonName: "example.com"
+    dnsNames:
+    - "example.com"
+    - "*.example.com"
+    usages:
+    - server auth
+
+  constraints:
+    privateKey:
+      algorithm: RSA
+      minSize: 2048
+
+  selector:
+    issuerRef:
+      name: letsencrypt-prod
+      kind: Issuer
+      group: cert-manager.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-policy:example-com
+  namespace: sandbox
+rules:
+- apiGroups: ["policy.cert-manager.io"]
+  resources: ["certificaterequestpolicies"]
+  verbs: ["use"]
+  resourceNames: ["example-com"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-policy:example-com
+  namespace: sandbox
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-policy:example-com
+subjects:
+# Policy intended to be used with a Certificate resource, so cert-manager is
+# the user creating CertificateRequest. Bind to the cert-manager
+# ServiceAccount.
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: cert-manager

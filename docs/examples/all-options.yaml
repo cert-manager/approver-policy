@@ -1,0 +1,70 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: all-options
+spec:
+  allowed:
+    commonName: "example.com"
+    dnsNames:
+    - "example.com"
+    - "*.example.com"
+    ipAddresses:
+    - "1.2.3.4"
+    - "10.0.1.*"
+    uris:
+    - "spiffe://example.org/ns/*/sa/*"
+    emailAddresses:
+    - "*@example.com"
+    isCA: false
+    usages:
+    - "server auth"
+    - "client auth"
+    subject:
+      organizations: ["hello-world"]
+      countries: ["*"]
+      organizationalUnits: ["*"]
+      localities: ["*"]
+      provinces: ["*"]
+      streetAddresses: ["*"]
+      postalCodes: ["*"]
+      serialNumber: "*"
+
+  constraints:
+    minDuration: 1h
+    maxDuration: 24h
+    privateKey:
+      algorithm: RSA
+      minSize: 2048
+      maxSize: 4096
+
+  selector:
+    issuerRef:
+      name: "my-ca-*"
+      kind: "*Issuer"
+      group: cert-manager.io
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-policy:all-options
+  namespace: sandbox
+rules:
+- apiGroups: ["policy.cert-manager.io"]
+  resources: ["certificaterequestpolicies"]
+  verbs: ["use"]
+  resourceNames: ["all-options"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-policy:example-com
+  namespace: sandbox
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-policy:example-com
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: alice

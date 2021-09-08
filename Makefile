@@ -21,6 +21,8 @@ HELM_VERSION ?= 3.6.3
 KUBEBUILDER_TOOLS_VERISON ?= 1.22.0
 K8S_CLUSTER_NAME ?= policy-approver
 
+GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/policy-approver" --repository.default-branch master --repository.path /
+
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
@@ -31,12 +33,8 @@ clean: ## clean up created files
 		_artifacts
 
 .PHONY: generate
-generate: depend ## generate code
+generate: depend docs/api/api.md ## generate code and documentation
 	./hack/update-codegen.sh
-
-.PHONY: build
-build: ## Build manager binary.
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -47,12 +45,17 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: lint
-lint: ## Run linters against code.
+lint: $(BINDIR)/gomarkdoc ## Run linters against code.
 	./hack/verify-boilerplate.sh
+	@$(BINDIR)/gomarkdoc --check $(GOMARKDOC_FLAGS) --output docs/api/api.md github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1 || (echo "docs are not up to date; run 'make generate' and commit the result" && exit 1)
 
 .PHONY: test
 test: depend lint vet ## test policy-approver
 	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
+
+.PHONY: build
+build: ## Build manager binary.
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/policy-approver ./cmd/
 
 .PHONY: verify
 verify: test build ## Verify repo.
@@ -71,8 +74,13 @@ smoke: demo ## create cluster, deploy policy-approver, run smoke tests
 	REPO_ROOT=$(shell pwd) ./hack/ci/run-smoke-test.sh
 	REPO_ROOT=$(shell pwd) ./hack/ci/delete-cluster.sh
 
+.PHONY: docs/api/api.md
+docs/api/api.md: $(BINDIR)/gomarkdoc
+	mkdir -p docs/api
+	$(BINDIR)/gomarkdoc $(GOMARKDOC_FLAGS) --output $@ github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1
+
 .PHONY: depend
-depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
+depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml $(BINDIR)/gomarkdoc
 
 $(BINDIR):
 	mkdir -p ./bin
@@ -108,3 +116,6 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver:
 $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager
 	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/jetstack/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/jetstack/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
+
+$(BINDIR)/gomarkdoc:
+	GO111MODULE=on go build -o $@ github.com/princjef/gomarkdoc/cmd/gomarkdoc

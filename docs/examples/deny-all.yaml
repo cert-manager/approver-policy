@@ -1,0 +1,34 @@
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: deny-all
+spec:
+  allowed: {}
+  constraints:
+    privateKey:
+      maxSize: 0
+  selector:
+    issuerRef: {}
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-policy:deny-all
+rules:
+- apiGroups: ["policy.cert-manager.io"]
+  resources: ["certificaterequestpolicies"]
+  verbs: ["use"]
+  resourceNames: ["deny-all"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-policy:deny-all
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-policy:deny-all
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:authenticated
