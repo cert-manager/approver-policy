@@ -28,7 +28,7 @@ import (
 // patchCMConversionCRDs patches the passed CRD objects to include the URL and
 // CA of the cert-manager webhook serving certificate. Only patches
 // cert-manager CRDs.
-func patchCMConversionCRDs(crds []*apiextensionsv1.CustomResourceDefinition, url string, caPEM []byte) {
+func patchCMConversionCRDs(crds []apiextensionsv1.CustomResourceDefinition, url string, caPEM []byte) {
 	for _, crd := range crds {
 		// Ensure all PreserveUnknownFields are set to false for _all_ CRDs.
 		crd.Spec.PreserveUnknownFields = false

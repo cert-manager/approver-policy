@@ -49,7 +49,7 @@ func init() {
 
 // readCRDsAtDirectories will read all CRDs yaml manifests files at the given
 // directories, parses and converts them into CustomResourceDefinition objects.
-func readCRDsAtDirectories(t *testing.T, dirs ...string) []*apiextensionsv1.CustomResourceDefinition {
+func readCRDsAtDirectories(t *testing.T, dirs ...string) []apiextensionsv1.CustomResourceDefinition {
 	serializer := jsonserializer.NewSerializerWithOptions(jsonserializer.DefaultMetaFactory, internalScheme, internalScheme, jsonserializer.SerializerOptions{
 		Yaml: true,
 	})
@@ -60,7 +60,7 @@ func readCRDsAtDirectories(t *testing.T, dirs ...string) []*apiextensionsv1.Cust
 		internalScheme.Name(),
 	)
 
-	var crds []*apiextensionsv1.CustomResourceDefinition
+	var crds []apiextensionsv1.CustomResourceDefinition
 	for _, dir := range dirs {
 		if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -89,26 +89,26 @@ func readCRDsAtDirectories(t *testing.T, dirs ...string) []*apiextensionsv1.Cust
 // readCRDsAtFilePath will attempt to read and parse CustomResourceDefinitions
 // which are defined in the given file path location. Ignores empty or
 // non-named CRD definitions.
-func readCRDsAtFilePath(codec runtime.Codec, converter runtime.ObjectConvertor, path string) ([]*apiextensionsv1.CustomResourceDefinition, error) {
+func readCRDsAtFilePath(codec runtime.Codec, converter runtime.ObjectConvertor, path string) ([]apiextensionsv1.CustomResourceDefinition, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var crds []*apiextensionsv1.CustomResourceDefinition
+	var crds []apiextensionsv1.CustomResourceDefinition
 	for _, d := range strings.Split(string(data), "\n---\n") {
 		// skip empty YAML documents
 		if strings.TrimSpace(d) == "" {
 			continue
 		}
 
-		internalCRD := &apiextensions.CustomResourceDefinition{}
-		if _, _, err := codec.Decode([]byte(d), nil, internalCRD); err != nil {
+		var internalCRD apiextensions.CustomResourceDefinition
+		if _, _, err := codec.Decode([]byte(d), nil, &internalCRD); err != nil {
 			return nil, err
 		}
 
-		out := &apiextensionsv1.CustomResourceDefinition{}
-		if err := converter.Convert(internalCRD, out, nil); err != nil {
+		var out apiextensionsv1.CustomResourceDefinition
+		if err := converter.Convert(&internalCRD, &out, nil); err != nil {
 			return nil, err
 		}
 
@@ -125,11 +125,11 @@ func readCRDsAtFilePath(codec runtime.Codec, converter runtime.ObjectConvertor, 
 
 // crdsToRuntimeObjects coverts the CustomResourceDefinition object into
 // generic controller-runtime client.Objects
-func crdsToRuntimeObjects(in []*apiextensionsv1.CustomResourceDefinition) []client.Object {
+func crdsToRuntimeObjects(in []apiextensionsv1.CustomResourceDefinition) []client.Object {
 	out := make([]client.Object, len(in))
 
-	for i, crd := range in {
-		out[i] = client.Object(crd)
+	for i := range in {
+		out[i] = client.Object(&in[i])
 	}
 
 	return out
