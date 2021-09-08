@@ -14,23 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
+package smoke
 
 import (
-	"path/filepath"
 	"testing"
 
-	testenv "github.com/cert-manager/policy-approver/test/env"
+	"github.com/cert-manager/policy-approver/test/env"
 )
 
-// Test_Integration runs the full suite of tests for the policy-approver
-// controller.
-func Test_Integration(t *testing.T) {
-	rootDir := testenv.RootDirOrSkip(t)
-
-	env = testenv.RunControlPlane(t,
-		filepath.Join(rootDir, "bin/cert-manager"),
-		filepath.Join(rootDir, "deploy/charts/policy-approver/templates/crds"),
-	)
-	testenv.RunSuite(t, "policy-approver-integration", "../../../../_artifacts")
+// Test_Smoke runs the full suite of smoke tests against policy-approver
+func Test_Smoke(t *testing.T) {
+	env.RunSuite(t, "policy-approver-smoke", "../../_artifacts")
 }

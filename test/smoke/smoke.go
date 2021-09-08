@@ -14,23 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
+package smoke
 
 import (
-	"path/filepath"
-	"testing"
+	"flag"
 
-	testenv "github.com/cert-manager/policy-approver/test/env"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
+	"github.com/cert-manager/policy-approver/test/smoke/config"
 )
 
-// Test_Integration runs the full suite of tests for the policy-approver
-// controller.
-func Test_Integration(t *testing.T) {
-	rootDir := testenv.RootDirOrSkip(t)
+var (
+	cnf = config.New(flag.CommandLine)
+)
 
-	env = testenv.RunControlPlane(t,
-		filepath.Join(rootDir, "bin/cert-manager"),
-		filepath.Join(rootDir, "deploy/charts/policy-approver/templates/crds"),
-	)
-	testenv.RunSuite(t, "policy-approver-integration", "../../../../_artifacts")
-}
+var _ = BeforeSuite(func() {
+	flag.Parse()
+	Expect(cnf.Complete()).NotTo(HaveOccurred())
+}, 60)

@@ -24,10 +24,6 @@ K8S_CLUSTER_NAME ?= policy-approver
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-.PHONY: manifests
-manifests: controller-gen ## Generate CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
 .PHONY: clean
 clean: ## clean up created files
 	rm -rf \
@@ -66,19 +62,13 @@ image: ## build docker image
 	GOARCH=$(ARCH) GOOS=linux CGO_ENABLED=0 go build -o ./bin/policy-approver-linux ./cmd/.
 	docker build -t quay.io/jetstack/cert-manager-policy-approver:v0.1.0 .
 
-# ==================================
-# E2E testing
-# ==================================
-.PHONY: kind
-kind: depend image kind-cluster deploy-cert-manager kind-load deploy
+.PHONY: demo
+demo: depend ## create cluster and deploy policy-approver
+	REPO_ROOT=$(shell pwd) ./hack/ci/create-cluster.sh
 
-.PHONY: kind-cluster
-kind-cluster: depend ## Use Kind to create a Kubernetes cluster for E2E tests
-	$(BINDIR)/kind get clusters | grep $(K8S_CLUSTER_NAME) || $(BINDIR)/kind create cluster --name $(K8S_CLUSTER_NAME)
-
-.PHONY: kind-load
-kind-load: ## Load all the Docker images into Kind
-	$(BINDIR)/kind load docker-image --name $(K8S_CLUSTER_NAME) quay.io/jetstack/cert-manager-policy-approver:v0.1.0
+.PHONY: smoke
+smoke: demo ## create cluster, deploy policy-approver, run smoke tests
+	REPO_ROOT=$(shell pwd) ./hack/ci/run-smoke-test.sh
 
 .PHONY: deploy-cert-manager
 deploy-cert-manager: depend ## Deploy cert-manager in the configured Kubernetes cluster in ~/.kube/config
@@ -89,13 +79,6 @@ deploy-cert-manager: depend ## Deploy cert-manager in the configured Kubernetes 
 deploy: depend ## Install CRDs into the K8s cluster
 	$(BINDIR)/kubectl apply -k config/crd
 	$(BINDIR)/kubectl apply -k config/default
-
-.PHONY: smoke
-smoke:
-	echo "not implemented"
-
-.PHONY: e2e
-e2e:
 
 .PHONY: depend
 depend: $(BINDIR) $(BINDIR)/deepcopy-gen $(BINDIR)/controller-gen $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
