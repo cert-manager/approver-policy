@@ -132,9 +132,15 @@ var _ = Context("Review", func() {
 			return approver.EvaluationResponse{Result: approver.ResultDenied}, nil
 		})
 
+		alg := cmapi.ECDSAKeyAlgorithm
 		policy := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &[]string{"example.com"}},
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &[]string{"example.com"}},
+				Constraints: &policyapi.CertificateRequestPolicyConstraints{
+					PrivateKey: &policyapi.CertificateRequestPolicyConstraintsPrivateKey{
+						Algorithm: &alg,
+					},
+				},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
 					"test-plugin": policyapi.CertificateRequestPolicyPluginData{

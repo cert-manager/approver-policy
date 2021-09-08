@@ -262,6 +262,7 @@ func Test_Evaluate(t *testing.T) {
 }
 
 func csrFrom(t *testing.T, keyAlgorithm x509.PublicKeyAlgorithm, mods ...gen.CSRModifier) []byte {
+	t.Helper()
 	csr, _, err := gen.CSR(keyAlgorithm, mods...)
 	if err != nil {
 		t.Fatal(err)
