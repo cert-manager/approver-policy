@@ -6,18 +6,18 @@ KUBECTL_BIN="${KUBECTL_BIN:-$REPO_ROOT/bin/kubectl}"
 HELM_BIN="${HELM_BIN:-$REPO_ROOT/bin/helm}"
 KIND_BIN="${KIND_BIN:-$REPO_ROOT/bin/kind}"
 POLICY_APPROVER_TAG="${POLICY_APPROVER_TAG:-smoke}"
-POLICY_APPROVER_REPO="${POLICY_APPROVER_REPO:-quay.io/jetstack/cert-manager-policy-approver}"
+POLICY_APPROVER_REPO="${POLICY_APPROVER_REPO:-quay.io/jetstack/cert-manager-approver-policy}"
 POLICY_APPROVER_IMAGE="$POLICY_APPROVER_REPO:$POLICY_APPROVER_TAG"
 
-echo ">> building policy-approver binary..."
-GOARCH=$(go env GOARCH) GOOS=linux CGO_ENABLED=0 go build -o $REPO_ROOT/bin/policy-approver-linux $REPO_ROOT/cmd/.
+echo ">> building approver-policy binary..."
+GOARCH=$(go env GOARCH) GOOS=linux CGO_ENABLED=0 go build -o $REPO_ROOT/bin/approver-policy-linux $REPO_ROOT/cmd/.
 
 echo ">> building docker image..."
 docker build -t $POLICY_APPROVER_IMAGE .
 
 echo ">> creating kind cluster..."
-$KIND_BIN delete cluster --name policy-approver
-cat <<EOF | $KIND_BIN create cluster --name policy-approver --config=-
+$KIND_BIN delete cluster --name approver-policy
+cat <<EOF | $KIND_BIN create cluster --name approver-policy --config=-
 apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
 kubeadmConfigPatches:
@@ -32,11 +32,11 @@ kubeadmConfigPatches:
 EOF
 
 echo ">> loading docker image..."
-$KIND_BIN load docker-image $POLICY_APPROVER_IMAGE --name policy-approver
+$KIND_BIN load docker-image $POLICY_APPROVER_IMAGE --name approver-policy
 
 echo ">> installing cert-manager..."
 $HELM_BIN repo add jetstack https://charts.jetstack.io --force-update
 $HELM_BIN upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set installCRDs=true --wait --create-namespace --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set global.logLevel=2
 
-echo ">> installing policy-approver..."
-$HELM_BIN upgrade -i -n cert-manager cert-manager-policy-approver ./deploy/charts/policy-approver --wait --set app.logLevel=2 --set image.repository=$POLICY_APPROVER_REPO --set image.tag=$POLICY_APPROVER_TAG
+echo ">> installing approver-policy..."
+$HELM_BIN upgrade -i -n cert-manager cert-manager-approver-policy ./deploy/charts/approver-policy --wait --set app.logLevel=2 --set image.repository=$POLICY_APPROVER_REPO --set image.tag=$POLICY_APPROVER_TAG

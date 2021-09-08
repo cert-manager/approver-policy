@@ -35,7 +35,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// Options hold options for the policy-approver Webhook TLS provider.
+// Options hold options for the approver-policy Webhook TLS provider.
 type Options struct {
 	// Log is the logger used by the webhook tls provider.
 	Log logr.Logger
@@ -51,7 +51,7 @@ type Options struct {
 	WebhookCertificatesDir string
 
 	// CASecretNamespace is the namespace that the
-	// cert-manager-policy-approver-tls Secret is stored.
+	// cert-manager-approver-policy-tls Secret is stored.
 	CASecretNamespace string
 }
 
@@ -83,7 +83,7 @@ func New(ctx context.Context, opts Options) (*TLS, error) {
 		authorityErrChan:       make(chan error),
 		caManager: &authority.DynamicAuthority{
 			SecretNamespace: opts.CASecretNamespace,
-			SecretName:      "cert-manager-policy-approver-tls",
+			SecretName:      "cert-manager-approver-policy-tls",
 			RESTConfig:      opts.RestConfig,
 			Log:             log.WithName("certificate-authority"),
 			CADuration:      time.Hour * 24,
@@ -232,7 +232,7 @@ func (t *TLS) regenerateCertificate(nextRenew chan<- time.Time) error {
 		Version:            2,
 		PublicKeyAlgorithm: x509.ECDSA,
 		PublicKey:          pk.Public(),
-		DNSNames:           []string{"cert-manager-policy-approver.cert-manager.svc"},
+		DNSNames:           []string{"cert-manager-approver-policy.cert-manager.svc"},
 		KeyUsage:           x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}

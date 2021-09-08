@@ -1,6 +1,6 @@
 # Vulnerability Reporting Process
 
 Security is the number one priority for cert-manager. If you think you've
-found a vulnerability in policy-approver, or in any cert-manager
+found a vulnerability in approver-policy, or in any cert-manager
 project, please follow the [vulnerability reporting process](https://github.com/jetstack/cert-manager/blob/master/SECURITY.md)
 documented in the main cert-manager repository.

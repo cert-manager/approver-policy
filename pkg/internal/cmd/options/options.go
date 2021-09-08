@@ -33,10 +33,10 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/klog/v2/klogr"
 
-	"github.com/cert-manager/policy-approver/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver"
 )
 
-// Options are the main options for the policy-approver. Populated via
+// Options are the main options for the approver-policy. Populated via
 // processing command line flags.
 type Options struct {
 	// logLevel is the verbosity level the driver will write logs at.
@@ -66,7 +66,7 @@ type Options struct {
 	Logr logr.Logger
 }
 
-// Webhook holds options specific to running the policy-approver Webhook
+// Webhook holds options specific to running the approver-policy Webhook
 // service.
 type Webhook struct {
 	// Host is the host that the Webhook will be served on.
@@ -80,7 +80,7 @@ type Webhook struct {
 	CertDir string
 
 	// CASecretNamespace is the namespace that the
-	// cert-manager-policy-approver-tls Secret is stored.
+	// cert-manager-approver-policy-tls Secret is stored.
 	CASecretNamespace string
 }
 
@@ -161,7 +161,7 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&o.Webhook.CASecretNamespace,
 		"webhook-ca-secret-namespace", "cert-manager",
-		"Namespace that the cert-manager-policy-approver-tls Secret is stored..")
+		"Namespace that the cert-manager-approver-policy-tls Secret is stored..")
 
 	fs.StringVar(&o.Webhook.CertDir,
 		"webhook-certificate-dir", "/tmp",

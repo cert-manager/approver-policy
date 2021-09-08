@@ -1,24 +1,24 @@
-# -- Number of replicas of policy-approver to run.
+# -- Number of replicas of approver-policy to run.
 replicaCount: 1
 
 image:
   # -- Target image repository.
-  repository: quay.io/jetstack/cert-manager-policy-approver
+  repository: quay.io/jetstack/cert-manager-approver-policy
   # -- Target image version tag.
   tag: v0.1.0
   # -- Kubernetes imagePullPolicy on Deployment.
   pullPolicy: IfNotPresent
 
 app:
-  # -- Verbosity of policy-approver logging.
+  # -- Verbosity of approver-policy logging.
   logLevel: 1 # 1-5
 
-  # -- Extra CLI arguments that will be passed to the policy-approver process.
+  # -- Extra CLI arguments that will be passed to the approver-policy process.
   extraArgs: []
 
-  # -- List if signer names that policy-approver will be given permission to
+  # -- List if signer names that approver-policy will be given permission to
   # approve and deny. CertificateRequests referencing these signer names can be
-  # processed by policy-approver. See:
+  # processed by approver-policy. See:
   # https://cert-manager.io/docs/concepts/certificaterequest/#approval
   approveSignerNames:
   - "issuers.cert-manager.io/*"
@@ -42,7 +42,7 @@ app:
         labels: {}
 
   readinessProbe:
-    # -- Container port to expose policy-approver HTTP readiness probe on
+    # -- Container port to expose approver-policy HTTP readiness probe on
     # default network interface.
     port: 6060
 
@@ -60,7 +60,7 @@ app:
 # -- Optional extra volume mounts. Useful for mounting custom root CAs
 volumeMounts: []
 #- name: my-volume-mount
-#  mountPath: /etc/policy-approver/secrets
+#  mountPath: /etc/approver-policy/secrets
 
 # -- Optional extra volumes.
 volumes: []
@@ -70,11 +70,11 @@ volumes: []
 
 
 resources: {}
-  # -- Kubernetes pod resource limits for policy-approver.
+  # -- Kubernetes pod resource limits for approver-policy.
   # limits:
   #   cpu: 100m
   #   memory: 128Mi
-  # -- Kubernetes pod memory resource requests for policy-approver.
+  # -- Kubernetes pod memory resource requests for approver-policy.
   # requests:
   #   cpu: 100m
   #   memory: 128Mi

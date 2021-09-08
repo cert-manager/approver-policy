@@ -27,11 +27,11 @@ import (
 // An Approver implements an Evaluator and Webhook.
 type Interface interface {
 	// Name is name of this Approver. Name must be unique to the
-	// policy-approver instance.
+	// approver-policy instance.
 	Name() string
 
 	// RegisterFlags can be used by Approvers for registering CLI flags which are
-	// required for configuring that Approver on this policy-approver instance.
+	// required for configuring that Approver on this approver-policy instance.
 	RegisterFlags(*pflag.FlagSet)
 
 	// Prepare can be used by Approvers for registering extra Kubernetes

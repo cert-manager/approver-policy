@@ -19,10 +19,10 @@ package smoke
 import (
 	"testing"
 
-	"github.com/cert-manager/policy-approver/test/env"
+	"github.com/cert-manager/approver-policy/test/env"
 )
 
-// Test_Smoke runs the full suite of smoke tests against policy-approver
+// Test_Smoke runs the full suite of smoke tests against approver-policy
 func Test_Smoke(t *testing.T) {
-	env.RunSuite(t, "policy-approver-smoke", "../../_artifacts")
+	env.RunSuite(t, "approver-policy-smoke", "../../_artifacts")
 }

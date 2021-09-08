@@ -27,18 +27,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/approver/fake"
-	"github.com/cert-manager/policy-approver/pkg/approver/manager/predicate"
-	"github.com/cert-manager/policy-approver/test/env"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver/fake"
+	"github.com/cert-manager/approver-policy/pkg/approver/manager/predicate"
+	"github.com/cert-manager/approver-policy/test/env"
 )
 
 func Test_Review(t *testing.T) {
 	rootDir := env.RootDirOrSkip(t)
 	env := env.RunControlPlane(t,
 		filepath.Join(rootDir, "bin/cert-manager"),
-		filepath.Join(rootDir, "deploy/charts/policy-approver/templates/crds"),
+		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
 	)
 
 	expNoEvaluation := func(t *testing.T) approver.Evaluator {

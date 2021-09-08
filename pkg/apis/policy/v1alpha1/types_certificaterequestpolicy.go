@@ -68,7 +68,7 @@ type CertificateRequestPolicySpec struct {
 
 	// Plugins define a set of plugins and their configuration that should be
 	// executed when this policy is evaluated against a CertificateRequest. A
-	// plugin must already be built within policy-approver for it to be
+	// plugin must already be built within approver-policy for it to be
 	// available.
 	// +optional
 	Plugins map[string]CertificateRequestPolicyPluginData `json:"plugins,omitempty"`

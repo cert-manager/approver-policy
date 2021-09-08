@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/cert-manager/policy-approver/pkg/apis/policy"
+	"github.com/cert-manager/approver-policy/pkg/apis/policy"
 )
 
 // SchemeGroupVersion is group version used to register these objects

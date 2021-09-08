@@ -38,9 +38,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver/manager"
-	fakemanager "github.com/cert-manager/policy-approver/pkg/approver/manager/fake"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver/manager"
+	fakemanager "github.com/cert-manager/approver-policy/pkg/approver/manager/fake"
 )
 
 func Test_certificaterequests_Reconcile(t *testing.T) {
@@ -90,7 +90,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			expResult:  ctrl.Result{},
 			expError:   true,
 			expObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
-			expEvent:   "Warning EvaluationError policy-approver failed to review the request and will retry",
+			expEvent:   "Warning EvaluationError approver-policy failed to review the request and will retry",
 		},
 		"if manager review returns an empty response, fire event and return a re-queue response": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
@@ -100,7 +100,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			expResult:  ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
 			expError:   false,
 			expObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
-			expEvent:   "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the policy-approver logs and file an issue",
+			expEvent:   "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
 		},
 		"if manager review returns an unknown response, fire event and return a re-queue response": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
@@ -110,7 +110,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			expResult:  ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
 			expError:   false,
 			expObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
-			expEvent:   "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the policy-approver logs and file an issue",
+			expEvent:   "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
 		},
 		"if manager review returns an unprocessed response, fire event and do nothing": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},

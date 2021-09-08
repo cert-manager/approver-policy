@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/cert-manager/policy-approver/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver"
 )
 
 var _ approver.Interface = &FakeApprover{}

@@ -23,5 +23,5 @@ bin
 *.swo
 *~
 
-/policy-approver
+/approver-policy
 /_artifacts

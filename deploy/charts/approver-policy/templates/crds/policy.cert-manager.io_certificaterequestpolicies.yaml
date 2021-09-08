@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.1
+    controller-gen.kubebuilder.io/version: v0.6.0
   creationTimestamp: null
   name: certificaterequestpolicies.policy.cert-manager.io
 spec:
@@ -177,7 +177,7 @@ spec:
                           description: MinSize defines the minimum key size a requestor may use for their private key. Values are inclusive (i.e. a min value of `2048` will accept a size of `2048`). MinSize and MaxSize may be the same value. An omitted field or value of `nil` permits any minimum size.
                           type: integer
                 plugins:
-                  description: Plugins define a set of plugins and their configuration that should be executed when this policy is evaluated against a CertificateRequest. A plugin must already be built within policy-approver for it to be available.
+                  description: Plugins define a set of plugins and their configuration that should be executed when this policy is evaluated against a CertificateRequest. A plugin must already be built within approver-policy for it to be available.
                   type: object
                   additionalProperties:
                     description: CertificateRequestPolicyPluginData is configuration needed by the plugin approver to evaluate a CertificateRequest on this policy.

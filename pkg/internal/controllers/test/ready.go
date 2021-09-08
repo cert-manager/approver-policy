@@ -26,12 +26,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/approver/allowed"
-	"github.com/cert-manager/policy-approver/pkg/approver/constraints"
-	"github.com/cert-manager/policy-approver/pkg/approver/fake"
-	"github.com/cert-manager/policy-approver/pkg/registry"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/approver/allowed"
+	"github.com/cert-manager/approver-policy/pkg/approver/constraints"
+	"github.com/cert-manager/approver-policy/pkg/approver/fake"
+	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
 var _ = Context("Ready", func() {

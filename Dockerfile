@@ -15,6 +15,6 @@
 FROM gcr.io/distroless/static@sha256:c9f9b040044cc23e1088772814532d90adadfa1b86dcba17d07cb567db18dc4e
 USER 1001
 
-COPY bin/policy-approver-linux /usr/bin/cert-manager-policy-approver
+COPY bin/approver-policy-linux /usr/bin/cert-manager-approver-policy
 
-ENTRYPOINT ["/usr/bin/cert-manager-policy-approver"]
+ENTRYPOINT ["/usr/bin/cert-manager-approver-policy"]

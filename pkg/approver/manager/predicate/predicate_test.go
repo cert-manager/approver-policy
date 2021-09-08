@@ -31,15 +31,15 @@ import (
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/test/env"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/test/env"
 )
 
 func Test_RBACBound(t *testing.T) {
 	rootDir := env.RootDirOrSkip(t)
 	env := env.RunControlPlane(t,
 		filepath.Join(rootDir, "bin/cert-manager"),
-		filepath.Join(rootDir, "deploy/charts/policy-approver/templates/crds"),
+		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
 	)
 
 	const (

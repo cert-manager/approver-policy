@@ -1,6 +1,6 @@
 ## Plugins
 
-Plugins are external approvers which are built into policy-approver at compile
+Plugins are external approvers which are built into approver-policy at compile
 time. Plugins are designed to be used as extensions to the existing policy
 checks where the user requires special functionality that the existing checks
 can't provide.

@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "cert-manager-policy-approver.name" . }}
+  name: {{ include "cert-manager-approver-policy.name" . }}
   labels:
-{{ include "cert-manager-policy-approver.labels" . | indent 4 }}
+{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "cert-manager-policy-approver.name" . }}
+      app: {{ include "cert-manager-approver-policy.name" . }}
   template:
     metadata:
       labels:
-        app: {{ include "cert-manager-policy-approver.name" . }}
+        app: {{ include "cert-manager-approver-policy.name" . }}
     spec:
-      serviceAccountName: {{ include "cert-manager-policy-approver.name" . }}
+      serviceAccountName: {{ include "cert-manager-approver-policy.name" . }}
       containers:
-      - name: {{ include "cert-manager-policy-approver.name" . }}
+      - name: {{ include "cert-manager-approver-policy.name" . }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
@@ -28,7 +28,7 @@ spec:
             path: "/readyz"
           initialDelaySeconds: 3
           periodSeconds: 7
-        command: ["cert-manager-policy-approver"]
+        command: ["cert-manager-approver-policy"]
         args:
           - "--log-level={{.Values.app.logLevel}}"
           {{- range .Values.app.extraArgs }}

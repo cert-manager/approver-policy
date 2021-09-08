@@ -21,7 +21,7 @@ import (
 
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 
-	"github.com/cert-manager/policy-approver/pkg/approver/manager"
+	"github.com/cert-manager/approver-policy/pkg/approver/manager"
 )
 
 var _ manager.Interface = &FakeManager{}

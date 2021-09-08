@@ -22,9 +22,9 @@ import (
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	policyapi "github.com/cert-manager/policy-approver/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/policy-approver/pkg/approver"
-	"github.com/cert-manager/policy-approver/pkg/registry"
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
 // Load the allowed approver.
@@ -32,12 +32,12 @@ func init() {
 	registry.Shared.Store(Allowed{})
 }
 
-// Allowed is a base policy-approver Approver that is responsible for ensuring
+// Allowed is a base approver-policy Approver that is responsible for ensuring
 // incoming requests may only request all or some of the X.509 attributes that
 // are allowed by the policy. Requests which do not request all of the
 // attributes which they are allowed to in the policy are permitted. It is
 // expected that allowed must _always_ be registered for all
-// policy-approver builds.
+// approver-policy builds.
 type Allowed struct{}
 
 // Name of Approver is "allowed"

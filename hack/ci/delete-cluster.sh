@@ -5,7 +5,7 @@ REPO_ROOT="${REPO_ROOT:-$(dirname "${BASH_SOURCE}")/../..}"
 KIND_BIN="${KIND_BIN:-$REPO_ROOT/bin/kind}"
 
 echo ">> exporting kind cluster logs..."
-$KIND_BIN export logs --name policy-approver _artifacts
+$KIND_BIN export logs --name approver-policy _artifacts
 
 echo ">> deleting kind cluster..."
-$KIND_BIN delete cluster --name policy-approver
+$KIND_BIN delete cluster --name approver-policy
