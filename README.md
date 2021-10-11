@@ -92,6 +92,7 @@ metadata:
 spec:
   allowed:
     commonName: "hello.world"
+    required: true
   selector:
     # Select all IssuerRef
     issuerRef: {}
@@ -141,6 +142,10 @@ corresponding attribute in the request. A request is permitted by the policy if
 the request omits an allowed attribute, but will _deny_ the request if it
 contains an attribute which is _not_ present in the allowed block.
 
+An allowed attribute can be marked as `required`, which if true, will enforce
+that the attribute has been defined in the request. The `required` field is not
+available for `isCA` or `usages`.
+
 In the following CertificateRequestPolicy, a request will be permitted if it
 does not request a DNS name, requests the DNS name "example.com", but will
 be denied when requesting "bar.example.com".
@@ -150,8 +155,22 @@ spec:
   ...
   allowed:
     dnsNames:
-    - "example.com"
-    - "foo.example.com"
+      values:
+      - "example.com"
+      - "foo.example.com"
+  ...
+```
+
+In the following, a request will be denied if the request contains no Common
+Name, but will permit requests whose Common Name ends in ".com".
+
+```yaml
+spec:
+  ...
+  allowed:
+    commonName:
+      value: "*.com"
+      required: true
   ...
 ```
 
@@ -179,30 +198,44 @@ metadata:
   name: my-policy
 spec:
   allowed:
-    commonName: "example.com"
+    commonName:
+      value: "example.com"
     dnsNames:
-    - "example.com"
-    - "*.example.com"
+      values:
+      - "example.com"
+      - "*.example.com"
     ipAddresses:
-    - "1.2.3.4"
-    - "10.0.1.*"
+      values:
+      - "1.2.3.4"
+      - "10.0.1.*"
     uris:
-    - "spiffe://example.org/ns/*/sa/*"
+      values:
+      - "spiffe://example.org/ns/*/sa/*"
     emailAddresses:
-    - "*@example.com"
+      values:
+      - "*@example.com"
+      required: true
     isCA: false
     usages:
     - "server auth"
     - "client auth"
     subject:
-      organizations: ["hello-world"]
-      countries: ["*"]
-      organizationalUnits: ["*"]
-      localities: ["*"]
-      provinces: ["*"]
-      streetAddresses: ["*"]
-      postalCodes: ["*"]
-      serialNumber: "*"
+      organizations:
+        values: ["hello-world"]
+      countries:
+        values: ["*"]
+      organizationalUnits:
+        values: ["*"]
+      localities:
+        values: ["*"]
+      provinces:
+        values: ["*"]
+      streetAddresses:
+        values: ["*"]
+      postalCodes:
+        values: ["*"]
+      serialNumber:
+        value: "*"
   ...
 ```
 
