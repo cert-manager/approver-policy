@@ -60,8 +60,3 @@ func (a Allowed) Prepare(_ context.Context, _ manager.Manager) error {
 func (a Allowed) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
-
-// Validate always returns Allowed since Allowed doesn't need to validate any of the fields.
-func (a Allowed) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-	return approver.WebhookValidationResponse{Allowed: true, Errors: nil}, nil
-}
