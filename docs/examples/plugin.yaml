@@ -4,11 +4,12 @@ metadata:
   name: plugin-some-example
 spec:
   allowed:
-    commonName: "example.com"
+    commonName:
+      value: "example.com"
   plugins:
-    some-example:
+    rego:
       values:
-        my-ref: "hello-world"
+       rule: "foo-bar"
   selector:
     issuerRef:
       name: my-ca

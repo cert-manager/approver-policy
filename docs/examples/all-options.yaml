@@ -4,30 +4,45 @@ metadata:
   name: all-options
 spec:
   allowed:
-    commonName: "example.com"
+    commonName:
+      required: true
+      value: "example.com"
     dnsNames:
-    - "example.com"
-    - "*.example.com"
+      required: false
+      values:
+      - "example.com"
+      - "*.example.com"
     ipAddresses:
-    - "1.2.3.4"
-    - "10.0.1.*"
+      values:
+      - "1.2.3.4"
+      - "10.0.1.*"
     uris:
-    - "spiffe://example.org/ns/*/sa/*"
+      values:
+      - "spiffe://example.org/ns/*/sa/*"
     emailAddresses:
-    - "*@example.com"
+      values:
+      - "*@example.com"
     isCA: false
     usages:
     - "server auth"
     - "client auth"
     subject:
-      organizations: ["hello-world"]
-      countries: ["*"]
-      organizationalUnits: ["*"]
-      localities: ["*"]
-      provinces: ["*"]
-      streetAddresses: ["*"]
-      postalCodes: ["*"]
-      serialNumber: "*"
+      organizations:
+        values: ["hello-world"]
+      countries:
+        values: ["*"]
+      organizationalUnits:
+        values: ["*"]
+      localities:
+        values: ["*"]
+      provinces:
+        values: ["*"]
+      streetAddresses:
+        values: ["*"]
+      postalCodes:
+        values: ["*"]
+      serialNumber:
+        value: "*"
 
   constraints:
     minDuration: 1h
