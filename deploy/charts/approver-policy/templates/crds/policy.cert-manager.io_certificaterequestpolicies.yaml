@@ -52,23 +52,51 @@ spec:
                   type: object
                   properties:
                     commonName:
-                      description: CommonName defines the X.509 Common Name that is permissible. Accepts wildcards "*". An omitted field or value of `nil` forbids a CommonName being requested. An empty string is equivalent to `nil`.
-                      type: string
+                      description: CommonName defines the X.509 Common Name that is permissible.
+                      type: object
+                      properties:
+                        required:
+                          description: Required marks this field as being a required value on the request. May only be set to true if Value is also defined.
+                          type: boolean
+                        value:
+                          description: Value defines the value that is permissible to be present on the request. Accepts wildcards "*". An omitted field or value of `nil` forbids the value from being requested. An empty string is equivalent to `nil`.
+                          type: string
                     dnsNames:
                       description: DNSNames defines the X.509 DNS SANs that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any DNSNames being requested. An empty slice `[]` is equivalent to `nil`.
-                      type: array
-                      items:
-                        type: string
+                      type: object
+                      properties:
+                        required:
+                          description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                          type: boolean
+                        values:
+                          description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                          type: array
+                          items:
+                            type: string
                     emailAddresses:
-                      description: EmailAddresses defines the X.509 Email SANs that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any EmailAddress from being requested. An empty slice `[]` is equivalent to `nil`.
-                      type: array
-                      items:
-                        type: string
+                      description: EmailAddresses defines the X.509 Email SANs that may be requested for.
+                      type: object
+                      properties:
+                        required:
+                          description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                          type: boolean
+                        values:
+                          description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                          type: array
+                          items:
+                            type: string
                     ipAddresses:
-                      description: IPAddresses defines the X.509 IP SANs that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any IPAddresses from being requested. An empty slice `[]` is equivalent to `nil`.
-                      type: array
-                      items:
-                        type: string
+                      description: IPAddresses defines the X.509 IP SANs that may be requested for.
+                      type: object
+                      properties:
+                        required:
+                          description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                          type: boolean
+                        values:
+                          description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                          type: array
+                          items:
+                            type: string
                     isCA:
                       description: IsCA defines whether it is permissible for a CertificateRequest to have the `spec.IsCA` field set to `true`. An omitted field, value of `nil` or `false`, forbids the `spec.IsCA` field from bring `true`. A value of `true` permits CertificateRequests setting the `spec.IsCA` field to `true`.
                       type: boolean
@@ -77,50 +105,113 @@ spec:
                       type: object
                       properties:
                         countries:
-                          description: Countries define the X.509 Subject Countries that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any Countries from being requested. An empty slice `[]` is equivalent to `nil`.
-                          type: array
-                          items:
-                            type: string
+                          description: Countries define the X.509 Subject Countries that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                              type: boolean
+                            values:
+                              description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                              type: array
+                              items:
+                                type: string
                         localities:
-                          description: Localities defines the X.509 Subject Localities that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any Localities from being requested. An empty slice `[]` is equivalent to nil.
-                          type: array
-                          items:
-                            type: string
+                          description: Localities defines the X.509 Subject Localities that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                              type: boolean
+                            values:
+                              description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                              type: array
+                              items:
+                                type: string
                         organizationalUnits:
-                          description: OrganizationalUnits defines the X.509 Subject Organizational Units that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any OrganizationalUnits from being requested. An empty slice `[]` is equivalent to nil.
-                          type: array
-                          items:
-                            type: string
+                          description: OrganizationalUnits defines the X.509 Subject Organizational Units that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                              type: boolean
+                            values:
+                              description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                              type: array
+                              items:
+                                type: string
                         organizations:
-                          description: Organizations define the X.509 Subject Organizations that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any Organization from being requested. An empty slice `[]` is equivalent to `nil`.
-                          type: array
-                          items:
-                            type: string
+                          description: Organizations define the X.509 Subject Organizations that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                              type: boolean
+                            values:
+                              description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                              type: array
+                              items:
+                                type: string
                         postalCodes:
-                          description: PostalCodes defines the X.509 Subject Postal Codes that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any Postal Codes from being requested. An empty slice `[]` is equivalent to nil.
-                          type: array
-                          items:
-                            type: string
+                          description: PostalCodes defines the X.509 Subject Postal Codes that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                              type: boolean
+                            values:
+                              description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                              type: array
+                              items:
+                                type: string
                         provinces:
-                          description: Provinces defines the X.509 Subject Provinces that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any Provinces from being requested. An empty slice `[]` is equivalent to nil.
-                          type: array
-                          items:
-                            type: string
+                          description: Provinces defines the X.509 Subject Provinces that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                              type: boolean
+                            values:
+                              description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                              type: array
+                              items:
+                                type: string
                         serialNumber:
-                          description: SerialNumber defines the X.509 Subject Serial Number that may be requested for. An omitted field or value of `nil` forbids any Serial Number from being requested.
-                          type: string
+                          description: SerialNumber defines the X.509 Subject Serial Number that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Value is also defined.
+                              type: boolean
+                            value:
+                              description: Value defines the value that is permissible to be present on the request. Accepts wildcards "*". An omitted field or value of `nil` forbids the value from being requested. An empty string is equivalent to `nil`.
+                              type: string
                         streetAddresses:
-                          description: StreetAddresses defines the X.509 Subject Street Addresses that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any Street Addresses from being requested. An empty slice `[]` is equivalent to nil.
+                          description: StreetAddresses defines the X.509 Subject Street Addresses that may be requested for.
+                          type: object
+                          properties:
+                            required:
+                              description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                              type: boolean
+                            values:
+                              description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
+                              type: array
+                              items:
+                                type: string
+                    uris:
+                      description: URIs defines the X.509 URI SANs that may be requested for.
+                      type: object
+                      properties:
+                        required:
+                          description: Required marks this field as being a required value on the request. May only be set to true if Values is also defined. Default is nil which marks the field as not required.
+                          type: boolean
+                        values:
+                          description: Defines the values that are permissible to be present on request. Accepts wildcards "*". An omitted field or value of `nil` forbids any value on the related field in the request from being requested. An empty slice `[]` is equivalent to `nil`.
                           type: array
                           items:
                             type: string
-                    uris:
-                      description: URIs defines the X.509 URI SANs that may be requested for. Accepts wildcards "*". An omitted field or value of `nil` forbids any URIs from being requested. An empty slice `[]` is equivalent to `nil`.
-                      type: array
-                      items:
-                        type: string
                     usages:
-                      description: Usages defines the list of permissible key usages that may appear of the CertificateRequest `spec.keyUsages` field. An omitted field or value of `nil` forbids any Usages being requested. An empty slice `[]` is equivalent to `nil`.
+                      description: Usages defines the list of permissible key usages that may appear on the CertificateRequest `spec.keyUsages` field. An omitted field or value of `nil` forbids any Usages being requested. An empty slice `[]` is equivalent to `nil`.
                       type: array
                       items:
                         description: 'KeyUsage specifies valid usage contexts for keys. See: https://tools.ietf.org/html/rfc5280#section-4.2.1.3      https://tools.ietf.org/html/rfc5280#section-4.2.1.12 Valid KeyUsage values are as follows: "signing", "digital signature", "content commitment", "key encipherment", "key agreement", "data encipherment", "cert sign", "crl sign", "encipher only", "decipher only", "any", "server auth", "client auth", "code signing", "email protection", "s/mime", "ipsec end system", "ipsec tunnel", "ipsec user", "timestamping", "ocsp signing", "microsoft sgc", "netscape sgc"'
