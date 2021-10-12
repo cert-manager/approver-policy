@@ -143,8 +143,9 @@ the request omits an allowed attribute, but will _deny_ the request if it
 contains an attribute which is _not_ present in the allowed block.
 
 An allowed attribute can be marked as `required`, which if true, will enforce
-that the attribute has been defined in the request. The `required` field is not
-available for `isCA` or `usages`.
+that the attribute has been defined in the request. A field can only be marked
+as `required` if the corresponding field is also defined. The `required` field
+is not available for `isCA` or `usages`.
 
 In the following CertificateRequestPolicy, a request will be permitted if it
 does not request a DNS name, requests the DNS name "example.com", but will
