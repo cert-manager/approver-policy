@@ -51,6 +51,10 @@ type Options struct {
 	// disable exposing metrics.
 	MetricsAddress string
 
+	// LeaderElectionNamespace is the Namespace to lease the controller replica
+	// leadership election.
+	LeaderElectionNamespace string
+
 	// ReadyzAddress is the TCP address for exposing the HTTP readiness probe
 	// which will be served on the HTTP path '/readyz'.
 	ReadyzAddress string
@@ -141,6 +145,9 @@ func (o *Options) addFlags(cmd *cobra.Command, approvers ...approver.Interface) 
 func (o *Options) addAppFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&o.logLevel, "log-level", "v", "1",
 		"Log level (1-5).")
+
+	fs.StringVar(&o.LeaderElectionNamespace, "leader-election-namespace", "",
+		"Namespace to lease leader election for controller replica set.")
 
 	fs.StringVar(&o.MetricsAddress, "metrics-bind-address", ":9402",
 		`TCP address for exposing HTTP Prometheus metrics which will be served on the HTTP path '/metrics'. The value "0" will

@@ -56,6 +56,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				LeaderElectionID:              "policy.cert-manager.io",
 				LeaderElectionReleaseOnCancel: true,
 				LeaderElectionResourceLock:    "leases",
+				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
 				ReadinessEndpointName:         "/readyz",
 				HealthProbeBindAddress:        opts.ReadyzAddress,
 				MetricsBindAddress:            opts.MetricsAddress,
