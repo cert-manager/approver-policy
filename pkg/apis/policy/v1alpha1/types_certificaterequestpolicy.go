@@ -93,8 +93,6 @@ type CertificateRequestPolicyAllowed struct {
 
 	// DNSNames defines the X.509 DNS SANs that may be requested for.
 	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any DNSNames being requested.
-	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
 	DNSNames *CertificateRequestPolicyAllowedStringSlice `json:"dnsNames,omitempty"`
 
@@ -185,7 +183,9 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 	// Accepts wildcards "*".
 	// An omitted field or value of `nil` forbids any value on the related field
 	// in the request from being requested.
-	// An empty slice `[]` is equivalent to `nil`.
+	// An empty slice `[]` is equivalent to `nil`, however an empty slice pared
+	// with Required `true` is an impossible condition that always denies.
+	// Values may not be `nil` if Required is `true`.
 	// +optional
 	Values *[]string `json:"values,omitempty"`
 
@@ -202,7 +202,9 @@ type CertificateRequestPolicyAllowedString struct {
 	// Value defines the value that is permissible to be present on the request.
 	// Accepts wildcards "*".
 	// An omitted field or value of `nil` forbids the value from being requested.
-	// An empty string is equivalent to `nil`.
+	// An empty string is equivalent to `nil`, however an empty string pared with
+	// Required as `true` is an impossible condition that always denies.
+	// Value may not be `nil` if Required is `true`.
 	// +optional
 	Value *string `json:"value,omitempty"`
 
