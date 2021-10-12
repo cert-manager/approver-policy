@@ -9,7 +9,7 @@ spec:
   plugins:
     rego:
       values:
-       rule: "foo-bar"
+       my-ref: "hello-world"
   selector:
     issuerRef:
       name: my-ca
