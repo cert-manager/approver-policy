@@ -146,7 +146,7 @@ func (o *Options) addAppFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&o.logLevel, "log-level", "v", "1",
 		"Log level (1-5).")
 
-	fs.StringVar(&o.LeaderElectionNamespace, "leader-election-namespace", "cert-manager",
+	fs.StringVar(&o.LeaderElectionNamespace, "leader-election-namespace", "",
 		"Namespace to lease leader election for controller replica set.")
 
 	fs.StringVar(&o.MetricsAddress, "metrics-bind-address", ":9402",
