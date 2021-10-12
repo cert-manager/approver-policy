@@ -17,7 +17,7 @@ docker build -t $POLICY_APPROVER_IMAGE .
 
 echo ">> pre-creating 'kind' docker network to avoid networking issues in CI"
 # When running in our CI environment the Docker network's subnet choice will cause issues with routing
-# This works this around till we have a way to properly patch this.
+# This works around this till we have a way to properly patch this.
 docker network create --driver=bridge --subnet=192.168.0.0/16 --gateway 192.168.0.1 kind || true
 # Sleep for 2s to avoid any races between docker's network subcommand and 'kind create'
 sleep 2
