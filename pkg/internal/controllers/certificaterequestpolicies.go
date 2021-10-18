@@ -19,16 +19,23 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -65,10 +72,56 @@ type certificaterequestpolicies struct {
 // addCertificateRequestPolicyController will register the
 // certificaterequestpolicies controller with the controller-runtime Manager.
 func addCertificateRequestPolicyController(ctx context.Context, opts Options) error {
+	log := opts.Log.WithName("certificaterequestpolicies")
+	genericChan := make(chan event.GenericEvent)
+
+	var enqueueListSelect []reflect.SelectCase
+	for _, reconciler := range opts.Reconcilers {
+		if enqueueChan := reconciler.EnqueueChan(); enqueueChan != nil {
+			enqueueListSelect = append(enqueueListSelect, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(enqueueChan)})
+		}
+	}
+
+	// Only setup generic event triggers if at least one Reconciler gave an
+	// enqueue channel.
+	if len(enqueueListSelect) > 0 {
+		enqueueListSelect = append(enqueueListSelect, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
+		go func() {
+			for {
+				chosen, _, ok := reflect.Select(enqueueListSelect)
+				if !ok {
+					// Check if the context has been cancelled, and exit go routine if so.
+					if chosen == len(enqueueListSelect)-1 {
+						return
+					}
+					enqueueListSelect[chosen].Chan = reflect.ValueOf(nil)
+					continue
+				}
+				genericChan <- event.GenericEvent{}
+			}
+		}()
+	}
+
 	return ctrl.NewControllerManagedBy(opts.Manager).
 		For(new(policyapi.CertificateRequestPolicy)).
+		Watches(&source.Channel{Source: genericChan}, handler.EnqueueRequestsFromMapFunc(
+			func(_ client.Object) []reconcile.Request {
+				log.Info("reconciling all certificaterequestpolicies after receiving event message")
+
+				var policyList policyapi.CertificateRequestPolicyList
+				if err := opts.Manager.GetCache().List(ctx, &policyList); err != nil {
+					log.Error(err, "failed to list certificaterequestpolicies, exiting...")
+					os.Exit(0)
+				}
+				var requests []reconcile.Request
+				for _, policy := range policyList.Items {
+					requests = append(requests, ctrl.Request{NamespacedName: types.NamespacedName{Name: policy.Name}})
+				}
+				return requests
+			},
+		)).
 		Complete(&certificaterequestpolicies{
-			log:         opts.Log.WithName("certificaterequestpolicies"),
+			log:         log,
 			clock:       clock.RealClock{},
 			recorder:    opts.Manager.GetEventRecorderFor("policy.cert-manager.io"),
 			client:      opts.Manager.GetClient(),
