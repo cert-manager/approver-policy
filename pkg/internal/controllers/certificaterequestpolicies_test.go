@@ -201,6 +201,30 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			}},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
+		"if reconciler returns ready response with just requeueAfter > 0, update to ready and mark requeue with requeueAfter": {
+			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
+				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
+				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
+			}},
+			reconcilers: []approver.Reconciler{fakeapprover.NewFakeReconciler().WithReady(func(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+				return approver.ReconcilerReadyResponse{Ready: true, Result: ctrl.Result{Requeue: false, RequeueAfter: time.Second}}, nil
+			})},
+			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
+			expError:  false,
+			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
+				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
+				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
+				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+					{Type: policyapi.CertificateRequestPolicyConditionReady,
+						Status:             corev1.ConditionTrue,
+						LastTransitionTime: fixedmetatime,
+						Reason:             "Ready",
+						Message:            "CertificateRequestPolicy is ready for approval evaluation",
+						ObservedGeneration: policyGeneration},
+				}},
+			}},
+			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
+		},
 		"if two reconcilers returns ready response with requeue and requeueAfter, update to ready and mark requeue with requeueAfter of smaller duration": {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
