@@ -40,15 +40,17 @@ var _ = Context("Ready", func() {
 		cancel func()
 
 		plugin1, plugin2, plugin3 *fake.FakeApprover
+
+		enqueueChan1, enqueueChan2, enqueueChan3 = make(chan struct{}), make(chan struct{}), make(chan struct{})
 	)
 
 	JustBeforeEach(func() {
 		plugin1 = fake.NewFakeApprover()
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-1")
+		plugin1.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-1").WithEnqueueChan(func() <-chan struct{} { return enqueueChan1 })
 		plugin2 = fake.NewFakeApprover()
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-2")
+		plugin2.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-2").WithEnqueueChan(func() <-chan struct{} { return enqueueChan2 })
 		plugin3 = fake.NewFakeApprover()
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-3")
+		plugin3.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-3").WithEnqueueChan(func() <-chan struct{} { return enqueueChan3 })
 
 		registry := new(registry.Registry).Store(allowed.Allowed{}, constraints.Constraints{}, plugin1, plugin2, plugin3)
 		ctx, cancel, _ = startControllers(registry)
@@ -234,5 +236,79 @@ var _ = Context("Ready", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 		waitForReady(ctx, env.AdminClient, policy.Name, "3s", "100ms")
+	})
+
+	It("if reconcilers return ready should set ready. After enqueue event, should update to false if next reconcile returns false", func() {
+		var i int
+
+		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			if i == 0 {
+				return approver.ReconcilerReadyResponse{Ready: true}, nil
+			}
+			return approver.ReconcilerReadyResponse{Ready: false}, nil
+		})
+		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		i++
+		enqueueChan1 <- struct{}{}
+		waitForNotReady(ctx, env.AdminClient, policy.Name)
+	})
+
+	It("if reconcilers return not-ready should set not-ready. After enqueue event, should update to true if next reconcile returns true", func() {
+		var i int
+
+		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			if i == 0 {
+				return approver.ReconcilerReadyResponse{Ready: false}, nil
+			}
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForNotReady(ctx, env.AdminClient, policy.Name)
+
+		i++
+		enqueueChan2 <- struct{}{}
+		waitForReady(ctx, env.AdminClient, policy.Name)
 	})
 })
