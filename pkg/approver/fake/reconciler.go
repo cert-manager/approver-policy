@@ -28,12 +28,15 @@ var _ approver.Reconciler = &FakeReconciler{}
 // FakeReconciler is a testing reconciler designed to mock Reconcilers with a
 // pre-determined response.
 type FakeReconciler struct {
-	name      string
-	readyFunc func(context.Context, *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)
+	name        string
+	readyFunc   func(context.Context, *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)
+	enqueueFunc func() <-chan struct{}
 }
 
 func NewFakeReconciler() *FakeReconciler {
-	return new(FakeReconciler)
+	return &FakeReconciler{
+		enqueueFunc: func() <-chan struct{} { return nil },
+	}
 }
 
 func (f *FakeReconciler) WithName(name string) *FakeReconciler {
@@ -46,10 +49,19 @@ func (f *FakeReconciler) WithReady(fn func(context.Context, *policyapi.Certifica
 	return f
 }
 
+func (f *FakeReconciler) WithEnqueueChan(fn func() <-chan struct{}) *FakeReconciler {
+	f.enqueueFunc = fn
+	return f
+}
+
 func (f *FakeReconciler) Name() string {
 	return f.name
 }
 
 func (f *FakeReconciler) Ready(ctx context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 	return f.readyFunc(ctx, policy)
+}
+
+func (f *FakeReconciler) EnqueueChan() <-chan struct{} {
+	return f.enqueueFunc()
 }
