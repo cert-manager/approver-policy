@@ -60,6 +60,6 @@ func (c Constraints) Ready(_ context.Context, _ *policyapi.CertificateRequestPol
 }
 
 // Constraints never needs to manually enqueue policies.
-func (c Constraints) EnqueueChan() <-chan struct{} {
+func (c Constraints) EnqueueChan() <-chan string {
 	return nil
 }

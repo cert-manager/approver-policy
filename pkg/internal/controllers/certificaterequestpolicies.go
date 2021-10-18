@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/go-logr/logr"
@@ -88,16 +87,17 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 		enqueueListSelect = append(enqueueListSelect, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
 		go func() {
 			for {
-				chosen, _, ok := reflect.Select(enqueueListSelect)
+				chosen, val, ok := reflect.Select(enqueueListSelect)
 				if !ok {
 					// Check if the context has been cancelled, and exit go routine if so.
 					if chosen == len(enqueueListSelect)-1 {
+						log.Info("closing certificaterequestpolicy enqueue event watcher")
 						return
 					}
 					enqueueListSelect[chosen].Chan = reflect.ValueOf(nil)
 					continue
 				}
-				genericChan <- event.GenericEvent{}
+				genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: val.String()}}}
 			}
 		}()
 	}
@@ -105,19 +105,9 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 	return ctrl.NewControllerManagedBy(opts.Manager).
 		For(new(policyapi.CertificateRequestPolicy)).
 		Watches(&source.Channel{Source: genericChan}, handler.EnqueueRequestsFromMapFunc(
-			func(_ client.Object) []reconcile.Request {
-				log.Info("reconciling all certificaterequestpolicies after receiving event message")
-
-				var policyList policyapi.CertificateRequestPolicyList
-				if err := opts.Manager.GetCache().List(ctx, &policyList); err != nil {
-					log.Error(err, "failed to list certificaterequestpolicies, exiting...")
-					os.Exit(0)
-				}
-				var requests []reconcile.Request
-				for _, policy := range policyList.Items {
-					requests = append(requests, ctrl.Request{NamespacedName: types.NamespacedName{Name: policy.Name}})
-				}
-				return requests
+			func(obj client.Object) []reconcile.Request {
+				log.Info("reconciling certificaterequestpolicy after receiving event message", "name", obj.GetName())
+				return []ctrl.Request{{NamespacedName: types.NamespacedName{Name: obj.GetName()}}}
 			},
 		)).
 		Complete(&certificaterequestpolicies{

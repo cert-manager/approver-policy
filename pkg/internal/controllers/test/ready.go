@@ -22,9 +22,11 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -41,16 +43,16 @@ var _ = Context("Ready", func() {
 
 		plugin1, plugin2, plugin3 *fake.FakeApprover
 
-		enqueueChan1, enqueueChan2, enqueueChan3 = make(chan struct{}), make(chan struct{}), make(chan struct{})
+		enqueueChan1, enqueueChan2, enqueueChan3 = make(chan string), make(chan string), make(chan string)
 	)
 
 	JustBeforeEach(func() {
 		plugin1 = fake.NewFakeApprover()
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-1").WithEnqueueChan(func() <-chan struct{} { return enqueueChan1 })
+		plugin1.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-1").WithEnqueueChan(func() <-chan string { return enqueueChan1 })
 		plugin2 = fake.NewFakeApprover()
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-2").WithEnqueueChan(func() <-chan struct{} { return enqueueChan2 })
+		plugin2.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-2").WithEnqueueChan(func() <-chan string { return enqueueChan2 })
 		plugin3 = fake.NewFakeApprover()
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-3").WithEnqueueChan(func() <-chan struct{} { return enqueueChan3 })
+		plugin3.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-3").WithEnqueueChan(func() <-chan string { return enqueueChan3 })
 
 		registry := new(registry.Registry).Store(allowed.Allowed{}, constraints.Constraints{}, plugin1, plugin2, plugin3)
 		ctx, cancel, _ = startControllers(registry)
@@ -271,7 +273,7 @@ var _ = Context("Ready", func() {
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
 		i++
-		enqueueChan1 <- struct{}{}
+		enqueueChan1 <- policy.Name
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 	})
 
@@ -308,7 +310,58 @@ var _ = Context("Ready", func() {
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 
 		i++
-		enqueueChan2 <- struct{}{}
+		enqueueChan2 <- policy.Name
 		waitForReady(ctx, env.AdminClient, policy.Name)
+	})
+
+	It("if reconcilers return not-ready should set not-ready. After enqueue event but for wrong name, should not change returning not-ready", func() {
+		var i int
+
+		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			if i == 0 {
+				return approver.ReconcilerReadyResponse{Ready: false}, nil
+			}
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForNotReady(ctx, env.AdminClient, policy.Name)
+
+		i++
+		enqueueChan2 <- "not-the-correct-name"
+
+		Consistently(func() bool {
+			Eventually(func() error {
+				return env.AdminClient.Get(ctx, client.ObjectKeyFromObject(&policy), &policy)
+			}).Should(BeNil())
+			for _, condition := range policy.Status.Conditions {
+				if condition.ObservedGeneration != policy.Generation {
+					return true
+				}
+				if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == corev1.ConditionTrue {
+					return true
+				}
+			}
+			return false
+		}, "3s").Should(BeFalse(), "expected the condition to maintain not-ready")
 	})
 })

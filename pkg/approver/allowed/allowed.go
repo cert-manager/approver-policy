@@ -62,6 +62,6 @@ func (a Allowed) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy)
 }
 
 // Allowed never needs to manually enqueue policies.
-func (a Allowed) EnqueueChan() <-chan struct{} {
+func (a Allowed) EnqueueChan() <-chan string {
 	return nil
 }

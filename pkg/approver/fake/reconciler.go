@@ -30,12 +30,12 @@ var _ approver.Reconciler = &FakeReconciler{}
 type FakeReconciler struct {
 	name        string
 	readyFunc   func(context.Context, *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error)
-	enqueueFunc func() <-chan struct{}
+	enqueueFunc func() <-chan string
 }
 
 func NewFakeReconciler() *FakeReconciler {
 	return &FakeReconciler{
-		enqueueFunc: func() <-chan struct{} { return nil },
+		enqueueFunc: func() <-chan string { return nil },
 	}
 }
 
@@ -49,7 +49,7 @@ func (f *FakeReconciler) WithReady(fn func(context.Context, *policyapi.Certifica
 	return f
 }
 
-func (f *FakeReconciler) WithEnqueueChan(fn func() <-chan struct{}) *FakeReconciler {
+func (f *FakeReconciler) WithEnqueueChan(fn func() <-chan string) *FakeReconciler {
 	f.enqueueFunc = fn
 	return f
 }
@@ -62,6 +62,6 @@ func (f *FakeReconciler) Ready(ctx context.Context, policy *policyapi.Certificat
 	return f.readyFunc(ctx, policy)
 }
 
-func (f *FakeReconciler) EnqueueChan() <-chan struct{} {
+func (f *FakeReconciler) EnqueueChan() <-chan string {
 	return f.enqueueFunc()
 }
