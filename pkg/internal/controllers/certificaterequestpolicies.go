@@ -97,7 +97,16 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 					enqueueListSelect[chosen].Chan = reflect.ValueOf(nil)
 					continue
 				}
-				genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: val.String()}}}
+				// Send a message in a go routine so to not potentially block
+				// reconciles who are sending a message on their enqueue channel.
+				go func(name string) {
+					select {
+					case <-ctx.Done():
+						return
+					case genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: name}}}:
+						return
+					}
+				}(val.String())
 			}
 		}()
 	}
