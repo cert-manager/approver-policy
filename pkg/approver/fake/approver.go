@@ -19,6 +19,7 @@ package fake
 import (
 	"context"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
@@ -31,7 +32,7 @@ var _ approver.Interface = &FakeApprover{}
 // pre-determined response.
 type FakeApprover struct {
 	registerFlagsFn func(*pflag.FlagSet)
-	prepareFn       func(context.Context, manager.Manager) error
+	prepareFn       func(context.Context, logr.Logger, manager.Manager) error
 	*FakeEvaluator
 	*FakeWebhook
 	*FakeReconciler
@@ -60,7 +61,7 @@ func (f *FakeApprover) WithRegisterFlags(fn func(*pflag.FlagSet)) *FakeApprover 
 	return f
 }
 
-func (f *FakeApprover) WithPrepare(fn func(context.Context, manager.Manager) error) *FakeApprover {
+func (f *FakeApprover) WithPrepare(fn func(context.Context, logr.Logger, manager.Manager) error) *FakeApprover {
 	f.prepareFn = fn
 	return f
 }
@@ -69,6 +70,6 @@ func (f *FakeApprover) RegisterFlags(pf *pflag.FlagSet) {
 	f.registerFlagsFn(pf)
 }
 
-func (f *FakeApprover) Prepare(ctx context.Context, mgr manager.Manager) error {
-	return f.prepareFn(ctx, mgr)
+func (f *FakeApprover) Prepare(ctx context.Context, log logr.Logger, mgr manager.Manager) error {
+	return f.prepareFn(ctx, log, mgr)
 }

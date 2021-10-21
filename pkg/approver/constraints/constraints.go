@@ -19,6 +19,7 @@ package constraints
 import (
 	"context"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
@@ -49,7 +50,7 @@ func (c Constraints) RegisterFlags(_ *pflag.FlagSet) {
 }
 
 // Prepare is a no-op, constraints doesn't need to prepare anything.
-func (c Constraints) Prepare(_ context.Context, _ manager.Manager) error {
+func (c Constraints) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {
 	return nil
 }
 
