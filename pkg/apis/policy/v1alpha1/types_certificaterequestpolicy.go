@@ -88,43 +88,27 @@ type CertificateRequestPolicySpec struct {
 // field _must_ be omitted or empty for the request to be permitted.
 type CertificateRequestPolicyAllowed struct {
 	// CommonName defines the X.509 Common Name that is permissible.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids a CommonName being requested.
-	// An empty string is equivalent to `nil`.
 	// +optional
-	CommonName *string `json:"commonName,omitempty"`
+	CommonName *CertificateRequestPolicyAllowedString `json:"commonName,omitempty"`
 
 	// DNSNames defines the X.509 DNS SANs that may be requested for.
 	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any DNSNames being requested.
-	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
-	DNSNames *[]string `json:"dnsNames,omitempty"`
+	DNSNames *CertificateRequestPolicyAllowedStringSlice `json:"dnsNames,omitempty"`
 
 	// IPAddresses defines the X.509 IP SANs that may be requested
 	// for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any IPAddresses from being
-	// requested.
-	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
-	IPAddresses *[]string `json:"ipAddresses,omitempty"`
+	IPAddresses *CertificateRequestPolicyAllowedStringSlice `json:"ipAddresses,omitempty"`
 
 	// URIs defines the X.509 URI SANs that may be requested for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any URIs from being requested.
-	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
-	URIs *[]string `json:"uris,omitempty"`
+	URIs *CertificateRequestPolicyAllowedStringSlice `json:"uris,omitempty"`
 
 	// EmailAddresses defines the X.509 Email SANs that may be
 	// requested for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any EmailAddress from being
-	// requested.
-	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
-	EmailAddresses *[]string `json:"emailAddresses,omitempty"`
+	EmailAddresses *CertificateRequestPolicyAllowedStringSlice `json:"emailAddresses,omitempty"`
 
 	// IsCA defines whether it is permissible for a CertificateRequest to have
 	// the `spec.IsCA` field set to `true`.
@@ -136,7 +120,7 @@ type CertificateRequestPolicyAllowed struct {
 	IsCA *bool `json:"isCA,omitempty"`
 
 	// Usages defines the list of permissible key usages that may appear
-	// of the CertificateRequest `spec.keyUsages` field.
+	// on the CertificateRequest `spec.keyUsages` field.
 	// An omitted field or value of `nil` forbids any Usages being requested.
 	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
@@ -155,70 +139,79 @@ type CertificateRequestPolicyAllowed struct {
 type CertificateRequestPolicyAllowedX509Subject struct {
 	// Organizations define the X.509 Subject Organizations that may be requested
 	// for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any Organization from being
-	// requested.
-	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
-	Organizations *[]string `json:"organizations,omitempty"`
+	Organizations *CertificateRequestPolicyAllowedStringSlice `json:"organizations,omitempty"`
 
 	// Countries define the X.509 Subject Countries that may be requested for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any Countries from being
-	// requested.
-	// An empty slice `[]` is equivalent to `nil`.
 	// +optional
-	Countries *[]string `json:"countries,omitempty"`
+	Countries *CertificateRequestPolicyAllowedStringSlice `json:"countries,omitempty"`
 
 	// OrganizationalUnits defines the X.509 Subject Organizational Units that
 	// may be requested for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any OrganizationalUnits from
-	// being requested.
-	// An empty slice `[]` is equivalent to nil.
 	// +optional
-	OrganizationalUnits *[]string `json:"organizationalUnits,omitempty"`
+	OrganizationalUnits *CertificateRequestPolicyAllowedStringSlice `json:"organizationalUnits,omitempty"`
 
 	// Localities defines the X.509 Subject Localities that may be requested for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any Localities from being
-	// requested.
-	// An empty slice `[]` is equivalent to nil.
 	// +optional
-	Localities *[]string `json:"localities,omitempty"`
+	Localities *CertificateRequestPolicyAllowedStringSlice `json:"localities,omitempty"`
 
 	// Provinces defines the X.509 Subject Provinces that may be requested for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any Provinces from being
-	// requested.
-	// An empty slice `[]` is equivalent to nil.
 	// +optional
-	Provinces *[]string `json:"provinces,omitempty"`
+	Provinces *CertificateRequestPolicyAllowedStringSlice `json:"provinces,omitempty"`
 
 	// StreetAddresses defines the X.509 Subject Street Addresses that may be
 	// requested for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any Street Addresses from being
-	// requested.
-	// An empty slice `[]` is equivalent to nil.
 	// +optional
-	StreetAddresses *[]string `json:"streetAddresses,omitempty"`
+	StreetAddresses *CertificateRequestPolicyAllowedStringSlice `json:"streetAddresses,omitempty"`
 
 	// PostalCodes defines the X.509 Subject Postal Codes that may be requested
 	// for.
-	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any Postal Codes from being
-	// requested.
-	// An empty slice `[]` is equivalent to nil.
 	// +optional
-	PostalCodes *[]string `json:"postalCodes,omitempty"`
+	PostalCodes *CertificateRequestPolicyAllowedStringSlice `json:"postalCodes,omitempty"`
 
 	// SerialNumber defines the X.509 Subject Serial Number that may be requested
 	// for.
-	// An omitted field or value of `nil` forbids any Serial Number from being
-	// requested.
 	// +optional
-	SerialNumber *string `json:"serialNumber,omitempty"`
+	SerialNumber *CertificateRequestPolicyAllowedString `json:"serialNumber,omitempty"`
+}
+
+// CertificateRequestPolicyAllowedStringSlice represents an allowed string
+// slice value paired with whether the field is a required value on the
+// request.
+type CertificateRequestPolicyAllowedStringSlice struct {
+	// Defines the values that are permissible to be present on request.
+	// Accepts wildcards "*".
+	// An omitted field or value of `nil` forbids any value on the related field
+	// in the request from being requested.
+	// An empty slice `[]` is equivalent to `nil`, however an empty slice pared
+	// with Required `true` is an impossible condition that always denies.
+	// Values may not be `nil` if Required is `true`.
+	// +optional
+	Values *[]string `json:"values,omitempty"`
+
+	// Required marks this field as being a required value on the request.
+	// May only be set to true if Values is also defined.
+	// Default is nil which marks the field as not required.
+	// +optional
+	Required *bool `json:"required,omitempty"`
+}
+
+// CertificateRequestPolicyAllowedString represents an allowed string value
+// paired with whether the field is a required value on the request.
+type CertificateRequestPolicyAllowedString struct {
+	// Value defines the value that is permissible to be present on the request.
+	// Accepts wildcards "*".
+	// An omitted field or value of `nil` forbids the value from being requested.
+	// An empty string is equivalent to `nil`, however an empty string pared with
+	// Required as `true` is an impossible condition that always denies.
+	// Value may not be `nil` if Required is `true`.
+	// +optional
+	Value *string `json:"value,omitempty"`
+
+	// Required marks this field as being a required value on the request.
+	// May only be set to true if Value is also defined.
+	// +optional
+	Required *bool `json:"required,omitempty"`
 }
 
 // CertificateRequestPolicyConstraints define fields that, if defined, _must_

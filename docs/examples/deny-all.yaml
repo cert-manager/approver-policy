@@ -1,16 +1,19 @@
+# Here we match on all requests created by anyone. The policy contains an
+# impossible condition and so will always return denied. This ensures all
+# requests will be denied by default unless another policy permits the request.
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
   name: deny-all
 spec:
-  allowed: {}
-  constraints:
-    privateKey:
-      maxSize: 0
+  allowed:
+    dnsNames:
+      values: []
+      required: true
   selector:
     issuerRef: {}
 ---
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: cert-manager-policy:deny-all

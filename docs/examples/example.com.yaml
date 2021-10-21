@@ -4,12 +4,14 @@ metadata:
   name: example-com
 spec:
   allowed:
-    commonName: "example.com"
+    commonName:
+      value: "example.com"
     dnsNames:
-    - "example.com"
-    - "*.example.com"
+      values:
+      - "example.com"
+      - "*.example.com"
     usages:
-    - server auth
+    - "server auth"
 
   constraints:
     privateKey:
