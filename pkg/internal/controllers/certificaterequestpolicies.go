@@ -114,8 +114,8 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 
 		// Capture requeue. If requeue is not currently set or the given
 		// requeueAfter is smaller than the current, set to given requeueAfter.
-		if response.Requeue {
-			if result.Requeue == false || result.RequeueAfter > response.RequeueAfter {
+		if response.Requeue || response.RequeueAfter > 0 {
+			if !result.Requeue || result.RequeueAfter > response.RequeueAfter {
 				result.RequeueAfter = response.RequeueAfter
 			}
 			result.Requeue = true
