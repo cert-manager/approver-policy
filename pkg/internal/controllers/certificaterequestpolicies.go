@@ -74,6 +74,8 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 	log := opts.Log.WithName("certificaterequestpolicies")
 	genericChan := make(chan event.GenericEvent)
 
+	// We use reflect.SelectCase along with reflect.Select as this allows us to
+	// conveniently select on an arbitrary number of enqueueChans.
 	var enqueueListSelect []reflect.SelectCase
 	for _, reconciler := range opts.Reconcilers {
 		if enqueueChan := reconciler.EnqueueChan(); enqueueChan != nil {
@@ -89,7 +91,8 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 			for {
 				chosen, val, ok := reflect.Select(enqueueListSelect)
 				if !ok {
-					// Check if the context has been cancelled, and exit go routine if so.
+					// Context is always the last index in the slice. Check if the
+					// context has been cancelled, and exit go routine if so.
 					if chosen == len(enqueueListSelect)-1 {
 						log.Info("closing certificaterequestpolicy enqueue event watcher")
 						return
@@ -97,16 +100,14 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 					enqueueListSelect[chosen].Chan = reflect.ValueOf(nil)
 					continue
 				}
-				// Send a message in a go routine so to not potentially block
-				// reconciles who are sending a message on their enqueue channel.
-				go func(name string) {
-					select {
-					case <-ctx.Done():
-						return
-					case genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: name}}}:
-						return
-					}
-				}(val.String())
+				// Send a message to the generic channel to cause a sync by the
+				// CertificateRequestPolicy controller.
+				select {
+				case <-ctx.Done():
+					return
+				case genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: val.String()}}}:
+					return
+				}
 			}
 		}()
 	}
