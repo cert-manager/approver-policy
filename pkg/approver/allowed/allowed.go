@@ -60,3 +60,8 @@ func (a Allowed) Prepare(_ context.Context, _ manager.Manager) error {
 func (a Allowed) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
+
+// Allowed never needs to manually enqueue policies.
+func (a Allowed) EnqueueChan() <-chan string {
+	return nil
+}

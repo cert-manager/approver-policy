@@ -56,4 +56,15 @@ type Reconciler interface {
 	// A returned error means that there was an error when trying to evaluate the
 	// Ready state. A returned error will have Ready be retried.
 	Ready(context.Context, *policyapi.CertificateRequestPolicy) (ReconcilerReadyResponse, error)
+
+	// EnqueueChan returns a channel that when a message is received, will
+	// reconcile the CertificateRequestPolicy with the given name, regardless of
+	// state.
+	// Useful for Reconcilers to provide an enqueue channel that forces a re-sync
+	// of CertificateRequestPolicies where external state (e.g. files, incoming
+	// events) effect the ready condition.
+	// EnqueueChan() is expected to only be called once for each Reconciler at
+	// start up.
+	// A nil return value will never cause a re-sync by that Reconciler.
+	EnqueueChan() <-chan string
 }

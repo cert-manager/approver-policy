@@ -58,3 +58,8 @@ func (c Constraints) Prepare(_ context.Context, _ manager.Manager) error {
 func (c Constraints) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
+
+// Constraints never needs to manually enqueue policies.
+func (c Constraints) EnqueueChan() <-chan string {
+	return nil
+}
