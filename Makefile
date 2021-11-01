@@ -20,6 +20,7 @@ OS     ?= $(shell go env GOOS)
 HELM_VERSION ?= 3.6.3
 KUBEBUILDER_TOOLS_VERISON ?= 1.22.0
 K8S_CLUSTER_NAME ?= approver-policy
+IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/approver-policy" --repository.default-branch master --repository.path /
 
@@ -54,16 +55,18 @@ test: depend lint vet ## test approver-policy
 	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
 
 .PHONY: build
-build: ## Build manager binary.
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/approver-policy ./cmd/
+build: $(BINDIR) ## Build manager binary.
+	CGO_ENABLED=0 go build -o bin/approver-policy ./cmd/
 
 .PHONY: verify
 verify: test build ## Verify repo.
 
+# image will only build and store the image locally, targeted in OCI format.
+# To actually push an image to the public repo, replace the `--output` flag and
+# arguments to `--push`.
 .PHONY: image
-image: ## build docker image
-	GOARCH=$(ARCH) GOOS=linux CGO_ENABLED=0 go build -o ./bin/approver-policy-linux ./cmd/.
-	docker build -t quay.io/jetstack/cert-manager-approver-policy:v0.1.0 .
+image: ## build docker image targeting all supported platforms
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-approver-policy:v0.2.0 --output type=local,dest=./bin/cert-manager-approver-policy .
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy
