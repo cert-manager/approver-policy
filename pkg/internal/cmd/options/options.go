@@ -83,6 +83,9 @@ type Webhook struct {
 	// stored with the names `tls.crt` and `tls.key` respectively.
 	CertDir string
 
+	// ServiceName is the service that exposes the Webhook server.
+	ServiceName string
+
 	// CASecretNamespace is the namespace that the
 	// cert-manager-approver-policy-tls Secret is stored.
 	CASecretNamespace string
@@ -166,9 +169,13 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 		"webhook-port", 6443,
 		"Port to serve webhook.")
 
+	fs.StringVar(&o.Webhook.ServiceName,
+		"webhook-service-name", "cert-manager-approver-policy",
+		"Name of the Kubernetes Service that exposes the Webhook's server.")
+
 	fs.StringVar(&o.Webhook.CASecretNamespace,
 		"webhook-ca-secret-namespace", "cert-manager",
-		"Namespace that the cert-manager-approver-policy-tls Secret is stored..")
+		"Namespace that the cert-manager-approver-policy-tls Secret is stored.")
 
 	fs.StringVar(&o.Webhook.CertDir,
 		"webhook-certificate-dir", "/tmp",
