@@ -48,6 +48,11 @@ type Options struct {
 	// cert-manager-approver-policy-tls Secret is stored.
 	CASecretNamespace string
 
+	// ServiceName is the name of the service that exposes the webhook server.
+	// This name will be used as the DNS SAN entry to the webhook's serving
+	// certificate.
+	ServiceName string
+
 	// Manager is the shared controller-runtime manager used by this
 	// approver-policy instance. The webhook will register its endpoints and
 	// runnables against.
@@ -65,6 +70,7 @@ func Register(ctx context.Context, opts Options) error {
 		RestConfig:             opts.Manager.GetConfig(),
 		WebhookCertificatesDir: opts.WebhookCertificatesDir,
 		CASecretNamespace:      opts.CASecretNamespace,
+		ServiceName:            opts.ServiceName,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to run webhook tls bootstrap process: %w", err)

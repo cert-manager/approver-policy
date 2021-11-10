@@ -53,6 +53,11 @@ type Options struct {
 	// CASecretNamespace is the namespace that the
 	// cert-manager-approver-policy-tls Secret is stored.
 	CASecretNamespace string
+
+	// ServiceName is the name of the service that exposes the webhook server.
+	// This name will be used as the DNS SAN entry to the webhook's serving
+	// certificate.
+	ServiceName string
 }
 
 // TLS is a TLS provider which is used for populating a serving key and
@@ -65,6 +70,13 @@ type TLS struct {
 	// webhook.
 	caManager *authority.DynamicAuthority
 
+	// serviceName is the name of the service that exposes the webhook server.
+	// This name will be used as the DNS SAN entry to the webhook's serving
+	// certificate.
+	serviceName string
+
+	// webhookCertificatesDir is the directory where the webhook certificate key
+	// pair is stored.
 	webhookCertificatesDir string
 
 	lock             sync.Mutex
@@ -78,6 +90,7 @@ func New(ctx context.Context, opts Options) (*TLS, error) {
 	log := opts.Log.WithName("tls")
 	t := &TLS{
 		log:                    log,
+		serviceName:            opts.ServiceName,
 		webhookCertificatesDir: opts.WebhookCertificatesDir,
 		nextRenewCh:            make(chan time.Time, 1),
 		authorityErrChan:       make(chan error),
@@ -232,7 +245,7 @@ func (t *TLS) regenerateCertificate(nextRenew chan<- time.Time) error {
 		Version:            2,
 		PublicKeyAlgorithm: x509.ECDSA,
 		PublicKey:          pk.Public(),
-		DNSNames:           []string{"cert-manager-approver-policy.cert-manager.svc"},
+		DNSNames:           []string{fmt.Sprintf("%s.%s.svc", t.serviceName, t.caManager.SecretNamespace)},
 		KeyUsage:           x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}

@@ -73,6 +73,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Log:                    opts.Logr,
 				Webhooks:               registry.Shared.Webhooks(),
 				WebhookCertificatesDir: opts.Webhook.CertDir,
+				ServiceName:            opts.Webhook.ServiceName,
 				CASecretNamespace:      opts.Webhook.CASecretNamespace,
 				Manager:                mgr,
 			}); err != nil {

@@ -30,17 +30,19 @@ spec:
           periodSeconds: 7
         command: ["cert-manager-approver-policy"]
         args:
-          - "--log-level={{.Values.app.logLevel}}"
+          - --log-level={{.Values.app.logLevel}}
+
           {{- range .Values.app.extraArgs }}
-          - "{{ . }}"
+          - {{ . }}
           {{- end  }}
 
-          - "--metrics-bind-address=:{{.Values.app.metrics.port}}"
-          - "--readiness-probe-bind-address=:{{.Values.app.readinessProbe.port}}"
+          - --metrics-bind-address=:{{.Values.app.metrics.port}}
+          - --readiness-probe-bind-address=:{{.Values.app.readinessProbe.port}}
 
-          - "--webhook-host={{.Values.app.webhook.host}}"
-          - "--webhook-port={{.Values.app.webhook.port}}"
-          - "--webhook-ca-secret-namespace={{.Release.Namespace}}"
+          - --webhook-host={{.Values.app.webhook.host}}
+          - --webhook-port={{.Values.app.webhook.port}}
+          - --webhook-service-name={{ include "cert-manager-approver-policy.name" . }}
+          - --webhook-ca-secret-namespace={{.Release.Namespace}}
 
         {{- if .Values.volumeMounts }}
         volumeMounts:
