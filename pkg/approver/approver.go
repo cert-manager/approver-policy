@@ -19,6 +19,7 @@ package approver
 import (
 	"context"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -36,7 +37,7 @@ type Interface interface {
 
 	// Prepare can be used by Approvers for registering extra Kubernetes
 	// controllers, adding health checks, or other controller-runtime runnables.
-	Prepare(context.Context, manager.Manager) error
+	Prepare(context.Context, logr.Logger, manager.Manager) error
 
 	// Evaluator is responsible for executing evaluations on whether a request
 	// should be denied or not.

@@ -19,6 +19,7 @@ package allowed
 import (
 	"context"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
@@ -51,7 +52,7 @@ func (a Allowed) RegisterFlags(_ *pflag.FlagSet) {
 }
 
 // Prepare is a no-op, Allowed doesn't need to prepare anything.
-func (a Allowed) Prepare(_ context.Context, _ manager.Manager) error {
+func (a Allowed) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {
 	return nil
 }
 

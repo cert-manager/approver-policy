@@ -83,7 +83,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			log.Info("preparing approvers...")
 			for _, approver := range registry.Shared.Approvers() {
 				log.Info("preparing approver...", "approver", approver.Name())
-				if err := approver.Prepare(ctx, mgr); err != nil {
+				if err := approver.Prepare(ctx, opts.Logr, mgr); err != nil {
 					return fmt.Errorf("failed to prepare approver %q: %w", approver.Name(), err)
 				}
 			}
