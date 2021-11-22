@@ -27,6 +27,7 @@ import (
 	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -77,6 +78,32 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		manager:  manager.New(opts.Manager.GetCache(), opts.Manager.GetClient(), opts.Evaluators),
 	}
 
+	enqueueRequestFromMapFunc := func(_ client.Object) []reconcile.Request {
+		// If an error happens here and we do nothing, we run the risk of not
+		// processing CertificateRequests.
+		// Exiting error is the safest option, as it will force a resync on all
+		// CertificateRequests on start.
+		var crList cmapi.CertificateRequestList
+		if err := c.lister.List(ctx, &crList); err != nil {
+			c.log.Error(err, "failed to list all CertificateRequests, exiting error")
+			os.Exit(-1)
+		}
+
+		var requests []reconcile.Request
+		for _, cr := range crList.Items {
+			// Check for approval status early, rather than relying on the
+			// predicate or doing it in the actual Reconcile func.
+			if apiutil.CertificateRequestIsApproved(&cr) || apiutil.CertificateRequestIsDenied(&cr) {
+				continue
+			}
+			requests = append(requests, reconcile.Request{
+				NamespacedName: types.NamespacedName{Namespace: cr.Namespace, Name: cr.Name}},
+			)
+		}
+
+		return requests
+	}
+
 	return ctrl.NewControllerManagedBy(opts.Manager).
 		For(new(cmapi.CertificateRequest), builder.WithPredicates(
 			// Only process CertificateRequests which have not yet got an approval
@@ -90,33 +117,20 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		// Watch CertificateRequestPolicies. If a policy is created or updated,
 		// then we need to process all CertificateRequests that do not yet have an
 		// approved or denied condition since they may be relevant for the policy.
-		Watches(&source.Kind{Type: new(policyapi.CertificateRequestPolicy)}, handler.EnqueueRequestsFromMapFunc(
-			func(obj client.Object) []reconcile.Request {
-				// If an error happens here and we do nothing, we run the risk of not
-				// processing CertificateRequests.
-				// Exiting error is the safest option, as it will force a resync on all
-				// CertificateRequests on start.
-				var crList cmapi.CertificateRequestList
-				if err := c.lister.List(ctx, &crList); err != nil {
-					c.log.Error(err, "failed to list all CertificateRequests, exiting error")
-					os.Exit(-1)
-				}
+		Watches(&source.Kind{Type: new(policyapi.CertificateRequestPolicy)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
 
-				var requests []reconcile.Request
-				for _, cr := range crList.Items {
-					// Check for approval status early, rather than relying on the
-					// predicate or doing it in the actual Reconcile func.
-					if apiutil.CertificateRequestIsApproved(&cr) || apiutil.CertificateRequestIsDenied(&cr) {
-						continue
-					}
-					requests = append(requests, reconcile.Request{
-						NamespacedName: types.NamespacedName{Namespace: cr.Namespace, Name: cr.Name}},
-					)
-				}
+		// Watch Roles, RoleBindings, ClusterRoles, and ClusterRoleBindings. If
+		// RBAC changes in the cluster then CertificateRequestPolicies may become
+		// appropriate for a CertificateRequest. On RBAC events, Reconcile all
+		// CertificateRequests that are neither Approved or Denied.
+		// Only need to cache metadata for RBAC resources since we do not need any
+		// information in the spec.
+		Watches(&source.Kind{Type: new(rbacv1.Role)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
+		Watches(&source.Kind{Type: new(rbacv1.RoleBinding)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
+		Watches(&source.Kind{Type: new(rbacv1.ClusterRole)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
+		Watches(&source.Kind{Type: new(rbacv1.ClusterRoleBinding)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
 
-				return requests
-			},
-		)).
+		// Complete the controller builder.
 		Complete(c)
 }
 
