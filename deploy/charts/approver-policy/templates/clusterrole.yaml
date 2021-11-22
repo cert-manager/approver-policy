@@ -16,6 +16,7 @@ rules:
 - apiGroups: ["cert-manager.io"]
   resources: ["certificaterequests"]
   verbs: ["list", "watch"]
+
 - apiGroups: ["cert-manager.io"]
   resources: ["certificaterequests/status"]
   verbs: ["update"]
@@ -27,6 +28,10 @@ rules:
   {{- range .Values.app.approveSignerNames }}
    - "{{ . }}"
   {{- end  }}
+
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "clusterroles", "rolebindings", "clusterrolebindings"]
+  verbs: ["list", "watch"]
 
 - apiGroups: [""]
   resources: ["events"]
