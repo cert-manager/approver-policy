@@ -35,8 +35,13 @@ import (
 )
 
 func Test_Review(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.TODO())
+	t.Cleanup(func() {
+		cancel()
+	})
+
 	rootDir := env.RootDirOrSkip(t)
-	env := env.RunControlPlane(t,
+	env := env.RunControlPlane(t, ctx,
 		filepath.Join(rootDir, "bin/cert-manager"),
 		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
 	)

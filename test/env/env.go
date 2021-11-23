@@ -96,7 +96,7 @@ func RunSuite(t *testing.T, suiteName, artifactsDir string) {
 // resources. Expects CRD directories to both cert-manager, as well as
 // approver-policy. This *MUST* be provided.
 // Returns a controller-runtime envtest which is ready to be run against.
-func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
+func RunControlPlane(t *testing.T, ctx context.Context, crdDirs ...string) *Environment {
 	env := &envtest.Environment{
 		AttachControlPlaneOutput: false,
 	}
@@ -119,7 +119,7 @@ func RunControlPlane(t *testing.T, crdDirs ...string) *Environment {
 	kubeconifgPath := writeKubeconfig(t, env.Config, "cert-manager-webhook-kubeconfig.yaml")
 	t.Logf("cert-manager webhook kubeconfig written to %q", kubeconifgPath)
 
-	webhookOpts, stopWebhook := webhooktesting.StartWebhookServer(t, []string{"--kubeconfig=" + kubeconifgPath})
+	webhookOpts, stopWebhook := webhooktesting.StartWebhookServer(t, ctx, []string{"--kubeconfig=" + kubeconifgPath})
 	t.Logf("running cert-manager webhook on %q", webhookOpts.URL)
 
 	// Register cleanup func to stop the cert-manager webhook after the test has

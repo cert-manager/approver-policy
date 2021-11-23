@@ -17,6 +17,7 @@ limitations under the License.
 package test
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -26,9 +27,14 @@ import (
 // Test_Controllers runs the full suite of tests for the approver-policy
 // controllers.
 func Test_Controllers(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.TODO())
+	t.Cleanup(func() {
+		cancel()
+	})
+
 	rootDir := testenv.RootDirOrSkip(t)
 
-	env = testenv.RunControlPlane(t,
+	env = testenv.RunControlPlane(t, ctx,
 		filepath.Join(rootDir, "bin/cert-manager"),
 		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
 	)
