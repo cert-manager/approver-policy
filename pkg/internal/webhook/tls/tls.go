@@ -98,7 +98,6 @@ func New(ctx context.Context, opts Options) (*TLS, error) {
 			SecretNamespace: opts.CASecretNamespace,
 			SecretName:      "cert-manager-approver-policy-tls",
 			RESTConfig:      opts.RestConfig,
-			Log:             log.WithName("certificate-authority"),
 			CADuration:      time.Hour * 24,
 			LeafDuration:    time.Hour,
 		},
@@ -107,7 +106,7 @@ func New(ctx context.Context, opts Options) (*TLS, error) {
 	// Run the authority in a separate goroutine
 	go func() {
 		defer close(t.authorityErrChan)
-		t.authorityErrChan <- t.caManager.Run(ctx.Done())
+		t.authorityErrChan <- t.caManager.Run(logr.NewContext(ctx, log.WithName("certificate-authority")))
 	}()
 
 	// initially fetch a certificate from the signing CA
