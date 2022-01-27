@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/go-logr/logr v1.2.0
-	github.com/jetstack/cert-manager v1.7.0-beta.0
+	github.com/jetstack/cert-manager v1.7.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/princjef/gomarkdoc v0.2.1
