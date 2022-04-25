@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/jetstack/cert-manager/blob/master/logo/logo.png" width="250x" alt="cert-manager project logo" />
+  <img src="https://github.com/cert-manager/cert-manager/blob/master/logo/logo.png" width="250x" alt="cert-manager project logo" />
 </p>
 <p align="center">
   <a href="https://godoc.org/github.com/cert-manager/approver-policy"><img src="https://godoc.org/github.com/cert-manager/approver-policy?status.svg" alt="approver-policy godoc"></a>
