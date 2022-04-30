@@ -67,7 +67,7 @@ verify: test build ## Verify repo.
 # arguments to `--push`.
 .PHONY: image
 image: ## build docker image targeting all supported platforms
-	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-approver-policy:v0.3.0 --output type=local,dest=./bin/cert-manager-approver-policy .
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-approver-policy:v0.4.0 --output type=local,dest=./bin/cert-manager-approver-policy .
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy
