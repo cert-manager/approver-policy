@@ -22,7 +22,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	v1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )

@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	webhooktesting "github.com/jetstack/cert-manager/cmd/webhook/app/testing"
+	webhooktesting "github.com/cert-manager/cert-manager/cmd/webhook/app/testing"
 	"github.com/onsi/ginkgo"
 	ginkgoconfig "github.com/onsi/ginkgo/config"
 	"github.com/onsi/ginkgo/reporters"
