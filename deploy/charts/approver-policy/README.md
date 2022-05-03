@@ -10,7 +10,7 @@ A Helm chart for cert-manager-approver-policy
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| cert-manager-dev | cert-manager-dev@googlegroups.com | https://cert-manager.io |
+| cert-manager-dev | <cert-manager-dev@googlegroups.com> | <https://cert-manager.io> |
 
 ## Source Code
 

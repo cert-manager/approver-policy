@@ -47,9 +47,13 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: lint
-lint: $(BINDIR)/gomarkdoc ## Run linters against code.
+lint: helm-docs $(BINDIR)/gomarkdoc ## Run linters against code.
 	./hack/verify-boilerplate.sh
 	@$(BINDIR)/gomarkdoc --check $(GOMARKDOC_FLAGS) --output docs/api/api.md github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1 || (echo "docs are not up to date; run 'make generate' and commit the result" && exit 1)
+
+.PHONY: helm-docs
+helm-docs: $(BINDIR)/helm-docs # verify helm-docs
+	./hack/verify-helm-docs.sh
 
 .PHONY: test
 test: depend lint vet ## test approver-policy
@@ -123,3 +127,6 @@ $(BINDIR)/cert-manager/crds.yaml:
 
 $(BINDIR)/gomarkdoc:
 	GO111MODULE=on go build -o $@ github.com/princjef/gomarkdoc/cmd/gomarkdoc
+
+$(BINDIR)/helm-docs: $(BINDIR)
+		go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
