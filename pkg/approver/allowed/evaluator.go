@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	utilpki "github.com/jetstack/cert-manager/pkg/util/pki"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"

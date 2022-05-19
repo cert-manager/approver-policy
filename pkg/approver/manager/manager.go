@@ -19,7 +19,7 @@ package manager
 import (
 	"context"
 
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 )
 
 // ReviewResult is the result from an approver manager reviewing a

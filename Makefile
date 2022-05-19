@@ -119,7 +119,7 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver:
 
 $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager
-	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/jetstack/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/jetstack/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
+	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
 $(BINDIR)/gomarkdoc:
 	GO111MODULE=on go build -o $@ github.com/princjef/gomarkdoc/cmd/gomarkdoc

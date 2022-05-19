@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -220,7 +220,7 @@ func Test_Review(t *testing.T) {
 					if err := env.AdminClient.Delete(context.TODO(), &obj); err != nil {
 						// Don't Fatal here as a ditch effort to at least try to clean-up
 						// everything.
-						t.Errorf("failed to delete policy: %w", err)
+						t.Errorf("failed to delete policy: %s", err)
 					}
 				}
 			})
