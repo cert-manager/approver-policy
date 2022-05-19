@@ -95,8 +95,9 @@ metadata:
   name: test-policy
 spec:
   allowed:
-    commonName: "hello.world"
-    required: true
+    commonName:
+      value: "hello.world"
+      required: true
   selector:
     # Select all IssuerRef
     issuerRef: {}
