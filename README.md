@@ -9,10 +9,10 @@
 
 # approver-policy
 
-approver-policy is a [cert-manager](https://cert-manager.io) approver that is responsible for
+approver-policy is a [cert-manager](https://cert-manager.io) approver responsible for
 [Approving or Denying CertificateRequests](https://cert-manager.io/docs/concepts/certificaterequest/#approval).
 
-approver-policy exposes the CertificateRequestPolicy resource which
+approver-policy exposes the `CertificateRequestPolicy` resource which
 administrators use to define policy over what, who, and how certificates are
 signed by cert-manager.
 
@@ -26,9 +26,9 @@ signed by cert-manager.
 > :warning:
 >
 > It is important that the
-> [default approver is disabled in cert-manager](https://cert-manager.io/docs/concepts/certificaterequest/#approver-controller).
+> [default approver be disabled in cert-manager](https://cert-manager.io/docs/concepts/certificaterequest/#approver-controller).
 > If the default approver is not disabled in cert-manager, approver-policy will
-> race with cert-manager and thus policy becomes useless.
+> race with cert-manager and thus **approver-policy** will be useless.
 >
 > ```terminal
 > $ helm upgrade -i -n cert-manager cert-manager jetstack/cert-manager --set extraArgs={--controllers='*\,-certificaterequests-approver'} --set installCRDs=true --create-namespace
@@ -46,7 +46,7 @@ $ helm upgrade -i -n cert-manager cert-manager-approver-policy jetstack/cert-man
 If you are using approver-policy with [external
 issuers](https://cert-manager.io/docs/configuration/external/), you _must_
 include their signer names so that approver-policy has permissions to approve
-and deny CertificateRequests that
+and deny `CertificateRequests` that
 [reference them](https://cert-manager.io/docs/concepts/certificaterequest/#rbac-syntax).
 For example, if using approver-policy for the internal issuer types, along with
 [google-ca-issuer](https://github.com/jetstack/google-cas-issuer), and
@@ -68,25 +68,27 @@ awspcaclusterissuers.awspca.cert-manager.io/*,awspcaissuers.awspca.cert-manager.
 
 > Example policy resources can be found [here](./docs/examples/).
 
-When a CertificateRequest is created, approver-policy will evaluate whether the
-request is appropriate for any existing policy, and if so, evaluate whether it
+When a `CertificateRequest` is created, **approver-policy** will evaluate whether the
+request is covered by any existing policies, and if so, evaluate whether it
 should be approved or denied.
 
-For a CertificateRequest to be appropriate for a policy and therefore be
+For a `CertificateRequest` to be covered a policy and therefore be
 evaluated by it, it must be both bound via RBAC _and_ be selected by the policy
-selector. CertificateRequestPolicy currently only supports `issuerRef` as a
+selector. `CertificateRequestPolicy` currently only supports `issuerRef` as a
 selector.
 
 **If at least one policy permits the request, the request is approved. If at
 least one policy is appropriate for the request but none of those permit the
 request, the request is denied.**
 
-CertificateRequestPolicies are cluster scoped resources that can be thought of
-as "policy profiles". They describe any request that is approved by that
-policy. Policies are bound to Kubernetes users and ServiceAccounts using RBAC.
+`CertificateRequestPolicy`s are cluster scoped resources that can be thought of
+as _policy profiles_. They describe any request that is approved by that
+policy. Policies are bound to Kubernetes users and `ServiceAccount`s using RBAC.
 
-Below is an example of a policy that is bound to all Kubernetes users who may
-only request certificates that have the common name of "hello.world".
+Here is an example of a policy that is bound to all Kubernetes users restricting
+them to only request certificates with the common name of `hello.world` (it would
+also block them from requesting certificates by that common name if they included
+any other attributes, see [Allowed](#allowed) for more information):
 
 ```yaml
 apiVersion: policy.cert-manager.io/v1alpha1
@@ -137,24 +139,22 @@ subjects:
 
 ## Behaviour
 
-CertificateRequestPolicy are split into 4 parts; `allowed`, `contraints`,
-`selector`, and `plugins`.
+`CertificateRequestPolicy` is split into 4 parts; [`allowed`](#allowed), [`contraints`](#constraints),
+[`selector`](#selector), and [`plugins`](#plugins).
 
 ### Allowed
 
-Allowed is the block that defines attributes that match against the
-corresponding attribute in the request. A request is permitted by the policy if
-the request omits an allowed attribute, but will _deny_ the request if it
-contains an attribute which is _not_ present in the allowed block.
+Only attributes listed in the `Allowed` block would be acceptable in a request.
+If any other attributes are included, the policy will _deny_ the request.
 
 An allowed attribute can be marked as `required`, which if true, will enforce
 that the attribute has been defined in the request. A field can only be marked
 as `required` if the corresponding field is also defined. The `required` field
 is not available for `isCA` or `usages`.
 
-In the following CertificateRequestPolicy, a request will be permitted if it
-does not request a DNS name, requests the DNS name "example.com", but will
-be denied when requesting "bar.example.com".
+In the following `CertificateRequestPolicy`, a request will be _approved_ if it
+omits the DNS name or requests the DNS name `example.com` or `foo.example.com`,
+but it will be _denied_ when requesting any other DNS name:
 
 ```yaml
 spec:
@@ -167,8 +167,8 @@ spec:
   ...
 ```
 
-In the following, a request will be denied if the request contains no Common
-Name, but will permit requests whose Common Name ends in ".com".
+In the following, a request will be _denied_ if the request contains no Common
+Name, but will _approve_ requests whose Common Name ends in `.com`:
 
 ```yaml
 spec:
@@ -180,22 +180,22 @@ spec:
   ...
 ```
 
-If an allowed field is omitted, that attribute is considered "deny all" for
+If an allowed field is omitted, that attribute is considered _deny all_ for
 requests.
 
-Allowed string fields accept wildcards "\*" within its values. Wildcards "\*" in
+Allowed string fields accept wildcards `*` within their values. Wildcards `*` in
 patterns represent any string that has a length of 0 or more. A pattern
-containing only "\*" will match anything. A pattern containing `"\*foo"` will
-match `"foo"` as well as any string which ends in `"foo"` (e.g. `"bar-foo"`). A
-pattern containing `"\*.foo"` will match `"bar-123.foo"`, but not `"barfoo"`.
+containing only `*` will match anything. A pattern containing `*foo` will
+match `foo` as well as any string which ends in `foo` (e.g. `bar-foo`). A
+pattern containing `*.foo` will match `bar-123.foo`, but not `barfoo`.
 
 Allowed fields that are lists will permit requests that are a subset of that
-list. This means that if `usages` contains `["server auth", "client auth"]`,
+list. This means that if `081284` contains `["server auth", "client auth"]`,
 then a request containing only `["server auth"]` would be permitted, but not
 `["server auth", "cert sign"]`.
 
-Below is an example including all supported allowed fields of
-CertificateRequestPolicy.
+An example including all supported allowed fields of
+`CertificateRequestPolicy`:
 
 ```yaml
 apiVersion: policy.cert-manager.io/v1alpha1
@@ -248,11 +248,11 @@ spec:
 ### Constraints
 
 Constraints is the block that is used to limit what attributes the request can
-have. If a constraint is not defined, then the attribute is considered "allow
-all".
+have. If a constraint is not defined, then the attribute is considered _allow
+all_.
 
 Below is an example containing all supported constraints fields of
-CertificateRequestPolicy.
+`CertificateRequestPolicy`:
 
 ```yaml
 apiVersion: policy.cert-manager.io/v1alpha1
@@ -273,13 +273,13 @@ spec:
 
 ### Selector
 
-Selector is a required field that is used for matching
-CertificateRequestPolicies against a CertificateRequest for evaluation.
+Selector is a required field that is used for matching a
+`CertificateRequestPolicy` against a `CertificateRequest` for evaluation.
 approver-policy currently only supports selecting over the `issuerRef` of a
 request.
 
-`issuerRef` values accept wildcards "\*". If an `issuerRef` is set to an empty
-object "{}", then the policy will match against _all_ RBAC bound requests.
+`issuerRef` values accept wildcards `*`. If an `issuerRef` is set to an empty
+object `{}`, then the policy will match against _all_ RBAC bound requests.
 
 ```yaml
 apiVersion: policy.cert-manager.io/v1alpha1
@@ -311,7 +311,7 @@ spec:
 
 ### Plugins
 
-Plugins are built into the approver-policy image at compile time. For more
-information on plugins and how to develop them, go [here](./docs/plugins.md).
+Plugins are built into the approver-policy image at compile time.
+See [information on plugins and how to develop them](./docs/plugins.md).
 
 ----
