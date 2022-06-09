@@ -7,6 +7,7 @@
 package bin
 
 import (
+	_ "github.com/norwoodj/helm-docs/cmd/helm-docs"
 	_ "github.com/onsi/ginkgo/ginkgo"
 	_ "github.com/princjef/gomarkdoc/cmd/gomarkdoc"
 	_ "k8s.io/code-generator/cmd/deepcopy-gen"
