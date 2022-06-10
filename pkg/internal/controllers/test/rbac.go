@@ -30,9 +30,9 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
-	"github.com/cert-manager/approver-policy/pkg/approver/allowed"
-	"github.com/cert-manager/approver-policy/pkg/approver/constraints"
 	"github.com/cert-manager/approver-policy/pkg/approver/fake"
+	"github.com/cert-manager/approver-policy/pkg/internal/approver/allowed"
+	"github.com/cert-manager/approver-policy/pkg/internal/approver/constraints"
 	"github.com/cert-manager/approver-policy/pkg/registry"
 	testenv "github.com/cert-manager/approver-policy/test/env"
 )
@@ -164,7 +164,7 @@ var _ = Context("RBAC", func() {
 			return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
 		})
 
-		registry := new(registry.Registry).Store(allowed.Allowed{}, constraints.Constraints{}, plugin)
+		registry := new(registry.Registry).Store(allowed.Approver(), constraints.Approver(), plugin)
 		ctx, cancel, namespace = startControllers(registry)
 	})
 

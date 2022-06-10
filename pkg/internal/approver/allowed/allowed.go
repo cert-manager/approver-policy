@@ -30,39 +30,44 @@ import (
 
 // Load the allowed approver.
 func init() {
-	registry.Shared.Store(Allowed{})
+	registry.Shared.Store(allowed{})
 }
 
-// Allowed is a base approver-policy Approver that is responsible for ensuring
+// Approver returns an instance on the allowed approver.
+func Approver() approver.Interface {
+	return allowed{}
+}
+
+// allowed is a base approver-policy Approver that is responsible for ensuring
 // incoming requests may only request all or some of the X.509 attributes that
 // are allowed by the policy. Requests which do not request all of the
 // attributes which they are allowed to in the policy are permitted. It is
 // expected that allowed must _always_ be registered for all
 // approver-policy builds.
-type Allowed struct{}
+type allowed struct{}
 
 // Name of Approver is "allowed"
-func (a Allowed) Name() string {
+func (a allowed) Name() string {
 	return "allowed"
 }
 
-// RegisterFlags is a no-op, Allowed doesn't need any flags.
-func (a Allowed) RegisterFlags(_ *pflag.FlagSet) {
+// RegisterFlags is a no-op, allowed doesn't need any flags.
+func (a allowed) RegisterFlags(_ *pflag.FlagSet) {
 	return
 }
 
-// Prepare is a no-op, Allowed doesn't need to prepare anything.
-func (a Allowed) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {
+// Prepare is a no-op, allowed doesn't need to prepare anything.
+func (a allowed) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {
 	return nil
 }
 
-// Ready always returns ready, Allowed doesn't have any dependencies to
+// Ready always returns ready, allowed doesn't have any dependencies to
 // block readiness.
-func (a Allowed) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+func (a allowed) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
 
-// Allowed never needs to manually enqueue policies.
-func (a Allowed) EnqueueChan() <-chan string {
+// allowed never needs to manually enqueue policies.
+func (a allowed) EnqueueChan() <-chan string {
 	return nil
 }

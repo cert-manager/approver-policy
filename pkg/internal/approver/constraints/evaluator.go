@@ -39,7 +39,7 @@ import (
 // permitted by the passed policy.
 // If the request is denied by the constraints an explanation is returned.
 // An error signals that the policy couldn't be evaluated to completion.
-func (c Constraints) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, request *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+func (c constraints) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, request *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 	// If no constraints defined, exit early.
 	if policy.Spec.Constraints == nil {
 		return approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: ""}, nil

@@ -30,7 +30,8 @@ import (
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
 	"github.com/cert-manager/approver-policy/pkg/approver/fake"
-	"github.com/cert-manager/approver-policy/pkg/approver/manager/predicate"
+	"github.com/cert-manager/approver-policy/pkg/approver/manager"
+	"github.com/cert-manager/approver-policy/pkg/internal/approver/manager/predicate"
 	"github.com/cert-manager/approver-policy/test/env"
 )
 
@@ -57,7 +58,7 @@ func Test_Review(t *testing.T) {
 		evaluator   func(t *testing.T) approver.Evaluator
 		predicate   func(t *testing.T) predicate.Predicate
 		policies    []policyapi.CertificateRequestPolicy
-		expResponse ReviewResponse
+		expResponse manager.ReviewResponse
 		expErr      bool
 	}{
 		"if no CertificateRequestPolicies exist, return ResultUnprocessed": {
@@ -69,7 +70,7 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			policies:    nil,
-			expResponse: ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies exist"},
+			expResponse: manager.ReviewResponse{Result: manager.ResultUnprocessed, Message: "No CertificateRequestPolicies exist"},
 			expErr:      false,
 		},
 		"if predicate returns an error, return an error": {
@@ -83,7 +84,7 @@ func Test_Review(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
-			expResponse: ReviewResponse{},
+			expResponse: manager.ReviewResponse{},
 			expErr:      true,
 		},
 		"if predicate returns no policies, return ResultUnprocessed": {
@@ -97,7 +98,7 @@ func Test_Review(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
-			expResponse: ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies bound or applicable"},
+			expResponse: manager.ReviewResponse{Result: manager.ResultUnprocessed, Message: "No CertificateRequestPolicies bound or applicable"},
 			expErr:      false,
 		},
 		"if single policy returns but evaluator denies, return ResultDenied": {
@@ -118,7 +119,7 @@ func Test_Review(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
-			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
+			expResponse: manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
 			expErr:      false,
 		},
 		"if single policy returns and evaluator returns not-denied, return ResultApproved": {
@@ -139,7 +140,7 @@ func Test_Review(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
-			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
+			expResponse: manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
 			expErr:      false,
 		},
 		"if two policies returned and evaluator returns one not-denied, return ResultApproved": {
@@ -175,7 +176,7 @@ func Test_Review(t *testing.T) {
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
-			expResponse: ReviewResponse{Result: ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-b"`},
+			expResponse: manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-b"`},
 			expErr:      false,
 		},
 		"if two policies returned and both return denied, return ResultDenied": {
@@ -208,7 +209,7 @@ func Test_Review(t *testing.T) {
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
-			expResponse: ReviewResponse{Result: ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response] [test-policy-b: this is a denied response]"},
+			expResponse: manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response] [test-policy-b: this is a denied response]"},
 			expErr:      false,
 		},
 	}
@@ -231,13 +232,13 @@ func Test_Review(t *testing.T) {
 				}
 			}
 
-			manager := &manager{
+			mngr := &mngr{
 				lister:     env.AdminClient,
 				predicates: []predicate.Predicate{test.predicate(t)},
 				evaluators: []approver.Evaluator{test.evaluator(t)},
 			}
 
-			response, err := manager.Review(context.TODO(), &cmapi.CertificateRequest{
+			response, err := mngr.Review(context.TODO(), &cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-req"},
 				Spec: cmapi.CertificateRequestSpec{
 					Username: "example",

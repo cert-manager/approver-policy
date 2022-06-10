@@ -27,7 +27,7 @@ import (
 
 // Validate validates that the processed CertificateRequestPolicy has valid
 // allowed fields defined and there are no parsing errors in the values.
-func (a Allowed) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 	// If no allowed fields are defined we can exit early
 	if policy.Spec.Allowed == nil {
 		return approver.WebhookValidationResponse{

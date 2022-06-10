@@ -29,7 +29,7 @@ import (
 
 // Validate validates that the processed CertificateRequestPolicy has valid
 // constraint fields defined and there are no parsing errors in the values.
-func (c Constraints) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+func (c constraints) Validate(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 	// If no constraints are defined we can exit early
 	if policy.Spec.Constraints == nil {
 		return approver.WebhookValidationResponse{

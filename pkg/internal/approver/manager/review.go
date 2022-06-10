@@ -27,15 +27,16 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
-	"github.com/cert-manager/approver-policy/pkg/approver/manager/predicate"
+	"github.com/cert-manager/approver-policy/pkg/approver/manager"
+	"github.com/cert-manager/approver-policy/pkg/internal/approver/manager/predicate"
 )
 
-var _ Interface = &manager{}
+var _ manager.Interface = &mngr{}
 
-// manager is an implementation of an Approver Manager. It will manage
+// mngr is an implementation of an Approver Manager. It will manage
 // filtering CertificiateRequestPolicies based on predicates, and evaluating
 // CertificateRequests using the registered evaluators.
-type manager struct {
+type mngr struct {
 	lister     client.Reader
 	predicates []predicate.Predicate
 	evaluators []approver.Evaluator
@@ -62,8 +63,8 @@ type policyMessage struct {
 // IssuerRef
 // - CertificateRequestPolicy is bound to the user that appears in the
 //   CertificateRequest
-func New(lister client.Reader, client client.Client, evaluators []approver.Evaluator) Interface {
-	return &manager{
+func New(lister client.Reader, client client.Client, evaluators []approver.Evaluator) manager.Interface {
+	return &mngr{
 		lister:     lister,
 		predicates: []predicate.Predicate{predicate.Ready, predicate.SelectorIssuerRef, predicate.RBACBound(client)},
 		evaluators: evaluators,
@@ -73,17 +74,17 @@ func New(lister client.Reader, client client.Client, evaluators []approver.Evalu
 // Review will evaluate whether the incoming CertificateRequest should be
 // approved. All evaluators will be called with CertificateRequestPolicys that
 // have passed all of the predicates.
-func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (ReviewResponse, error) {
+func (m *mngr) Review(ctx context.Context, cr *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 	policyList := new(policyapi.CertificateRequestPolicyList)
 	if err := m.lister.List(ctx, policyList); err != nil {
-		return ReviewResponse{}, err
+		return manager.ReviewResponse{}, err
 	}
 
 	// If no CertificateRequestPolicies exist in the cluster, return
 	// ResultUnprocessed. A CertificateRequest may be re-evaluated at a later
 	// time if a CertificateRequestPolicy is created.
 	if len(policyList.Items) == 0 {
-		return ReviewResponse{Result: ResultUnprocessed, Message: "No CertificateRequestPolicies exist"}, nil
+		return manager.ReviewResponse{Result: manager.ResultUnprocessed, Message: "No CertificateRequestPolicies exist"}, nil
 	}
 
 	var (
@@ -93,14 +94,14 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 	for _, predicate := range m.predicates {
 		policies, err = predicate(ctx, cr, policies)
 		if err != nil {
-			return ReviewResponse{}, fmt.Errorf("failed to perform predicate on policies: %w", err)
+			return manager.ReviewResponse{}, fmt.Errorf("failed to perform predicate on policies: %w", err)
 		}
 	}
 
 	// If no policies are appropriate, return ResultUnprocessed.
 	if len(policies) == 0 {
-		return ReviewResponse{
-			Result:  ResultUnprocessed,
+		return manager.ReviewResponse{
+			Result:  manager.ResultUnprocessed,
 			Message: "No CertificateRequestPolicies bound or applicable",
 		}, nil
 	}
@@ -122,7 +123,7 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 			if err != nil {
 				// if a single evaluator errors, then return early without trying
 				// others.
-				return ReviewResponse{}, err
+				return manager.ReviewResponse{}, err
 			}
 
 			if len(response.Message) > 0 {
@@ -139,8 +140,8 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 
 		// If no evaluator denied the request, return with approved response.
 		if !evaluatorDenied {
-			return ReviewResponse{
-				Result:  ResultApproved,
+			return manager.ReviewResponse{
+				Result:  manager.ResultApproved,
 				Message: fmt.Sprintf("Approved by CertificateRequestPolicy: %q", policy.Name),
 			}, nil
 		}
@@ -160,8 +161,8 @@ func (m *manager) Review(ctx context.Context, cr *cmapi.CertificateRequest) (Rev
 
 	// Return with all policies that we consulted, and their errors to why the
 	// request was denied.
-	return ReviewResponse{
-		Result:  ResultDenied,
+	return manager.ReviewResponse{
+		Result:  manager.ResultDenied,
 		Message: fmt.Sprintf("No policy approved this request: %s", strings.Join(messages, " ")),
 	}, nil
 }
