@@ -94,16 +94,16 @@ $(BINDIR):
 	mkdir -p ./bin
 
 $(BINDIR)/deepcopy-gen:
-	go build -o $@ k8s.io/code-generator/cmd/deepcopy-gen
+	cd hack/tools && go build -o $@ k8s.io/code-generator/cmd/deepcopy-gen
 
 $(BINDIR)/controller-gen:
-	go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
+	cd hack/tools && go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 $(BINDIR)/ginkgo:
-	go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
+	cd hack/tools && go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
 
 $(BINDIR)/kind:
-	go build -o $(BINDIR)/kind sigs.k8s.io/kind
+	cd hack/tools && go build -o $(BINDIR)/kind sigs.k8s.io/kind
 
 $(BINDIR)/helm:
 	curl -o $(BINDIR)/helm.tar.gz -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
@@ -126,7 +126,7 @@ $(BINDIR)/cert-manager/crds.yaml:
 	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
 $(BINDIR)/gomarkdoc:
-	GO111MODULE=on go build -o $@ github.com/princjef/gomarkdoc/cmd/gomarkdoc
+	cd hack/tools && GO111MODULE=on go build -o $@ github.com/princjef/gomarkdoc/cmd/gomarkdoc
 
 $(BINDIR)/helm-docs: $(BINDIR)
-		go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
+		cd hack/tools && go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
