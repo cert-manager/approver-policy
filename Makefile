@@ -94,16 +94,16 @@ $(BINDIR):
 	mkdir -p ./bin
 
 $(BINDIR)/deepcopy-gen:
-	go build -o $@ k8s.io/code-generator/cmd/deepcopy-gen
+	GOBIN=$(BINDIR) go install k8s.io/code-generator/cmd/deepcopy-gen@v0.24.1
 
 $(BINDIR)/controller-gen:
-	go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
+	GOBIN=$(BINDIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.0
 
 $(BINDIR)/ginkgo:
-	go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
+	GOBIN=$(BINDIR) go install github.com/onsi/ginkgo/ginkgo@v1.16.5
 
 $(BINDIR)/kind:
-	go build -o $(BINDIR)/kind sigs.k8s.io/kind
+	GOBIN=$(BINDIR) go install sigs.k8s.io/kind@v0.14.0
 
 $(BINDIR)/helm:
 	curl -o $(BINDIR)/helm.tar.gz -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
@@ -126,7 +126,7 @@ $(BINDIR)/cert-manager/crds.yaml:
 	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
 $(BINDIR)/gomarkdoc:
-	GO111MODULE=on go build -o $@ github.com/princjef/gomarkdoc/cmd/gomarkdoc
+	GOBIN=$(BINDIR) go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@v0.3.2
 
-$(BINDIR)/helm-docs: $(BINDIR)
-		go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
+$(BINDIR)/helm-docs:
+	GOBIN=$(BINDIR) go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.10.0
