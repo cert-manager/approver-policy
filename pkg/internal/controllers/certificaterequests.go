@@ -22,10 +22,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-logr/logr"
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -40,6 +40,7 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver/manager"
+	internalmanager "github.com/cert-manager/approver-policy/pkg/internal/approver/manager"
 )
 
 // certificaterequests is a controller-runtime Reconciler which evaluates
@@ -75,7 +76,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		recorder: opts.Manager.GetEventRecorderFor("policy.cert-manager.io"),
 		client:   opts.Manager.GetClient(),
 		lister:   opts.Manager.GetCache(),
-		manager:  manager.New(opts.Manager.GetCache(), opts.Manager.GetClient(), opts.Evaluators),
+		manager:  internalmanager.New(opts.Manager.GetCache(), opts.Manager.GetClient(), opts.Evaluators),
 	}
 
 	enqueueRequestFromMapFunc := func(_ client.Object) []reconcile.Request {

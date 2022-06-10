@@ -30,8 +30,6 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
-	"github.com/cert-manager/approver-policy/pkg/approver/allowed"
-	"github.com/cert-manager/approver-policy/pkg/approver/constraints"
 	"github.com/cert-manager/approver-policy/pkg/approver/fake"
 	"github.com/cert-manager/approver-policy/pkg/registry"
 )
@@ -54,7 +52,7 @@ var _ = Context("Ready", func() {
 		plugin3 = fake.NewFakeApprover()
 		plugin3.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-3").WithEnqueueChan(func() <-chan string { return enqueueChan3 })
 
-		registry := new(registry.Registry).Store(allowed.Allowed{}, constraints.Constraints{}, plugin1, plugin2, plugin3)
+		registry := new(registry.Registry).Store(plugin1, plugin2, plugin3)
 		ctx, cancel, _ = startControllers(registry)
 	})
 

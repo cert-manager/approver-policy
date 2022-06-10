@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/approver-policy/pkg/approver/internal"
+	"github.com/cert-manager/approver-policy/pkg/internal/util"
 )
 
 // Predicate is a func called by the Approver Manager to filter the set of
@@ -62,13 +62,13 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 		issRefSel := policy.Spec.Selector.IssuerRef
 		issRef := cr.Spec.IssuerRef
 
-		if issRefSel.Name != nil && !internal.WildcardMatchs(*issRefSel.Name, issRef.Name) {
+		if issRefSel.Name != nil && !util.WildcardMatchs(*issRefSel.Name, issRef.Name) {
 			continue
 		}
-		if issRefSel.Kind != nil && !internal.WildcardMatchs(*issRefSel.Kind, issRef.Kind) {
+		if issRefSel.Kind != nil && !util.WildcardMatchs(*issRefSel.Kind, issRef.Kind) {
 			continue
 		}
-		if issRefSel.Group != nil && !internal.WildcardMatchs(*issRefSel.Group, issRef.Group) {
+		if issRefSel.Group != nil && !util.WildcardMatchs(*issRefSel.Group, issRef.Group) {
 			continue
 		}
 		matchingPolicies = append(matchingPolicies, policy)

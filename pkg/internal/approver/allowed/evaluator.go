@@ -27,7 +27,7 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
-	"github.com/cert-manager/approver-policy/pkg/approver/internal"
+	"github.com/cert-manager/approver-policy/pkg/internal/util"
 )
 
 // Evaluate evaluates whether the given CertificateRequest conforms to the
@@ -36,7 +36,7 @@ import (
 // If the request is denied by the allowed attributes an explanation is
 // returned.
 // An error signals that the policy couldn't be evaluated to completion.
-func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, request *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateRequestPolicy, request *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
 	var (
 		// el will contain a list of policy violations for fields, if there are
 		// items in the list, then the request does not meet the allowed
@@ -58,7 +58,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.CommonName) > 0 {
 		if allowed.CommonName == nil || allowed.CommonName.Value == nil {
 			el = append(el, field.Invalid(fldPath.Child("commonName", "value"), csr.Subject.CommonName, "nil"))
-		} else if !internal.WildcardMatchs(*allowed.CommonName.Value, csr.Subject.CommonName) {
+		} else if !util.WildcardMatchs(*allowed.CommonName.Value, csr.Subject.CommonName) {
 			el = append(el, field.Invalid(fldPath.Child("commonName", "value"), csr.Subject.CommonName, *allowed.CommonName.Value))
 		}
 	} else if allowed.CommonName != nil && allowed.CommonName.Required != nil && *allowed.CommonName.Required {
@@ -68,7 +68,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.DNSNames) > 0 {
 		if allowed.DNSNames == nil || allowed.DNSNames.Values == nil {
 			el = append(el, field.Invalid(fldPath.Child("dnsNames", "values"), csr.DNSNames, "nil"))
-		} else if !internal.WildcardSubset(*allowed.DNSNames.Values, csr.DNSNames) {
+		} else if !util.WildcardSubset(*allowed.DNSNames.Values, csr.DNSNames) {
 			el = append(el, field.Invalid(fldPath.Child("dnsNames", "values"), csr.DNSNames, strings.Join(*allowed.DNSNames.Values, ", ")))
 		}
 	} else if allowed.DNSNames != nil && allowed.DNSNames.Required != nil && *allowed.DNSNames.Required {
@@ -82,7 +82,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		}
 		if allowed.IPAddresses == nil || allowed.IPAddresses.Values == nil {
 			el = append(el, field.Invalid(fldPath.Child("ipAddresses", "values"), ips, "nil"))
-		} else if !internal.WildcardSubset(*allowed.IPAddresses.Values, ips) {
+		} else if !util.WildcardSubset(*allowed.IPAddresses.Values, ips) {
 			el = append(el, field.Invalid(fldPath.Child("ipAddresses", "values"), ips, strings.Join(*allowed.IPAddresses.Values, ", ")))
 		}
 	} else if allowed.IPAddresses != nil && allowed.IPAddresses.Required != nil && *allowed.IPAddresses.Required {
@@ -96,7 +96,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		}
 		if allowed.URIs == nil || allowed.URIs.Values == nil {
 			el = append(el, field.Invalid(fldPath.Child("uris", "values"), uris, "nil"))
-		} else if !internal.WildcardSubset(*allowed.URIs.Values, uris) {
+		} else if !util.WildcardSubset(*allowed.URIs.Values, uris) {
 			el = append(el, field.Invalid(fldPath.Child("uris", "values"), uris, strings.Join(*allowed.URIs.Values, ", ")))
 		}
 	} else if allowed.URIs != nil && allowed.URIs.Required != nil && *allowed.URIs.Required {
@@ -106,7 +106,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.EmailAddresses) > 0 {
 		if allowed.EmailAddresses == nil || allowed.EmailAddresses.Values == nil {
 			el = append(el, field.Invalid(fldPath.Child("emailAddresses", "values"), csr.EmailAddresses, "nil"))
-		} else if !internal.WildcardSubset(*allowed.EmailAddresses.Values, csr.EmailAddresses) {
+		} else if !util.WildcardSubset(*allowed.EmailAddresses.Values, csr.EmailAddresses) {
 			el = append(el, field.Invalid(fldPath.Child("emailAddresses", "values"), csr.EmailAddresses, strings.Join(*allowed.EmailAddresses.Values, ", ")))
 		}
 	} else if allowed.EmailAddresses != nil && allowed.EmailAddresses.Required != nil && *allowed.EmailAddresses.Required {
@@ -133,7 +133,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 			for _, usage := range *allowed.Usages {
 				policyUsages = append(policyUsages, string(usage))
 			}
-			if !internal.WildcardSubset(policyUsages, requestUsages) {
+			if !util.WildcardSubset(policyUsages, requestUsages) {
 				el = append(el, field.Invalid(fldPath.Child("usages"), requestUsages, strings.Join(policyUsages, ", ")))
 			}
 		}
@@ -145,7 +145,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.Organization) > 0 {
 		if allowedSub == nil || allowedSub.Organizations == nil || allowedSub.Organizations.Values == nil {
 			el = append(el, field.Invalid(fldPath.Child("organizations", "values"), csr.Subject.Organization, "nil"))
-		} else if !internal.WildcardSubset(*allowedSub.Organizations.Values, csr.Subject.Organization) {
+		} else if !util.WildcardSubset(*allowedSub.Organizations.Values, csr.Subject.Organization) {
 			el = append(el, field.Invalid(fldPath.Child("organizations", "values"), csr.Subject.Organization, strings.Join(*allowedSub.Organizations.Values, ", ")))
 		}
 	} else if allowedSub != nil && allowedSub.Organizations != nil && allowedSub.Organizations.Required != nil && *allowedSub.Organizations.Required {
@@ -155,7 +155,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.Country) > 0 {
 		if allowedSub == nil || allowedSub.Countries == nil {
 			el = append(el, field.Invalid(fldPath.Child("countries", "values"), csr.Subject.Country, "nil"))
-		} else if !internal.WildcardSubset(*allowedSub.Countries.Values, csr.Subject.Country) {
+		} else if !util.WildcardSubset(*allowedSub.Countries.Values, csr.Subject.Country) {
 			el = append(el, field.Invalid(fldPath.Child("countries", "values"), csr.Subject.Country, strings.Join(*allowedSub.Countries.Values, ", ")))
 		}
 	} else if allowedSub != nil && allowedSub.Countries != nil && allowedSub.Countries.Required != nil && *allowedSub.Countries.Required {
@@ -165,7 +165,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.OrganizationalUnit) > 0 {
 		if allowedSub == nil || allowedSub.OrganizationalUnits == nil {
 			el = append(el, field.Invalid(fldPath.Child("organizationalUnits", "values"), csr.Subject.OrganizationalUnit, "nil"))
-		} else if !internal.WildcardSubset(*allowedSub.OrganizationalUnits.Values, csr.Subject.OrganizationalUnit) {
+		} else if !util.WildcardSubset(*allowedSub.OrganizationalUnits.Values, csr.Subject.OrganizationalUnit) {
 			el = append(el, field.Invalid(fldPath.Child("organizationalUnits", "values"), csr.Subject.OrganizationalUnit, strings.Join(*allowedSub.OrganizationalUnits.Values, ", ")))
 		}
 	} else if allowedSub != nil && allowedSub.OrganizationalUnits != nil && allowedSub.OrganizationalUnits.Required != nil && *allowedSub.OrganizationalUnits.Required {
@@ -175,7 +175,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.Locality) > 0 {
 		if allowedSub == nil || allowedSub.Localities == nil {
 			el = append(el, field.Invalid(fldPath.Child("localities", "values"), csr.Subject.Locality, "nil"))
-		} else if !internal.WildcardSubset(*allowedSub.Localities.Values, csr.Subject.Locality) {
+		} else if !util.WildcardSubset(*allowedSub.Localities.Values, csr.Subject.Locality) {
 			el = append(el, field.Invalid(fldPath.Child("localities", "values"), csr.Subject.Locality, strings.Join(*allowedSub.Localities.Values, ", ")))
 		}
 	} else if allowedSub != nil && allowedSub.Localities != nil && allowedSub.Localities.Required != nil && *allowedSub.Localities.Required {
@@ -185,7 +185,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.Province) > 0 {
 		if allowedSub == nil || allowedSub.Provinces == nil {
 			el = append(el, field.Invalid(fldPath.Child("provinces", "values"), csr.Subject.Province, "nil"))
-		} else if !internal.WildcardSubset(*allowedSub.Provinces.Values, csr.Subject.Province) {
+		} else if !util.WildcardSubset(*allowedSub.Provinces.Values, csr.Subject.Province) {
 			el = append(el, field.Invalid(fldPath.Child("provinces", "values"), csr.Subject.Province, strings.Join(*allowedSub.Provinces.Values, ", ")))
 		}
 	} else if allowedSub != nil && allowedSub.Provinces != nil && allowedSub.Provinces.Required != nil && *allowedSub.Provinces.Required {
@@ -195,7 +195,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.StreetAddress) > 0 {
 		if allowedSub == nil || allowedSub.StreetAddresses == nil {
 			el = append(el, field.Invalid(fldPath.Child("streetAddresses", "values"), csr.Subject.StreetAddress, "nil"))
-		} else if !internal.WildcardSubset(*allowedSub.StreetAddresses.Values, csr.Subject.StreetAddress) {
+		} else if !util.WildcardSubset(*allowedSub.StreetAddresses.Values, csr.Subject.StreetAddress) {
 			el = append(el, field.Invalid(fldPath.Child("streetAddresses", "values"), csr.Subject.StreetAddress, strings.Join(*allowedSub.StreetAddresses.Values, ", ")))
 		}
 	} else if allowedSub != nil && allowedSub.StreetAddresses != nil && allowedSub.StreetAddresses.Required != nil && *allowedSub.StreetAddresses.Required {
@@ -205,7 +205,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.PostalCode) > 0 {
 		if allowedSub == nil || allowedSub.PostalCodes == nil {
 			el = append(el, field.Invalid(fldPath.Child("postalCodes", "values"), csr.Subject.PostalCode, "nil"))
-		} else if !internal.WildcardSubset(*allowedSub.PostalCodes.Values, csr.Subject.PostalCode) {
+		} else if !util.WildcardSubset(*allowedSub.PostalCodes.Values, csr.Subject.PostalCode) {
 			el = append(el, field.Invalid(fldPath.Child("postalCodes", "values"), csr.Subject.PostalCode, strings.Join(*allowedSub.PostalCodes.Values, ", ")))
 		}
 	} else if allowedSub != nil && allowedSub.PostalCodes != nil && allowedSub.PostalCodes.Required != nil && *allowedSub.PostalCodes.Required {
@@ -215,7 +215,7 @@ func (a Allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.SerialNumber) > 0 {
 		if allowedSub == nil || allowedSub.SerialNumber == nil {
 			el = append(el, field.Invalid(fldPath.Child("serialNumber", "value"), csr.Subject.SerialNumber, "nil"))
-		} else if !internal.WildcardMatchs(*allowedSub.SerialNumber.Value, csr.Subject.SerialNumber) {
+		} else if !util.WildcardMatchs(*allowedSub.SerialNumber.Value, csr.Subject.SerialNumber) {
 			el = append(el, field.Invalid(fldPath.Child("serialNumber", "value"), csr.Subject.SerialNumber, *allowedSub.SerialNumber.Value))
 		}
 	} else if allowedSub != nil && allowedSub.SerialNumber != nil && allowedSub.SerialNumber.Required != nil && *allowedSub.SerialNumber.Required {

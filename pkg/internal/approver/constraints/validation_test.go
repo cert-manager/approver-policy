@@ -121,7 +121,7 @@ func Test_Validate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			response, err := Constraints{}.Validate(context.TODO(), test.policy)
+			response, err := constraints{}.Validate(context.TODO(), test.policy)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expResponse, response)
 		})

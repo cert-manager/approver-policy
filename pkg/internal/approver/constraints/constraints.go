@@ -28,39 +28,44 @@ import (
 	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
-// Load the Constraints approver.
+// Load the constraints approver.
 func init() {
-	registry.Shared.Store(Constraints{})
+	registry.Shared.Store(constraints{})
 }
 
-// Constraints is a base approver-policy Approver that is responsible for
-// ensuring incoming requests satisfy the Constraints defined on
+// Approver returns an instance on the constraints approver.
+func Approver() approver.Interface {
+	return constraints{}
+}
+
+// constraints is a base approver-policy Approver that is responsible for
+// ensuring incoming requests satisfy the constraints defined on
 // CertificateRequestPolicies. It is expected that constraints must _always_ be
 // registered for all approver-policy builds.
-type Constraints struct{}
+type constraints struct{}
 
 // Name of Approver is "constraints"
-func (c Constraints) Name() string {
+func (c constraints) Name() string {
 	return "constraints"
 }
 
 // RegisterFlags is a no-op, constraints doesn't need any flags.
-func (c Constraints) RegisterFlags(_ *pflag.FlagSet) {
+func (c constraints) RegisterFlags(_ *pflag.FlagSet) {
 	return
 }
 
 // Prepare is a no-op, constraints doesn't need to prepare anything.
-func (c Constraints) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {
+func (c constraints) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {
 	return nil
 }
 
 // Ready always returns ready, constraints doesn't have any dependencies to
 // block readiness.
-func (c Constraints) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+func (c constraints) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
 
-// Constraints never needs to manually enqueue policies.
-func (c Constraints) EnqueueChan() <-chan string {
+// constraints never needs to manually enqueue policies.
+func (c constraints) EnqueueChan() <-chan string {
 	return nil
 }

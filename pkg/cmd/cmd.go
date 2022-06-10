@@ -22,8 +22,8 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	_ "github.com/cert-manager/approver-policy/pkg/approver/allowed"
-	_ "github.com/cert-manager/approver-policy/pkg/approver/constraints"
+	_ "github.com/cert-manager/approver-policy/pkg/internal/approver/allowed"
+	_ "github.com/cert-manager/approver-policy/pkg/internal/approver/constraints"
 	"github.com/cert-manager/approver-policy/pkg/internal/cmd"
 )
 

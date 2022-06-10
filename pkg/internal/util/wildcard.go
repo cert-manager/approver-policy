@@ -17,7 +17,7 @@ limitations under the License.
 // !!
 // Modified from https://github.com/minio/minio/blob/RELEASE.2020-06-22T03-12-50Z.hotfix/pkg/wildcard/match.go
 
-package internal
+package util
 
 // Wildcards '*' in patterns represent any string which has a length of 0 or
 // more. A pattern containing only "*" will match anything. A pattern
