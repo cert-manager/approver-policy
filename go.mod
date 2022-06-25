@@ -3,16 +3,16 @@ module github.com/cert-manager/approver-policy
 go 1.18
 
 require (
-	github.com/cert-manager/cert-manager v1.8.0
+	github.com/cert-manager/cert-manager v1.8.2
 	github.com/go-logr/logr v1.2.3
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.3
-	k8s.io/api v0.24.1
+	k8s.io/api v0.24.2
 	k8s.io/apiextensions-apiserver v0.23.6
-	k8s.io/apimachinery v0.24.1
+	k8s.io/apimachinery v0.24.2
 	k8s.io/cli-runtime v0.24.1
 	k8s.io/client-go v0.24.1
 	k8s.io/component-base v0.23.6
