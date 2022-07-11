@@ -445,9 +445,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{"foo": "bar"},
-						},
+						MatchLabels: map[string]string{"foo": "bar"},
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -486,9 +484,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{"foo": "bar"},
-						},
+						MatchLabels: map[string]string{"foo": "bar"},
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -523,10 +519,8 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						MatchNames: []string{namespace.Name},
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{"foo": "bar"},
-						},
+						MatchNames:  []string{namespace.Name},
+						MatchLabels: map[string]string{"foo": "bar"},
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -561,10 +555,8 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						MatchNames: []string{"foo"},
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{"foo": "bar"},
-						},
+						MatchNames:  []string{"foo"},
+						MatchLabels: map[string]string{"foo": "bar"},
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -763,9 +755,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{"foo": "bar"},
-						},
+						MatchLabels: map[string]string{"foo": "bar"},
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{

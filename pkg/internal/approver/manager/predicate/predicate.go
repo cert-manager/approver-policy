@@ -125,8 +125,10 @@ func SelectorNamespace(lister client.Reader) Predicate {
 			}
 
 			// Match by Label Selector.
-			if nsSel.LabelSelector != nil {
-				selector, err := metav1.LabelSelectorAsSelector(nsSel.LabelSelector)
+			if nsSel.MatchLabels != nil {
+				selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+					MatchLabels: nsSel.MatchLabels,
+				})
 				if err != nil {
 					return nil, fmt.Errorf("failed to parse namespace label selector: %w", err)
 				}
