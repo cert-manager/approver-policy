@@ -130,6 +130,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		Watches(&source.Kind{Type: new(rbacv1.RoleBinding)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
 		Watches(&source.Kind{Type: new(rbacv1.ClusterRole)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
 		Watches(&source.Kind{Type: new(rbacv1.ClusterRoleBinding)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
+		Watches(&source.Kind{Type: new(corev1.Namespace)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
 
 		// Complete the controller builder.
 		Complete(c)
