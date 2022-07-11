@@ -23,6 +23,8 @@ import (
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	authzv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -60,6 +62,13 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 
 	for _, policy := range policies {
 		issRefSel := policy.Spec.Selector.IssuerRef
+		// If the issuerRef selector is nil, we match the policy and continue
+		// early.
+		if issRefSel == nil {
+			matchingPolicies = append(matchingPolicies, policy)
+			continue
+		}
+
 		issRef := cr.Spec.IssuerRef
 
 		if issRefSel.Name != nil && !util.WildcardMatches(*issRefSel.Name, issRef.Name) {
@@ -75,6 +84,62 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 	}
 
 	return matchingPolicies, nil
+}
+
+// SelectorNamespace is a Predicate that returns the subset of given policies
+// that have an `spec.selector.namespace` matching the `metadata.namespace` of
+// the request. SelectorNamespace will match with `namespace.matchNames` on
+// namespaces using wilcards "*". Empty selector is equivalent to "*" and will
+// match on any Namespace.
+func SelectorNamespace(lister client.Reader) Predicate {
+	return func(ctx context.Context, cr *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+		var matchingPolicies []policyapi.CertificateRequestPolicy
+
+		var namespace corev1.Namespace
+		if err := lister.Get(ctx, client.ObjectKey{Name: cr.Namespace}, &namespace); err != nil {
+			return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
+		}
+		namespaceLabels := labels.Set(namespace.Labels)
+
+		for _, policy := range policies {
+			nsSel := policy.Spec.Selector.Namespace
+
+			// Namespace Selector is nil so we always match.
+			if nsSel == nil {
+				matchingPolicies = append(matchingPolicies, policy)
+				continue
+			}
+
+			ns := cr.Namespace
+			matched := len(nsSel.MatchNames) == 0
+
+			// Match by name.
+			for _, matchName := range nsSel.MatchNames {
+				if util.WildcardMatchs(matchName, ns) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
+
+			// Match by Label Selector.
+			if nsSel.LabelSelector != nil {
+				selector, err := metav1.LabelSelectorAsSelector(nsSel.LabelSelector)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse namespace label selector: %w", err)
+				}
+				if !selector.Matches(namespaceLabels) {
+					continue
+				}
+			}
+
+			matchingPolicies = append(matchingPolicies, policy)
+		}
+
+		return matchingPolicies, nil
+	}
 }
 
 // RBACBoundPolicies is a Predicate that returns the subset of
