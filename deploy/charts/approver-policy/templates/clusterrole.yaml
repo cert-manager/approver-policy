@@ -40,3 +40,7 @@ rules:
 - apiGroups: ["authorization.k8s.io"]
   resources: ["subjectaccessreviews"]
   verbs: ["create"]
+
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["list", "watch"]
