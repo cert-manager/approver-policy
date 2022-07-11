@@ -17,7 +17,6 @@ BINDIR ?= $(CURDIR)/bin
 ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
-HELM_VERSION ?= 3.6.3
 KUBEBUILDER_TOOLS_VERISON ?= 1.22.0
 K8S_CLUSTER_NAME ?= approver-policy
 IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
@@ -100,17 +99,13 @@ $(BINDIR)/controller-gen:
 	cd hack/tools && go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 $(BINDIR)/ginkgo:
-	cd hack/tools && go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
+	cd hack/tools && go build -o $@ github.com/onsi/ginkgo/ginkgo
 
 $(BINDIR)/kind:
-	cd hack/tools && go build -o $(BINDIR)/kind sigs.k8s.io/kind
+	cd hack/tools && go build -o $@ sigs.k8s.io/kind
 
 $(BINDIR)/helm:
-	curl -o $(BINDIR)/helm.tar.gz -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
-	tar -C $(BINDIR) -xzf $(BINDIR)/helm.tar.gz
-	cp $(BINDIR)/$(OS)-$(ARCH)/helm $(BINDIR)/helm
-	rm -r $(BINDIR)/$(OS)-$(ARCH) $(BINDIR)/helm.tar.gz
-	$(BINDIR)/helm repo add jetstack https://charts.jetstack.io --force-update
+	cd hack/tools && go build -o $@ helm.sh/helm/v3/cmd/helm
 
 $(BINDIR)/kubectl:
 	curl -o ./bin/kubectl -LO "https://storage.googleapis.com/kubernetes-release/release/$(shell curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/$(OS)/$(ARCH)/kubectl"
@@ -123,10 +118,10 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver:
 
 $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager
-	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
+	curl -sSLo $@ https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
 $(BINDIR)/gomarkdoc:
 	cd hack/tools && GO111MODULE=on go build -o $@ github.com/princjef/gomarkdoc/cmd/gomarkdoc
 
 $(BINDIR)/helm-docs: $(BINDIR)
-		cd hack/tools && go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
+		cd hack/tools && go build -o $@ github.com/norwoodj/helm-docs/cmd/helm-docs
