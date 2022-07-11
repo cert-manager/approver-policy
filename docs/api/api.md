@@ -580,7 +580,7 @@ type CertificateRequestPolicySelector struct {
     // unmatched `issuerRef` if defined, regardless of whether the requestor is
     // bound by RBAC.
     // Accepts wildcards "*".
-    // Nil values are equivalent to "*",
+    // Omitted values are equivalent to "*".
     //
     // The following value will match _all_ `issuerRefs`:
     // ```
