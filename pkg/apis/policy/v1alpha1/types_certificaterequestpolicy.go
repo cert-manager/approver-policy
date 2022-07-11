@@ -75,7 +75,7 @@ type CertificateRequestPolicySpec struct {
 
 	// Selector is used for selecting over which CertificateRequests this
 	// CertificateRequestPolicy is appropriate for and so will used for its
-	// evaluation.
+	// approval evaluation.
 	Selector CertificateRequestPolicySelector `json:"selector"`
 }
 
@@ -284,16 +284,20 @@ type CertificateRequestPolicyPluginData struct {
 	Values map[string]string `json:"values,omitempty"`
 }
 
-// CertificateRequestPolicySelector is used for selecting over the
-// CertificateRequests what this CertificateRequestPolicy is appropriate for,
-// and if so, will be used to evaluate the request.
+// CertificateRequestPolicySelector is used for selecting over which
+// CertificateRequests this CertificateRequestPolicy is appropriate for, and if
+// so, will be used to evaluate the request.
+// All selectors that have been configured must _all_ match a
+// CertificateRequest in order for the CertificateRequestPolicy to be chosen
+// for evaluation.
+// At least one of issuerRef or namespace must be defined.
 type CertificateRequestPolicySelector struct {
 	// IssuerRef is used to match this CertificateRequestPolicy against processed
 	// CertificateRequests. This policy will only be evaluated against a
 	// CertificateRequest whose `spec.issuerRef` field matches
 	// `spec.selector.issuerRef`. CertificateRequests will not be processed on
-	// unmatched `issuerRef`, regardless of whether the requestor is bound by
-	// RBAC.
+	// unmatched `issuerRef` if defined, regardless of whether the requestor is
+	// bound by RBAC.
 	// Accepts wildcards "*".
 	// Nil values are equivalent to "*",
 	//
@@ -301,9 +305,15 @@ type CertificateRequestPolicySelector struct {
 	// ```
 	// issuerRef: {}
 	// ```
-	//
-	// Required field.
+	// +optional
 	IssuerRef *CertificateRequestPolicySelectorIssuerRef `json:"issuerRef"`
+
+	// Namespace is used to select on Namespaces, meaning the
+	// CertificateRequestPolicy will only match on CertificateRequests that have
+	// been created in matching selected Namespaces.
+	// If this field is omitted, all Namespaces are selected.
+	// +optional
+	Namespace *CertificateRequestPolicySelectorNamespace `json:"namespace"`
 }
 
 // CertificateRequestPolicySelectorIssuerRef defines the selector for matching
@@ -329,6 +339,23 @@ type CertificateRequestPolicySelectorIssuerRef struct {
 	// An omitted field or value of `nil` matches all.
 	// +optional
 	Group *string `json:"group,omitempty"`
+}
+
+// CertificateRequestPolicySelectorNamespace defines the selector for matching
+// on the `Namespace` of requests. Note that all selectors in the Namespace
+// selector must match in order for the request to be considered for evaluation
+// by this policy.
+type CertificateRequestPolicySelectorNamespace struct {
+	// MatchNames are the set of Namespace names that select on
+	// CertificateRequests that have been created in a matching Namespace.
+	// Accepts wildcards "*".
+	// +optional
+	MatchNames []string `json:"names,omitempty"`
+
+	// LabelSelector is the set of Namespace labels that select on
+	// CertificateRequests that have been created in a matching Namespace.
+	// +optional
+	*metav1.LabelSelector `json:",omitempty"`
 }
 
 // CertificateRequestPolicyStatus defines the observed state of the
