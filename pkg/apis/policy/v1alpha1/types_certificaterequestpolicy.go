@@ -350,12 +350,13 @@ type CertificateRequestPolicySelectorNamespace struct {
 	// CertificateRequests that have been created in a matching Namespace.
 	// Accepts wildcards "*".
 	// +optional
-	MatchNames []string `json:"names,omitempty"`
+	MatchNames []string `json:"matchNames,omitempty"`
 
-	// LabelSelector is the set of Namespace labels that select on
-	// CertificateRequests that have been created in a matching Namespace.
+	// MatchLabels is the set of Namespace labels that select on
+	// CertificateRequests which have been created in a Namespace matching the
+	// selector.
 	// +optional
-	*metav1.LabelSelector `json:",omitempty"`
+	MatchLabels map[string]string `json:"matchLabels,omitempty"`
 }
 
 // CertificateRequestPolicyStatus defines the observed state of the

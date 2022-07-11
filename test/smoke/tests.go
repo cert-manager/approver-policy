@@ -78,10 +78,8 @@ var _ = Describe("Smoke", func() {
 						Name: pointer.String(issuer.Name),
 					},
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						MatchNames: []string{"smoke-test-policy-*"},
-						LabelSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{"foo": "bar"},
-						},
+						MatchNames:  []string{"smoke-test-policy-*"},
+						MatchLabels: map[string]string{"foo": "bar"},
 					},
 				},
 			},

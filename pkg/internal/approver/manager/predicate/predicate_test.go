@@ -754,7 +754,7 @@ func Test_SelectorNamespace(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+						MatchLabels: map[string]string{"foo": "bar"},
 					}},
 				}},
 			},
@@ -771,7 +771,7 @@ func Test_SelectorNamespace(t *testing.T) {
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+						MatchLabels: map[string]string{"foo": "bar"},
 					}},
 				}},
 			},
@@ -924,7 +924,7 @@ func Test_SelectorNamespace(t *testing.T) {
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+						MatchLabels: map[string]string{"foo": "bar"},
 					}},
 				}},
 			},
@@ -952,24 +952,24 @@ func Test_SelectorNamespace(t *testing.T) {
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+						MatchLabels: map[string]string{"foo": "bar"},
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"bar": "foo"}},
+						MatchLabels: map[string]string{"bar": "foo"},
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						MatchNames:    []string{"test-namespace"},
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+						MatchNames:  []string{"test-namespace"},
+						MatchLabels: map[string]string{"foo": "bar"},
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						MatchNames:    []string{"namespace-test"},
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"bar": "foo"}},
+						MatchNames:  []string{"namespace-test"},
+						MatchLabels: map[string]string{"bar": "foo"},
 					}},
 				}},
 			},
@@ -986,13 +986,13 @@ func Test_SelectorNamespace(t *testing.T) {
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+						MatchLabels: map[string]string{"foo": "bar"},
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
-						MatchNames:    []string{"test-namespace"},
-						LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+						MatchNames:  []string{"test-namespace"},
+						MatchLabels: map[string]string{"foo": "bar"},
 					}},
 				}},
 			},
