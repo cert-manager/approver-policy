@@ -284,7 +284,7 @@ spec:
                   type: object
                   properties:
                     issuerRef:
-                      description: "IssuerRef is used to match this CertificateRequestPolicy against processed CertificateRequests. This policy will only be evaluated against a CertificateRequest whose `spec.issuerRef` field matches `spec.selector.issuerRef`. CertificateRequests will not be processed on unmatched `issuerRef` if defined, regardless of whether the requestor is bound by RBAC. Accepts wildcards \"*\". Nil values are equivalent to \"*\", \n The following value will match _all_ `issuerRefs`: ``` issuerRef: {} ```"
+                      description: "IssuerRef is used to match this CertificateRequestPolicy against processed CertificateRequests. This policy will only be evaluated against a CertificateRequest whose `spec.issuerRef` field matches `spec.selector.issuerRef`. CertificateRequests will not be processed on unmatched `issuerRef` if defined, regardless of whether the requestor is bound by RBAC. Accepts wildcards \"*\". Omitted values are equivalent to \"*\". \n The following value will match _all_ `issuerRefs`: ``` issuerRef: {} ```"
                       type: object
                       properties:
                         group:
