@@ -122,8 +122,8 @@ func (v *validator) certificateRequestPolicy(ctx context.Context, policy *policy
 		}
 	}
 
-	if policy.Spec.Selector.IssuerRef == nil {
-		el = append(el, field.Required(fldPath.Child("selector", "issuerRef"), "must be defined, hint: `{}` matches everything"))
+	if policy.Spec.Selector.IssuerRef == nil && policy.Spec.Selector.Namespace == nil {
+		el = append(el, field.Required(fldPath.Child("selector"), "one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"))
 	}
 
 	for _, webhook := range v.webhooks {
