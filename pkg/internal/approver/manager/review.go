@@ -65,8 +65,13 @@ type policyMessage struct {
 //   CertificateRequest
 func New(lister client.Reader, client client.Client, evaluators []approver.Evaluator) manager.Interface {
 	return &mngr{
-		lister:     lister,
-		predicates: []predicate.Predicate{predicate.Ready, predicate.SelectorIssuerRef, predicate.RBACBound(client)},
+		lister: lister,
+		predicates: []predicate.Predicate{
+			predicate.Ready,
+			predicate.SelectorIssuerRef,
+			predicate.SelectorNamespace(lister),
+			predicate.RBACBound(client),
+		},
 		evaluators: evaluators,
 	}
 }
