@@ -249,7 +249,7 @@ func Test_validatorHandle(t *testing.T) {
 				},
 			},
 		},
-		"a CertificateRequestPolicy whose issuerRef selector has not been defined should return 403": {
+		"a CertificateRequestPolicy whose issuerRef or namespace selector has not been defined should return 403": {
 			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 				return approver.WebhookValidationResponse{Allowed: true}, nil
 			}),
@@ -281,11 +281,11 @@ func Test_validatorHandle(t *testing.T) {
 			expResp: admission.Response{
 				AdmissionResponse: admissionv1.AdmissionResponse{
 					Allowed: false,
-					Result:  &metav1.Status{Reason: "spec.selector.issuerRef: Required value: must be defined, hint: `{}` matches everything", Code: 403},
+					Result:  &metav1.Status{Reason: "spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything", Code: 403},
 				},
 			},
 		},
-		"a CertificateRequestPolicy whose defined plugins have not been registered and issuerRef selector not defined should return a 403": {
+		"a CertificateRequestPolicy whose defined plugins have not been registered and issuerRef and namespace selector not defined should return a 403": {
 			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 				return approver.WebhookValidationResponse{Allowed: true}, nil
 			}),
@@ -322,11 +322,11 @@ func Test_validatorHandle(t *testing.T) {
 			expResp: admission.Response{
 				AdmissionResponse: admissionv1.AdmissionResponse{
 					Allowed: false,
-					Result:  &metav1.Status{Reason: "[spec.plugins: Unsupported value: \"plugin-1\", spec.plugins: Unsupported value: \"plugin-2\", spec.plugins: Unsupported value: \"plugin-3\", spec.selector.issuerRef: Required value: must be defined, hint: `{}` matches everything]", Code: 403},
+					Result:  &metav1.Status{Reason: "[spec.plugins: Unsupported value: \"plugin-1\", spec.plugins: Unsupported value: \"plugin-2\", spec.plugins: Unsupported value: \"plugin-3\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]", Code: 403},
 				},
 			},
 		},
-		"a CertificateRequestPolicy whose some of the defined plugins have not been registered and issuerRef selector not defined should return a 403": {
+		"a CertificateRequestPolicy whose some of the defined plugins have not been registered and issuerRef or namespace selector not defined should return a 403": {
 			registeredPlugins: []string{"plugin-1", "plugin-2"},
 			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 				return approver.WebhookValidationResponse{Allowed: true}, nil
@@ -365,11 +365,11 @@ func Test_validatorHandle(t *testing.T) {
 			expResp: admission.Response{
 				AdmissionResponse: admissionv1.AdmissionResponse{
 					Allowed: false,
-					Result:  &metav1.Status{Reason: "[spec.plugins: Unsupported value: \"plugin-3\": supported values: \"plugin-1\", \"plugin-2\", spec.plugins: Unsupported value: \"plugin-4\": supported values: \"plugin-1\", \"plugin-2\", spec.selector.issuerRef: Required value: must be defined, hint: `{}` matches everything]", Code: 403},
+					Result:  &metav1.Status{Reason: "[spec.plugins: Unsupported value: \"plugin-3\": supported values: \"plugin-1\", \"plugin-2\", spec.plugins: Unsupported value: \"plugin-4\": supported values: \"plugin-1\", \"plugin-2\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]", Code: 403},
 				},
 			},
 		},
-		"a CertificateRequestPolicy where all plugins used are registered with a valid issuerRef selector should return Allowed": {
+		"a CertificateRequestPolicy where all plugins used are registered with a valid issuerRef or namespace selector should return Allowed": {
 			registeredPlugins: []string{"plugin-1", "plugin-2"},
 			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 				return approver.WebhookValidationResponse{Allowed: true}, nil
