@@ -228,7 +228,7 @@ func Test_WildcardContains(t *testing.T) {
 	}
 }
 
-func Test_WildcardMatchs(t *testing.T) {
+func Test_WildcardMatches(t *testing.T) {
 	tests := map[string]struct {
 		pattern string
 		text    string
@@ -297,7 +297,7 @@ func Test_WildcardMatchs(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			if match := WildcardMatchs(test.pattern, test.text); match != test.exp {
+			if match := WildcardMatches(test.pattern, test.text); match != test.exp {
 				t.Errorf("unexpected match (%q, %q): exp=%t got=%t",
 					test.pattern, test.text, test.exp, match)
 			}

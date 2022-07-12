@@ -43,7 +43,7 @@ func WildcardSubset(patterns, members []string) bool {
 // ('*').
 func WildcardContains(patterns []string, member string) bool {
 	for _, pattern := range patterns {
-		if WildcardMatchs(pattern, member) {
+		if WildcardMatches(pattern, member) {
 			return true
 		}
 	}
@@ -51,9 +51,9 @@ func WildcardContains(patterns []string, member string) bool {
 	return false
 }
 
-// WildcardMatchs will return true if the given string matches the pattern.
+// WildcardMatches will return true if the given string matches the pattern.
 // Pattern is a string which supports wildcards ('*').
-func WildcardMatchs(pattern, str string) bool {
+func WildcardMatches(pattern, str string) bool {
 	if len(pattern) == 0 {
 		return len(str) == 0
 	}
