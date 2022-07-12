@@ -58,7 +58,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.CommonName) > 0 {
 		if allowed.CommonName == nil || allowed.CommonName.Value == nil {
 			el = append(el, field.Invalid(fldPath.Child("commonName", "value"), csr.Subject.CommonName, "nil"))
-		} else if !util.WildcardMatchs(*allowed.CommonName.Value, csr.Subject.CommonName) {
+		} else if !util.WildcardMatches(*allowed.CommonName.Value, csr.Subject.CommonName) {
 			el = append(el, field.Invalid(fldPath.Child("commonName", "value"), csr.Subject.CommonName, *allowed.CommonName.Value))
 		}
 	} else if allowed.CommonName != nil && allowed.CommonName.Required != nil && *allowed.CommonName.Required {
@@ -215,7 +215,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	if len(csr.Subject.SerialNumber) > 0 {
 		if allowedSub == nil || allowedSub.SerialNumber == nil {
 			el = append(el, field.Invalid(fldPath.Child("serialNumber", "value"), csr.Subject.SerialNumber, "nil"))
-		} else if !util.WildcardMatchs(*allowedSub.SerialNumber.Value, csr.Subject.SerialNumber) {
+		} else if !util.WildcardMatches(*allowedSub.SerialNumber.Value, csr.Subject.SerialNumber) {
 			el = append(el, field.Invalid(fldPath.Child("serialNumber", "value"), csr.Subject.SerialNumber, *allowedSub.SerialNumber.Value))
 		}
 	} else if allowedSub != nil && allowedSub.SerialNumber != nil && allowedSub.SerialNumber.Required != nil && *allowedSub.SerialNumber.Required {
