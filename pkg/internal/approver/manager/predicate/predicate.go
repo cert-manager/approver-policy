@@ -92,11 +92,11 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 // namespaces using wilcards "*". Empty selector is equivalent to "*" and will
 // match on any Namespace.
 func SelectorNamespace(lister client.Reader) Predicate {
-	return func(ctx context.Context, cr *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+	return func(ctx context.Context, request *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 		var matchingPolicies []policyapi.CertificateRequestPolicy
 
 		var namespace corev1.Namespace
-		if err := lister.Get(ctx, client.ObjectKey{Name: cr.Namespace}, &namespace); err != nil {
+		if err := lister.Get(ctx, client.ObjectKey{Name: request.Namespace}, &namespace); err != nil {
 			return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
 		}
 		namespaceLabels := labels.Set(namespace.Labels)
@@ -110,16 +110,25 @@ func SelectorNamespace(lister client.Reader) Predicate {
 				continue
 			}
 
-			ns := cr.Namespace
+			// (matched ref 1): If no strings are in matchNames, then we mark as
+			// matched here. This is to ensure the `matched` bool is `true` for the
+			// condition later on.
 			matched := len(nsSel.MatchNames) == 0
 
 			// Match by name.
 			for _, matchName := range nsSel.MatchNames {
-				if util.WildcardMatchs(matchName, ns) {
+				if util.WildcardMatchs(matchName, request.Namespace) {
 					matched = true
 					break
 				}
 			}
+
+			// (matched ref 2): If we haven't matched here then we can continue to
+			// the next policy early, and not bother checking the label selector.
+			// `matched` will be true if:
+			// 1. we had matchNames defined and they matched, or
+			// 2. we didn't define any matchNames and so `matched` was already `true`
+			//    (from matched ref 1).
 			if !matched {
 				continue
 			}
@@ -132,6 +141,7 @@ func SelectorNamespace(lister client.Reader) Predicate {
 				if err != nil {
 					return nil, fmt.Errorf("failed to parse namespace label selector: %w", err)
 				}
+				// If the selector doesn't match, then we continue to the next policy.
 				if !selector.Matches(namespaceLabels) {
 					continue
 				}
