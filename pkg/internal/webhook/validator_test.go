@@ -414,6 +414,56 @@ func Test_validatorHandle(t *testing.T) {
 				},
 			},
 		},
+		"a CertificateRequestPolicy where the namespace selector matchLabels definition is invalid, should return error of invalid": {
+			registeredPlugins: []string{"plugin-1", "plugin-2"},
+			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+				return approver.WebhookValidationResponse{Allowed: true}, nil
+			}),
+			req: admission.Request{
+				AdmissionRequest: admissionv1.AdmissionRequest{
+					UID: types.UID("abc"),
+					RequestKind: &metav1.GroupVersionKind{
+						Group:   "policy.cert-manager.io",
+						Version: "v1alpha1",
+						Kind:    "CertificateRequestPolicy",
+					},
+					Operation: admissionv1.Create,
+					Object: runtime.RawExtension{
+						Raw: []byte(`
+{
+ "apiVersion": "policy.cert-manager.io/v1alpha1",
+	"kind": "CertificateRequestPolicy",
+	"metadata": {
+		"name": "testing"
+	},
+	"spec": {
+	  "plugins": {
+			"plugin-1": {},
+			"plugin-2": {}
+		},
+		"selector": {
+		  "namespace": {
+				"matchLabels": {
+				  "%%%": "@@@"
+				}
+			}
+		}
+	}
+}
+`),
+					},
+				},
+			},
+			expResp: admission.Response{
+				AdmissionResponse: admissionv1.AdmissionResponse{
+					Allowed: false,
+					Result: &metav1.Status{
+						Reason: `spec.selector.namespace.matchLabels: Invalid value: map[string]string{"%%%":"@@@"}: [key: Invalid value: "%%%": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]'), values[0][%%%]: Invalid value: "@@@": a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue',  or 'my_value',  or '12345', regex used for validation is '(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')]`,
+						Code:   403,
+					},
+				},
+			},
+		},
 	}
 
 	for name, test := range tests {

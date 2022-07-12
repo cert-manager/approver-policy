@@ -126,6 +126,12 @@ func (v *validator) certificateRequestPolicy(ctx context.Context, policy *policy
 		el = append(el, field.Required(fldPath.Child("selector"), "one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"))
 	}
 
+	if nsSel := policy.Spec.Selector.Namespace; nsSel != nil && len(nsSel.MatchLabels) > 0 {
+		if _, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: nsSel.MatchLabels}); err != nil {
+			el = append(el, field.Invalid(fldPath.Child("selector", "namespace", "matchLabels"), nsSel.MatchLabels, err.Error()))
+		}
+	}
+
 	for _, webhook := range v.webhooks {
 		response, err := webhook.Validate(ctx, policy)
 		if err != nil {
