@@ -49,6 +49,7 @@ var _ = Describe("Smoke", func() {
 		namespace := corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "smoke-test-policy-",
+				Labels:       map[string]string{"foo": "bar"},
 			},
 		}
 		Expect(cl.Create(ctx, &namespace)).NotTo(HaveOccurred())
@@ -75,6 +76,10 @@ var _ = Describe("Smoke", func() {
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
 						Name: pointer.String(issuer.Name),
+					},
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames:  []string{"smoke-test-policy-*"},
+						MatchLabels: map[string]string{"foo": "bar"},
 					},
 				},
 			},
