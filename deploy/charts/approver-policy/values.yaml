@@ -9,6 +9,9 @@ image:
   # -- Kubernetes imagePullPolicy on Deployment.
   pullPolicy: IfNotPresent
 
+# -- Optional secrets used for pulling the approver-policy container image.
+imagePullSecrets: []
+
 app:
   # -- Verbosity of approver-policy logging.
   logLevel: 1 # 1-5
