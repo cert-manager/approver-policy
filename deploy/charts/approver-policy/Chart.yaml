@@ -13,4 +13,4 @@ sources:
 - https://github.com/cert-manager/approver-policy
 
 appVersion: v0.4.0
-version: v0.4.0
+version: v0.4.1
