@@ -1,6 +1,6 @@
 # cert-manager-approver-policy
 
-![Version: v0.4.1](https://img.shields.io/badge/Version-v0.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.4.0](https://img.shields.io/badge/AppVersion-v0.4.0-informational?style=flat-square)
+![Version: v0.4.2](https://img.shields.io/badge/Version-v0.4.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.4.0](https://img.shields.io/badge/AppVersion-v0.4.0-informational?style=flat-square)
 
 A Helm chart for cert-manager-approver-policy
 
@@ -29,6 +29,7 @@ A Helm chart for cert-manager-approver-policy
 | app.metrics.service.servicemonitor | object | `{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"}` | ServiceMonitor resource for this Service. |
 | app.metrics.service.type | string | `"ClusterIP"` | Service type to expose metrics. |
 | app.readinessProbe.port | int | `6060` | Container port to expose approver-policy HTTP readiness probe on default network interface. |
+| app.webhook.certificateDir | string | `"/tmp"` | Directory to read and store the webhook TLS certificate key pair. |
 | app.webhook.host | string | `"0.0.0.0"` | Host that the webhook listens on. |
 | app.webhook.port | int | `6443` | Port that the webhook listens on. |
 | app.webhook.service | object | `{"type":"ClusterIP"}` | Type of Kubernetes Service used by the Webhook |
