@@ -47,6 +47,7 @@ spec:
           - --webhook-port={{.Values.app.webhook.port}}
           - --webhook-service-name={{ include "cert-manager-approver-policy.name" . }}
           - --webhook-ca-secret-namespace={{.Release.Namespace}}
+          - --webhook-certificate-dir={{.Values.app.webhook.certificateDir}}
 
         {{- if .Values.volumeMounts }}
         volumeMounts:

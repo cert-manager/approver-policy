@@ -56,6 +56,8 @@ app:
     port: 6443
     # -- Timeout of webhook HTTP request.
     timeoutSeconds: 5
+    # -- Directory to read and store the webhook TLS certificate key pair.
+    certificateDir: /tmp
     # -- Type of Kubernetes Service used by the Webhook
     service:
       type: ClusterIP
