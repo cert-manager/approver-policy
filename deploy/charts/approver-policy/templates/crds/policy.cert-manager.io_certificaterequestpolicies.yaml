@@ -310,7 +310,6 @@ spec:
                           type: array
                           items:
                             type: string
-                      x-kubernetes-map-type: atomic
             status:
               description: CertificateRequestPolicyStatus defines the observed state of the CertificateRequestPolicy.
               type: object
