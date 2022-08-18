@@ -117,7 +117,7 @@ func SelectorNamespace(lister client.Reader) Predicate {
 
 			// Match by name.
 			for _, matchName := range nsSel.MatchNames {
-				if util.WildcardMatchs(matchName, request.Namespace) {
+				if util.WildcardMatches(matchName, request.Namespace) {
 					matched = true
 					break
 				}
