@@ -95,11 +95,9 @@ func SelectorNamespace(lister client.Reader) Predicate {
 	return func(ctx context.Context, request *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 		var matchingPolicies []policyapi.CertificateRequestPolicy
 
-		var namespace corev1.Namespace
-		if err := lister.Get(ctx, client.ObjectKey{Name: request.Namespace}, &namespace); err != nil {
-			return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
-		}
-		namespaceLabels := labels.Set(namespace.Labels)
+		// namespaceLabels are the labels of the namespace the request is in. We
+		// use a pointer here so we can lazily fetch the namespace as necessary.
+		var namespaceLabels *map[string]string
 
 		for _, policy := range policies {
 			nsSel := policy.Spec.Selector.Namespace
@@ -135,6 +133,15 @@ func SelectorNamespace(lister client.Reader) Predicate {
 
 			// Match by Label Selector.
 			if nsSel.MatchLabels != nil {
+
+				if namespaceLabels == nil {
+					var namespace corev1.Namespace
+					if err := lister.Get(ctx, client.ObjectKey{Name: request.Namespace}, &namespace); err != nil {
+						return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
+					}
+					namespaceLabels = &namespace.Labels
+				}
+
 				selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 					MatchLabels: nsSel.MatchLabels,
 				})
@@ -142,7 +149,7 @@ func SelectorNamespace(lister client.Reader) Predicate {
 					return nil, fmt.Errorf("failed to parse namespace label selector: %w", err)
 				}
 				// If the selector doesn't match, then we continue to the next policy.
-				if !selector.Matches(namespaceLabels) {
+				if !selector.Matches(labels.Set(*namespaceLabels)) {
 					continue
 				}
 			}

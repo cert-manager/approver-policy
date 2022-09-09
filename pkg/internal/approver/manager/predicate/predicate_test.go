@@ -726,8 +726,26 @@ func Test_SelectorNamespace(t *testing.T) {
 		expPolicies       []policyapi.CertificateRequestPolicy
 		expErr            bool
 	}{
-		"if namespace for request doesn't exist, expect error": {
-			policies:          nil,
+		"if namespace for request doesn't exist and using match names, expect no error": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"bar"},
+					}},
+				}},
+			},
+			existingNamespace: nil,
+			expPolicies:       nil,
+			expErr:            false,
+		},
+		"if namespace for request doesn't exist and using match labels, expect error": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+			},
 			existingNamespace: nil,
 			expPolicies:       nil,
 			expErr:            true,
