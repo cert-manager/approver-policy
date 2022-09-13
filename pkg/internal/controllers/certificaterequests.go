@@ -161,15 +161,21 @@ func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	var event struct {
+		eventtype string
+		reason    string
+	}
 	switch response.Result {
 	case manager.ResultApproved:
 		log.V(2).Info("approving request")
-		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", response.Message)
+		event.eventtype = corev1.EventTypeNormal
+		event.reason = "Approved"
 		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "policy.cert-manager.io", response.Message)
 
 	case manager.ResultDenied:
 		log.V(2).Info("denying request")
-		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", response.Message)
+		event.eventtype = corev1.EventTypeWarning
+		event.reason = "Denied"
 		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", response.Message)
 
 	case manager.ResultUnprocessed:
@@ -188,6 +194,8 @@ func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (
 	if err := c.client.Status().Update(ctx, cr); err != nil {
 		return ctrl.Result{}, err
 	}
+
+	c.recorder.Event(cr, event.eventtype, event.reason, response.Message)
 
 	return ctrl.Result{}, nil
 }
