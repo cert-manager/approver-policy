@@ -17,8 +17,8 @@ BINDIR ?= $(CURDIR)/bin
 ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
-HELM_VERSION ?= 3.6.3
-KUBEBUILDER_TOOLS_VERISON ?= 1.22.0
+HELM_VERSION ?= 3.10.0
+KUBEBUILDER_TOOLS_VERSION ?= 1.25.0
 K8S_CLUSTER_NAME ?= approver-policy
 IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
@@ -117,7 +117,7 @@ $(BINDIR)/kubectl:
 	chmod +x ./bin/kubectl
 
 $(BINDIR)/kubebuilder/bin/kube-apiserver:
-	curl -sSLo $(BINDIR)/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERISON)-$(OS)-$(ARCH).tar.gz"
+	curl -sSLo $(BINDIR)/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERSION)-$(OS)-$(ARCH).tar.gz"
 	mkdir -p $(BINDIR)/kubebuilder
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
 
