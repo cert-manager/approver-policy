@@ -63,13 +63,14 @@ var _ = Context("Selector", func() {
 		cancel()
 	})
 
+	// IssuerRef Selector
 	It("it should select on all CertificateRequests where issuerRef={}, RBAC bound, and plugin return Ready", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -103,7 +104,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -139,7 +140,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -174,7 +175,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -236,7 +237,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -266,7 +267,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -289,5 +290,496 @@ var _ = Context("Selector", func() {
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
 		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userCreateCRRoleName)
+	})
+
+	// Namespace Selector
+	It("it should select on all CertificateRequests where namespace={}, RBAC bound, and plugin return Ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer-2", Kind: "ClusterIssuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should select on all CertificateRequests where Namespace={matchNames=[*]}, RBAC bound, and plugin return Ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer-2", Kind: "ClusterIssuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should select on all CertificateRequests where Namespace={matchNames=[test-*]}, RBAC bound, and plugin return Ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"test-*"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer-2", Kind: "ClusterIssuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should select on all CertificateRequests where Namespace={matchNames=[*-*]}, RBAC bound, and plugin return Ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*-*"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer-2", Kind: "ClusterIssuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should not select CertificateRequests where namespace={matchLabels=[foo=bar]}, RBAC bound, and plugin return Ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer-2", Kind: "ClusterIssuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should select on all CertificateRequests where namespace={matchLabels=[foo=bar]}, RBAC bound, and plugin return Ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		namespace.Labels["foo"] = "bar"
+		Expect(env.AdminClient.Update(ctx, &namespace)).ToNot(HaveOccurred())
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer-2", Kind: "ClusterIssuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should not select on CertificateRequests where the namespace match name matches, but match labels does not match", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames:  []string{namespace.Name},
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should not select on CertificateRequests where the namespace match labels match, but match names does not match", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		namespace.Labels["foo"] = "bar"
+		Expect(env.AdminClient.Update(ctx, &namespace)).ToNot(HaveOccurred())
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames:  []string{"foo"},
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should not select on CertificateRequests where the namespace matches but the policy is not ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{Requeue: true, RequeueAfter: time.Millisecond * 50}}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{namespace.Name},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForNotReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should not select on CertificateRequests where the namespace selector matches and policy is ready but not bound to user", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{namespace.Name},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userCreateCRRoleName)
+	})
+
+	It("it should not select on CertificateRequests where the namespace selector matches but issuerRef does not", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo", namespace.Name},
+					},
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: pointer.String("foo"), Kind: pointer.String("bar"), Group: pointer.String("*"),
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should not select on CertificateRequests where the issuerRef selector matches, but namespace does not", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo"},
+					},
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: pointer.String("my-issuer"), Kind: pointer.String("Issuer"), Group: pointer.String("*"),
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("it should select on CertificateRequests where the issuerRef and namespace selector matches", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo", namespace.Name},
+					},
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: pointer.String("my-issuer"), Kind: pointer.String("Issuer"), Group: pointer.String("*"),
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	It("if namespace selector doesn't match, don't approve or deny. If selector updated with match, should approve CertificateRequest", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+		)
+		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
+
+		namespace.Labels["foo"] = "bar"
+		Expect(env.AdminClient.Update(ctx, &namespace)).ToNot(HaveOccurred())
+
+		// Now namespace has a selecting namespace, should approve request.
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 })

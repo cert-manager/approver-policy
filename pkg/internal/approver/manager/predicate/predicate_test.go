@@ -28,8 +28,10 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/test/env"
@@ -702,6 +704,333 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies, err := SelectorIssuerRef(context.TODO(), baseRequest, test.policies)
 			assert.NoError(t, err)
 			if !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
+				t.Errorf("unexpected policies returned:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
+			}
+		})
+	}
+}
+
+func Test_SelectorNamespace(t *testing.T) {
+	var (
+		baseRequest = &cmapi.CertificateRequest{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "test-namespace",
+			},
+		}
+		testns = &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace"}}
+	)
+
+	tests := map[string]struct {
+		policies          []policyapi.CertificateRequestPolicy
+		existingNamespace runtime.Object
+		expPolicies       []policyapi.CertificateRequestPolicy
+		expErr            bool
+	}{
+		"if namespace for request doesn't exist and using match names, expect no error": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"bar"},
+					}},
+				}},
+			},
+			existingNamespace: nil,
+			expPolicies:       nil,
+			expErr:            false,
+		},
+		"if namespace for request doesn't exist and using match labels, expect error": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+			},
+			existingNamespace: nil,
+			expPolicies:       nil,
+			expErr:            true,
+		},
+		"if no policies given, return no policies": {
+			policies:          nil,
+			existingNamespace: testns,
+			expPolicies:       nil,
+			expErr:            false,
+		},
+		"if policy given that doesn't match namespace match name, return no policies": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo"},
+					}},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies:       nil,
+			expErr:            false,
+		},
+		"if policy given that doesn't match namespace match labels, return no policies": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+			},
+			existingNamespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace", Labels: map[string]string{"bar": "foo"}}},
+			expPolicies:       nil,
+			expErr:            false,
+		},
+		"if two policies given that doesn't match, return no policies": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+			},
+			existingNamespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace", Labels: map[string]string{"bar": "foo"}}},
+			expPolicies:       nil,
+			expErr:            false,
+		},
+		"if one of two policies match all with all nils, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: new(policyapi.CertificateRequestPolicySelectorNamespace)},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo"},
+					}},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: new(policyapi.CertificateRequestPolicySelectorNamespace)},
+				}},
+			},
+			expErr: false,
+		},
+		"if one of two policies match all with wildcard, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo"},
+					}},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+			},
+			expErr: false,
+		},
+		"if one of two policies match with wildcard suffix, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"test-*"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo"},
+					}},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"test-*"},
+					}},
+				}},
+			},
+			expErr: false,
+		},
+		"if one of two policies match with wildcard prefix, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*-namespace"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"foo"},
+					}},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*-namespace"},
+					}},
+				}},
+			},
+			expErr: false,
+		},
+		"if both of two policies match all with empty, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: new(policyapi.CertificateRequestPolicySelectorNamespace)},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: new(policyapi.CertificateRequestPolicySelectorNamespace)},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: new(policyapi.CertificateRequestPolicySelectorNamespace)},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: new(policyapi.CertificateRequestPolicySelectorNamespace)},
+				}},
+			},
+			expErr: false,
+		},
+		"if both of two policies match all with wildcard, return policy": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+			},
+			expErr: false,
+		},
+		"if one policy matches with, other doesn't, return 1": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"test-namespace"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+			},
+			existingNamespace: testns,
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"test-namespace"},
+					}},
+				}},
+			},
+			expErr: false,
+		},
+		"if some polices match with a mix of exact, just wildcard and mix return policies": {
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"test-namespace"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"bar": "foo"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames:  []string{"test-namespace"},
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames:  []string{"namespace-test"},
+						MatchLabels: map[string]string{"bar": "foo"},
+					}},
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"test-namespace"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames: []string{"*"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+						MatchNames:  []string{"test-namespace"},
+						MatchLabels: map[string]string{"foo": "bar"},
+					}},
+				}},
+			},
+			existingNamespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace", Labels: map[string]string{"foo": "bar"}}},
+			expErr:            false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			builder := fakeclient.NewClientBuilder().
+				WithScheme(policyapi.GlobalScheme)
+			if test.existingNamespace != nil {
+				builder = builder.WithRuntimeObjects(test.existingNamespace)
+			}
+			fakeclient := builder.Build()
+
+			policies, err := SelectorNamespace(fakeclient)(context.TODO(), baseRequest, test.policies)
+			assert.Equal(t, err != nil, test.expErr, "%v", err)
+			if !test.expErr && !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
 				t.Errorf("unexpected policies returned:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
 			}
 		})

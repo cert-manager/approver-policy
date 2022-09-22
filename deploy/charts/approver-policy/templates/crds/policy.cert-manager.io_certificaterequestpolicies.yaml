@@ -280,13 +280,11 @@ spec:
                         additionalProperties:
                           type: string
                 selector:
-                  description: Selector is used for selecting over which CertificateRequests this CertificateRequestPolicy is appropriate for and so will used for its evaluation.
+                  description: Selector is used for selecting over which CertificateRequests this CertificateRequestPolicy is appropriate for and so will used for its approval evaluation.
                   type: object
-                  required:
-                    - issuerRef
                   properties:
                     issuerRef:
-                      description: "IssuerRef is used to match this CertificateRequestPolicy against processed CertificateRequests. This policy will only be evaluated against a CertificateRequest whose `spec.issuerRef` field matches `spec.selector.issuerRef`. CertificateRequests will not be processed on unmatched `issuerRef`, regardless of whether the requestor is bound by RBAC. Accepts wildcards \"*\". Nil values are equivalent to \"*\", \n The following value will match _all_ `issuerRefs`: ``` issuerRef: {} ``` \n Required field."
+                      description: "IssuerRef is used to match this CertificateRequestPolicy against processed CertificateRequests. This policy will only be evaluated against a CertificateRequest whose `spec.issuerRef` field matches `spec.selector.issuerRef`. CertificateRequests will not be processed on unmatched `issuerRef` if defined, regardless of whether the requestor is bound by RBAC. Accepts wildcards \"*\". Omitted values are equivalent to \"*\". \n The following value will match _all_ `issuerRefs`: ``` issuerRef: {} ```"
                       type: object
                       properties:
                         group:
@@ -298,6 +296,20 @@ spec:
                         name:
                           description: Name is the wildcard selector to match the `spec.issuerRef.name` field on requests. Accepts wildcards "*". An omitted field or value of `nil` matches all.
                           type: string
+                    namespace:
+                      description: Namespace is used to select on Namespaces, meaning the CertificateRequestPolicy will only match on CertificateRequests that have been created in matching selected Namespaces. If this field is omitted, all Namespaces are selected.
+                      type: object
+                      properties:
+                        matchLabels:
+                          description: MatchLabels is the set of Namespace labels that select on CertificateRequests which have been created in a Namespace matching the selector.
+                          type: object
+                          additionalProperties:
+                            type: string
+                        matchNames:
+                          description: MatchNames are the set of Namespace names that select on CertificateRequests that have been created in a matching Namespace. Accepts wildcards "*".
+                          type: array
+                          items:
+                            type: string
             status:
               description: CertificateRequestPolicyStatus defines the observed state of the CertificateRequestPolicy.
               type: object

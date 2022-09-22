@@ -23,6 +23,8 @@ import (
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	authzv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -60,6 +62,13 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 
 	for _, policy := range policies {
 		issRefSel := policy.Spec.Selector.IssuerRef
+		// If the issuerRef selector is nil, we match the policy and continue
+		// early.
+		if issRefSel == nil {
+			matchingPolicies = append(matchingPolicies, policy)
+			continue
+		}
+
 		issRef := cr.Spec.IssuerRef
 
 		if issRefSel.Name != nil && !util.WildcardMatches(*issRefSel.Name, issRef.Name) {
@@ -75,6 +84,81 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 	}
 
 	return matchingPolicies, nil
+}
+
+// SelectorNamespace is a Predicate that returns the subset of given policies
+// that have an `spec.selector.namespace` matching the `metadata.namespace` of
+// the request. SelectorNamespace will match with `namespace.matchNames` on
+// namespaces using wilcards "*". Empty selector is equivalent to "*" and will
+// match on any Namespace.
+func SelectorNamespace(lister client.Reader) Predicate {
+	return func(ctx context.Context, request *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+		var matchingPolicies []policyapi.CertificateRequestPolicy
+
+		// namespaceLabels are the labels of the namespace the request is in. We
+		// use a pointer here so we can lazily fetch the namespace as necessary.
+		var namespaceLabels *map[string]string
+
+		for _, policy := range policies {
+			nsSel := policy.Spec.Selector.Namespace
+
+			// Namespace Selector is nil so we always match.
+			if nsSel == nil {
+				matchingPolicies = append(matchingPolicies, policy)
+				continue
+			}
+
+			// (matched ref 1): If no strings are in matchNames, then we mark as
+			// matched here. This is to ensure the `matched` bool is `true` for the
+			// condition later on.
+			matched := len(nsSel.MatchNames) == 0
+
+			// Match by name.
+			for _, matchName := range nsSel.MatchNames {
+				if util.WildcardMatches(matchName, request.Namespace) {
+					matched = true
+					break
+				}
+			}
+
+			// (matched ref 2): If we haven't matched here then we can continue to
+			// the next policy early, and not bother checking the label selector.
+			// `matched` will be true if:
+			// 1. we had matchNames defined and they matched, or
+			// 2. we didn't define any matchNames and so `matched` was already `true`
+			//    (from matched ref 1).
+			if !matched {
+				continue
+			}
+
+			// Match by Label Selector.
+			if nsSel.MatchLabels != nil {
+
+				if namespaceLabels == nil {
+					var namespace corev1.Namespace
+					if err := lister.Get(ctx, client.ObjectKey{Name: request.Namespace}, &namespace); err != nil {
+						return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
+					}
+					namespaceLabels = &namespace.Labels
+				}
+
+				selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+					MatchLabels: nsSel.MatchLabels,
+				})
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse namespace label selector: %w", err)
+				}
+				// If the selector doesn't match, then we continue to the next policy.
+				if !selector.Matches(labels.Set(*namespaceLabels)) {
+					continue
+				}
+			}
+
+			matchingPolicies = append(matchingPolicies, policy)
+		}
+
+		return matchingPolicies, nil
+	}
 }
 
 // RBACBoundPolicies is a Predicate that returns the subset of
