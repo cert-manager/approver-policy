@@ -100,7 +100,7 @@ $(BINDIR)/controller-gen:
 	cd hack/tools && go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 $(BINDIR)/ginkgo:
-	cd hack/tools && go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
+	cd hack/tools && go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/v2/ginkgo
 
 $(BINDIR)/kind:
 	cd hack/tools && go build -o $(BINDIR)/kind sigs.k8s.io/kind
