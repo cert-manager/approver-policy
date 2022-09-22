@@ -6,16 +6,16 @@ require (
 	github.com/cert-manager/cert-manager v1.9.1
 	github.com/go-logr/logr v1.2.3
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.20.0
+	github.com/onsi/gomega v1.20.1
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
-	k8s.io/api v0.25.0
+	k8s.io/api v0.25.2
 	k8s.io/apiextensions-apiserver v0.24.4
-	k8s.io/apimachinery v0.25.0
+	k8s.io/apimachinery v0.25.2
 	k8s.io/cli-runtime v0.25.0
-	k8s.io/client-go v0.25.0
-	k8s.io/component-base v0.24.4
+	k8s.io/client-go v0.25.2
+	k8s.io/component-base v0.25.2
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/utils v0.0.0-20220812165043-ad590609e2e5
 	sigs.k8s.io/controller-runtime v0.12.3
@@ -36,7 +36,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
-	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.4 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
@@ -55,7 +54,6 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -79,16 +77,8 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
-	go.opentelemetry.io/contrib v1.9.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.34.0 // indirect
 	go.opentelemetry.io/otel v1.9.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp v0.20.0 // indirect
-	go.opentelemetry.io/otel/metric v0.31.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.9.0 // indirect
-	go.opentelemetry.io/otel/sdk/export/metric v0.28.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v0.31.0 // indirect
 	go.opentelemetry.io/otel/trace v1.9.0 // indirect
-	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.starlark.net v0.0.0-20220816155156-cfacd8902214 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
