@@ -29,18 +29,17 @@ import (
 )
 
 // SchemeGroupVersion is group version used to register these objects
+// +k8s:deepcopy-gen=false
 var SchemeGroupVersion = schema.GroupVersion{Group: policy.GroupName, Version: "v1alpha1"}
 
-// Resource takes an unqualified resource and returns a Group qualified GroupResource
-func Resource(resource string) schema.GroupResource {
-	return SchemeGroupVersion.WithResource(resource).GroupResource()
-}
-
 var (
+	// +k8s:deepcopy-gen=false
 	SchemeBuilder      runtime.SchemeBuilder
 	localSchemeBuilder = &SchemeBuilder
-	AddToScheme        = localSchemeBuilder.AddToScheme
+	// +k8s:deepcopy-gen=false
+	AddToScheme = localSchemeBuilder.AddToScheme
 
+	// +k8s:deepcopy-gen=false
 	GlobalScheme *runtime.Scheme
 )
 
@@ -63,6 +62,7 @@ func init() {
 }
 
 // Adds the list of known types to api.Scheme.
+// +k8s:deepcopy-gen=false
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&CertificateRequestPolicy{},

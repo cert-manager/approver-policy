@@ -411,5 +411,6 @@ const (
 	// CertificateRequestPolicy has successfully loaded the policy, and all
 	// configuration including plugin options are accepted and ready for
 	// evaluating CertificateRequests.
+	// +k8s:deepcopy-gen=false
 	CertificateRequestPolicyConditionReady CertificateRequestPolicyConditionType = "Ready"
 )
