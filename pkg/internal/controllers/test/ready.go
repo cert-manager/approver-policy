@@ -235,7 +235,7 @@ var _ = Context("Ready", func() {
 		}
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
-		waitForReady(ctx, env.AdminClient, policy.Name, "3s", "100ms")
+		waitForReady(ctx, env.AdminClient, policy.Name)
 	})
 
 	It("if reconcilers return ready should set ready. After enqueue event, should update to false if next reconcile returns false", func() {
@@ -350,7 +350,7 @@ var _ = Context("Ready", func() {
 		Consistently(func() bool {
 			Eventually(func() error {
 				return env.AdminClient.Get(ctx, client.ObjectKeyFromObject(&policy), &policy)
-			}).Should(BeNil())
+			}, "10ms", "10s").Should(BeNil())
 			for _, condition := range policy.Status.Conditions {
 				if condition.ObservedGeneration != policy.Generation {
 					return true
@@ -360,6 +360,6 @@ var _ = Context("Ready", func() {
 				}
 			}
 			return false
-		}, "3s").Should(BeFalse(), "expected the condition to maintain not-ready")
+		}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeFalse(), "expected the condition to maintain not-ready")
 	})
 })

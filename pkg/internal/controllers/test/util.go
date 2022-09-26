@@ -19,6 +19,7 @@ package test
 import (
 	"context"
 	"crypto/x509"
+	"time"
 
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -44,9 +45,9 @@ func waitForApproval(ctx context.Context, cl client.Client, ns, name string) {
 		cr := new(cmapi.CertificateRequest)
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)
-		}).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
 		return apiutil.CertificateRequestIsApproved(cr)
-	}).Should(BeTrue(), "expected approval")
+	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeTrue(), "expected approval")
 }
 
 // waitForDenial will wait for the CertificateRequest, given by namespace and
@@ -56,9 +57,9 @@ func waitForDenial(ctx context.Context, cl client.Client, ns, name string) {
 		cr := new(cmapi.CertificateRequest)
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)
-		}).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
 		return apiutil.CertificateRequestIsDenied(cr)
-	}).Should(BeTrue(), "expected denial")
+	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeTrue(), "expected denial")
 }
 
 // waitForNoApproveOrDeny will wait a reasonable amount of time (3 seconds) for
@@ -68,20 +69,20 @@ func waitForNoApproveOrDeny(ctx context.Context, cl client.Client, ns, name stri
 		cr := new(cmapi.CertificateRequest)
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)
-		}).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
 		return apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr)
-	}, "3s").Should(BeFalse(), "expected neither approved not denied")
+	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeFalse(), "expected neither approved not denied")
 }
 
 // waitForReady will wait for the CertificateRequestPolicy, given by name, to
 // become in an Ready state. Will ensure the Ready condition has the same
 // observed Generation as the object's Generation.
-func waitForReady(ctx context.Context, cl client.Client, name string, intervals ...interface{}) {
+func waitForReady(ctx context.Context, cl client.Client, name string) {
 	Eventually(func() bool {
 		var policy policyapi.CertificateRequestPolicy
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Name: name}, &policy)
-		}).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
 		for _, condition := range policy.Status.Conditions {
 			if condition.ObservedGeneration != policy.Generation {
 				return false
@@ -91,18 +92,18 @@ func waitForReady(ctx context.Context, cl client.Client, name string, intervals 
 			}
 		}
 		return false
-	}, intervals...).Should(BeTrue(), "expected policy to become ready")
+	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeTrue(), "expected policy to become ready")
 }
 
 // waitForNotReady will wait for the CertificateRequestPolicy, given by name,
 // become in an Not-Ready state. Will ensure the Ready condition has the same
 // observed Generation as the object's Generation.
-func waitForNotReady(ctx context.Context, cl client.Client, name string, intervals ...interface{}) {
+func waitForNotReady(ctx context.Context, cl client.Client, name string) {
 	Eventually(func() bool {
 		var policy policyapi.CertificateRequestPolicy
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Name: name}, &policy)
-		}).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
 		for _, condition := range policy.Status.Conditions {
 			if condition.ObservedGeneration != policy.Generation {
 				return false
@@ -112,7 +113,7 @@ func waitForNotReady(ctx context.Context, cl client.Client, name string, interva
 			}
 		}
 		return false
-	}, intervals...).Should(BeTrue(), "expected policy to become not-ready")
+	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeTrue(), "expected policy to become not-ready")
 }
 
 // startControllers will create a test Namespace and start the approver-policy

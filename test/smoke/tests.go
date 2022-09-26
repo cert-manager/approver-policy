@@ -19,6 +19,7 @@ package smoke
 import (
 	"context"
 	"crypto/x509"
+	"time"
 
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -95,7 +96,7 @@ var _ = Describe("Smoke", func() {
 				}
 			}
 			return false
-		}, "5s", "100ms").Should(BeTrue())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeTrue())
 
 		By("Binding all authenticated users to the test CertificateRequestPolicy")
 		role := rbacv1.Role{
@@ -141,7 +142,7 @@ var _ = Describe("Smoke", func() {
 		Eventually(func() bool {
 			Expect(cl.Get(ctx, client.ObjectKey{Namespace: namespace.Name, Name: certificateRequest.Name}, &certificateRequest)).NotTo(HaveOccurred())
 			return apiutil.CertificateRequestIsDenied(&certificateRequest)
-		}, "5s", "100ms").Should(BeTrue())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeTrue())
 		Expect(cl.Delete(ctx, &certificateRequest)).NotTo(HaveOccurred())
 
 		By("Creating CertificateRequest that passes policy")
@@ -164,7 +165,7 @@ var _ = Describe("Smoke", func() {
 		Eventually(func() bool {
 			Expect(cl.Get(ctx, client.ObjectKey{Namespace: namespace.Name, Name: certificateRequest.Name}, &certificateRequest)).NotTo(HaveOccurred())
 			return apiutil.CertificateRequestIsApproved(&certificateRequest)
-		}, "5s", "100ms").Should(BeTrue())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeTrue())
 
 		By("Cleaning up test resources")
 		Expect(cl.Delete(ctx, &namespace)).NotTo(HaveOccurred())
