@@ -18,16 +18,12 @@ package env
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	webhooktesting "github.com/cert-manager/cert-manager/cmd/webhook/app/testing"
-	"github.com/onsi/ginkgo"
-	ginkgoconfig "github.com/onsi/ginkgo/config"
-	"github.com/onsi/ginkgo/reporters"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -43,13 +39,6 @@ const (
 )
 
 func init() {
-	// Turn on verbose by default to get spec names
-	ginkgoconfig.DefaultReporterConfig.Verbose = true
-	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
-	ginkgoconfig.GinkgoConfig.EmitSpecProgress = true
-	// Randomize specs as well as suites
-	ginkgoconfig.GinkgoConfig.RandomizeAllSpecs = true
-
 	wait.ForeverTestTimeout = time.Second * 60
 
 	// Since we are going to be creating CRDs in the API server, we need to
@@ -83,12 +72,7 @@ func RunSuite(t *testing.T, suiteName, artifactsDir string) {
 		artifactsDir = path
 	}
 
-	junitReporter := reporters.NewJUnitReporter(filepath.Join(
-		artifactsDir,
-		fmt.Sprintf("junit-go-%s.xml", suiteName),
-	))
-
-	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, suiteName, []ginkgo.Reporter{junitReporter})
+	ginkgo.RunSpecs(t, suiteName)
 }
 
 // RunControlPlane runs a local API server and makes it ready for running tests
