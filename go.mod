@@ -3,10 +3,10 @@ module github.com/cert-manager/approver-policy
 go 1.19
 
 require (
-	github.com/cert-manager/cert-manager v1.9.1
+	github.com/cert-manager/cert-manager v1.10.0
 	github.com/go-logr/logr v1.2.3
-	github.com/onsi/ginkgo/v2 v2.1.6
-	github.com/onsi/gomega v1.20.1
+	github.com/onsi/ginkgo/v2 v2.2.0
+	github.com/onsi/gomega v1.20.2
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
@@ -90,10 +90,10 @@ require (
 	go.opentelemetry.io/otel/trace v1.9.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.starlark.net v0.0.0-20220817180228-f738f5508c12 // indirect
-	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0 // indirect
+	golang.org/x/crypto v0.0.0-20220924013350-4ba4fb4dd9e7 // indirect
 	golang.org/x/net v0.0.0-20220921203646-d300de134e69 // indirect
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/sync v0.0.0-20220923202941-7f9b1623fab7 // indirect
 	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
 	golang.org/x/term v0.0.0-20220919170432-7a66f970e087 // indirect
 	golang.org/x/text v0.3.7 // indirect
