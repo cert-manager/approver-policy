@@ -31,7 +31,7 @@ A Helm chart for cert-manager-approver-policy
 | app.readinessProbe.port | int | `6060` | Container port to expose approver-policy HTTP readiness probe on default network interface. |
 | app.webhook.certificateDir | string | `"/tmp"` | Directory to read and store the webhook TLS certificate key pair. |
 | app.webhook.host | string | `"0.0.0.0"` | Host that the webhook listens on. |
-| app.webhook.port | int | `6443` | Port that the webhook listens on. |
+| app.webhook.port | int | `10250` | Port that the webhook listens on. |
 | app.webhook.service | object | `{"type":"ClusterIP"}` | Type of Kubernetes Service used by the Webhook |
 | app.webhook.timeoutSeconds | int | `5` | Timeout of webhook HTTP request. |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on Deployment. |

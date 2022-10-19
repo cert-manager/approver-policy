@@ -53,7 +53,7 @@ app:
     # -- Host that the webhook listens on.
     host: 0.0.0.0
     # -- Port that the webhook listens on.
-    port: 6443
+    port: 10250
     # -- Timeout of webhook HTTP request.
     timeoutSeconds: 5
     # -- Directory to read and store the webhook TLS certificate key pair.
