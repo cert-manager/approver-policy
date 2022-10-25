@@ -61,6 +61,14 @@ app:
     # -- Type of Kubernetes Service used by the Webhook
     service:
       type: ClusterIP
+    # -- Boolean value, default do not deploy webhook to hostNetwork
+    hostNetwork: false
+    # -- May need to be changed if hostNetwork is true
+    dnsPolicy: ClusterFirst
+    # -- Options to affect scheduling
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
 
 # -- Optional extra volume mounts. Useful for mounting custom root CAs
 volumeMounts: []
