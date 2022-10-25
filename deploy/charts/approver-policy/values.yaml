@@ -73,7 +73,6 @@ volumes: []
 #  secret:
 #    secretName: my-secret
 
-
 resources: {}
   # -- Kubernetes pod resource limits for approver-policy.
   # limits:

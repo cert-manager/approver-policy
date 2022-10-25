@@ -42,7 +42,6 @@ spec:
 
           - --metrics-bind-address=:{{.Values.app.metrics.port}}
           - --readiness-probe-bind-address=:{{.Values.app.readinessProbe.port}}
-
           - --webhook-host={{.Values.app.webhook.host}}
           - --webhook-port={{.Values.app.webhook.port}}
           - --webhook-service-name={{ include "cert-manager-approver-policy.name" . }}
@@ -55,7 +54,7 @@ spec:
         {{- end }}
 
         resources:
-          {{- toYaml .Values.resources | indent 12 }}
+{{ toYaml .Values.resources | indent 10 }}
 
       {{- if .Values.volumes }}
       volumes:
