@@ -22,3 +22,24 @@ signed by cert-manager.
 Please follow the documentation at
 [cert-manager.io](https://cert-manager.io/docs/usage/approver-policy/) for
 installing and using approver-policy.
+
+
+## Release Process
+
+Create a Git tag with a tagname that has a `v` prefix and push it to GitHub.
+This will trigger the [release workflow].
+
+1. Create and push a Git tag
+
+```sh
+export VERSION=v0.5.0-alpha.0
+git tag --annotate --message="Release ${VERSION}" "${VERSION}"
+git push origin "${VERSION}"
+```
+
+2. Wait for the [release workflow] to succeed.
+
+3. Visit the [releases page], edit the draft release, click "Generate release notes", and publish the release.
+
+[release workflow]: https://github.com/cert-manager/approver-policy/actions/workflows/release.yaml
+[releases page]: https://github.com/cert-manager/approver-policy/releases
