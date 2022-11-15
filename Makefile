@@ -128,8 +128,8 @@ $(BINDIR)/ginkgo:
 $(BINDIR)/kind:
 	cd hack/tools && go build -o $(BINDIR)/kind sigs.k8s.io/kind
 
-$(BINDIR)/helm:
-	curl -o $(BINDIR)/helm.tar.gz -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
+$(BINDIR)/helm: | $(BINDIR)
+	curl -o $(BINDIR)/helm.tar.gz -sSL "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
 	tar -C $(BINDIR) -xzf $(BINDIR)/helm.tar.gz
 	cp $(BINDIR)/$(OS)-$(ARCH)/helm $(BINDIR)/helm
 	rm -r $(BINDIR)/$(OS)-$(ARCH) $(BINDIR)/helm.tar.gz
