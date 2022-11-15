@@ -12,9 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The version of approver-policy
 VERSION ?= $(shell git describe --tags --always --dirty --match='v*' --abbrev=14)
+# The version of the approver-policy Helm chart (if different).
+# May be overridden for releases which only change the Helm chart sources.
+HELM_CHART_VERSION ?= $(VERSION)
 
 BINDIR ?= $(CURDIR)/bin
+# The directory containing intermediate and final build artifacts.
+BUILDDIR ?= build
+
 ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
@@ -27,6 +34,9 @@ IMAGE_TAG := $(VERSION)
 IMAGE := $(IMAGE_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/approver-policy" --repository.default-branch master --repository.path /
+
+# Allow target to create GitHub outputs when run via GitHub Actions
+GITHUB_OUTPUT ?= /dev/null
 
 .PHONY: help
 help: ## Display this help.
@@ -73,6 +83,18 @@ verify: test build ## Verify repo.
 .PHONY: image
 image: ## build docker image
 	docker build --tag ${IMAGE} --build-arg VERSION=$(VERSION) .
+
+helm_archive := $(BUILDDIR)/charts/cert-manager-approver-policy-$(HELM_CHART_VERSION).tgz
+$(helm_archive): $(BINDIR)/helm
+	$(BINDIR)/helm package deploy/charts/approver-policy \
+		--destination $(dir $@) \
+		--version $(HELM_CHART_VERSION) \
+		--app-version $(VERSION)
+	@echo path=$@ >> $(GITHUB_OUTPUT)
+
+.PHONY: helm-archive
+helm-archive: ## Build a Helm archive file
+helm-archive: $(helm_archive)
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy

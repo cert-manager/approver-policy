@@ -36,6 +36,9 @@ jobs:
     needs:
       - docker-image
     steps:
+      - uses: actions/checkout@v3
+      - id: create_helm_archive
+        run: make helm-archive
       - id: create_release
         uses: actions/create-release@v1
         env:
@@ -47,3 +50,11 @@ jobs:
           prerelease: true
           body: |
             Docker Image: `${{ env.IMAGE }}`
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.create_helm_archive.outputs.path }}
+          asset_name: cert-manager-approver-policy.helm-chart.tgz
+          asset_content_type: application/gzip
