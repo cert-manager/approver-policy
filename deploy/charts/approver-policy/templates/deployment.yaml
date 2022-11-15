@@ -21,7 +21,7 @@ spec:
       serviceAccountName: {{ include "cert-manager-approver-policy.name" . }}
       containers:
       - name: {{ include "cert-manager-approver-policy.name" . }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.app.webhook.port }}

@@ -12,17 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The version of approver-policy
+VERSION ?= $(shell git describe --tags --always --dirty --match='v*' --abbrev=14)
+# The version of the approver-policy Helm chart (if different).
+# May be overridden for releases which only change the Helm chart sources.
+HELM_CHART_VERSION ?= $(VERSION)
 
 BINDIR ?= $(CURDIR)/bin
+# The directory containing intermediate and final build artifacts.
+BUILDDIR ?= build
+
 ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
 HELM_VERSION ?= 3.10.0
 KUBEBUILDER_TOOLS_VERSION ?= 1.25.0
 K8S_CLUSTER_NAME ?= approver-policy
-IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
+IMAGE_REGISTRY ?= quay.io/jetstack
+IMAGE_NAME := cert-manager-approver-policy
+IMAGE_TAG := $(VERSION)
+IMAGE := $(IMAGE_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/approver-policy" --repository.default-branch master --repository.path /
+
+# Allow target to create GitHub outputs when run via GitHub Actions
+GITHUB_OUTPUT ?= /dev/null
 
 .PHONY: help
 help: ## Display this help.
@@ -66,12 +80,21 @@ build: $(BINDIR) ## Build manager binary.
 .PHONY: verify
 verify: test build ## Verify repo.
 
-# image will only build and store the image locally, targeted in OCI format.
-# To actually push an image to the public repo, replace the `--output` flag and
-# arguments to `--push`.
 .PHONY: image
-image: ## build docker image targeting all supported platforms
-	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-approver-policy:v0.4.0 --output type=local,dest=./bin/cert-manager-approver-policy .
+image: ## build docker image
+	docker build --tag ${IMAGE} --build-arg VERSION=$(VERSION) .
+
+helm_archive := $(BUILDDIR)/charts/cert-manager-approver-policy-$(HELM_CHART_VERSION).tgz
+$(helm_archive): $(BINDIR)/helm
+	$(BINDIR)/helm package deploy/charts/approver-policy \
+		--destination $(dir $@) \
+		--version $(HELM_CHART_VERSION) \
+		--app-version $(VERSION)
+	@echo path=$@ >> $(GITHUB_OUTPUT)
+
+.PHONY: helm-archive
+helm-archive: ## Build a Helm archive file
+helm-archive: $(helm_archive)
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy
@@ -105,8 +128,8 @@ $(BINDIR)/ginkgo:
 $(BINDIR)/kind:
 	cd hack/tools && go build -o $(BINDIR)/kind sigs.k8s.io/kind
 
-$(BINDIR)/helm:
-	curl -o $(BINDIR)/helm.tar.gz -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
+$(BINDIR)/helm: | $(BINDIR)
+	curl -o $(BINDIR)/helm.tar.gz -sSL "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
 	tar -C $(BINDIR) -xzf $(BINDIR)/helm.tar.gz
 	cp $(BINDIR)/$(OS)-$(ARCH)/helm $(BINDIR)/helm
 	rm -r $(BINDIR)/$(OS)-$(ARCH) $(BINDIR)/helm.tar.gz

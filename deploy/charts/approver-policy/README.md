@@ -36,7 +36,7 @@ A Helm chart for cert-manager-approver-policy
 | app.webhook.timeoutSeconds | int | `5` | Timeout of webhook HTTP request. |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on Deployment. |
 | image.repository | string | `"quay.io/jetstack/cert-manager-approver-policy"` | Target image repository. |
-| image.tag | string | `"v0.4.0"` | Target image version tag. |
+| image.tag | string | `""` | Target image version tag (if empty, Chart AppVersion will be used) |
 | imagePullSecrets | list | `[]` | Optional secrets used for pulling the approver-policy container image. |
 | replicaCount | int | `1` | Number of replicas of approver-policy to run. |
 | resources | object | `{}` |  |

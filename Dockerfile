@@ -27,8 +27,9 @@ COPY pkg/ pkg/
 
 RUN go mod download
 
+ARG VERSION
 # Build
-RUN make build
+RUN make build VERSION=${VERSION}
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
