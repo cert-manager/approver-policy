@@ -19,6 +19,7 @@ package test
 import (
 	"context"
 	"crypto/x509"
+	"fmt"
 	"time"
 
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
@@ -28,7 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog/v2/ktesting"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -122,48 +123,94 @@ func waitForNotReady(ctx context.Context, cl client.Client, name string) {
 // created namespace as well as a shutdown function to stop the controllers is
 // returned.
 func startControllers(registry *registry.Registry) (context.Context, func(), corev1.Namespace) {
-	ctx, cancel := context.WithCancel(context.Background())
+	// A logr which will print log messages interspersed with the Ginkgo
+	// progress messages to make it easy to understand the context of the log
+	// messages.
+	// The logger is also added to the context so that it will be used by code
+	// that uses logr.FromContext.
+	log, ctx := ktesting.NewTestContext(GinkgoT())
+	ctx, cancel := context.WithCancel(ctx)
 
 	namespace := corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-policy-",
 		},
 	}
+	By("Creating Policy Namespace: " + namespace.Name)
 	Expect(env.AdminClient.Create(ctx, &namespace)).NotTo(HaveOccurred())
-	By("Created Policy Namespace: " + namespace.Name)
 
+	// A channel which will be closed after the controller-manager stops and
+	// just before its goroutine exits.
+	mgrStopped := make(chan struct{})
+
+	// shutdown stops the controller-manager and then cleans up most of the
+	// resources from previous tests.
+	// NB: The test namespace can not be deleted because envtest does not run
+	// the garbage collection controller which is required to empty the
+	// namespace before it is deleted. See:
+	// * https://github.com/kubernetes-sigs/controller-runtime/issues/880
+	// * https://book.kubebuilder.io/reference/envtest.html#testing-considerations
 	shutdown := func() {
-		By("Deleting all CertificateRequests after test")
-		env.AdminClient.DeleteAllOf(ctx, new(cmapi.CertificateRequest))
-
-		By("Deleting all CertificateRequestPolicies after test")
-		env.AdminClient.DeleteAllOf(ctx, new(policyapi.CertificateRequestPolicy))
-
-		By("Deleting Policy Namespace: " + namespace.Name)
-		env.AdminClient.Delete(ctx, &namespace)
-
+		// Cancel the context and wait for the manager goroutine to exit before
+		// cleaning up the test resources to avoid distracting messages from the
+		// controllers when they attempt to re-reconcile the deleted resources.
 		cancel()
+		<-mgrStopped
+
+		// A new context for use by the cleanup clients because the previous
+		// context has already been cancelled.
+		ctx := context.Background()
+
+		By("Waiting for all CertificateRequest resources to be deleted")
+		{
+			// DeleteAllOf can't be used to delete resources in all namespaces,
+			// but List does return resources from all namespaces by default,
+			// so we delete each item in that list.
+			// https://github.com/kubernetes-sigs/controller-runtime/issues/1842
+			var l cmapi.CertificateRequestList
+			Expect(env.AdminClient.List(ctx, &l)).To(Succeed())
+			for i, o := range l.Items {
+				By(fmt.Sprintf("Deleting: %s", client.ObjectKeyFromObject(&o).String()))
+				Expect(env.AdminClient.Delete(ctx, &l.Items[i])).To(Succeed())
+			}
+		}
+
+		By("Waiting for all CertificateRequestPolicy resources to be deleted")
+		// CertificateRequestPolicy is a cluster-scoped resource, so DeleteAllOf
+		// can be used in this case.
+		Expect(
+			client.IgnoreNotFound(
+				env.AdminClient.DeleteAllOf(ctx, new(policyapi.CertificateRequestPolicy)),
+			),
+		).To(Succeed())
 	}
 
-	log := klogr.New().WithName("testing")
 	mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
-		Scheme:                        policyapi.GlobalScheme,
-		LeaderElection:                true,
-		MetricsBindAddress:            "0",
-		LeaderElectionNamespace:       namespace.Name,
+		Scheme:             policyapi.GlobalScheme,
+		LeaderElection:     true,
+		MetricsBindAddress: "0",
+		// Use the default namespace for leader election lock to further avoid
+		// the possibility of running parallel controller-managers in case a
+		// previous controller-manager is somehow still running.
+		LeaderElectionNamespace:       "default",
 		LeaderElectionID:              "cert-manager-approver-policy",
 		LeaderElectionReleaseOnCancel: true,
-		Logger:                        log,
+		Logger:                        log.WithName("manager"),
 	})
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(controllers.AddControllers(ctx, controllers.Options{
-		Log: log, Manager: mgr,
-		Evaluators: registry.Evaluators(), Reconcilers: registry.Reconcilers(),
+		Log:         log.WithName("controllers"),
+		Manager:     mgr,
+		Evaluators:  registry.Evaluators(),
+		Reconcilers: registry.Reconcilers(),
 	})).NotTo(HaveOccurred())
 
 	By("Running Policy controller")
-	go mgr.Start(ctx)
+	go func() {
+		Expect(mgr.Start(ctx)).To(Succeed())
+		close(mgrStopped)
+	}()
 
 	By("Waiting for Leader Election")
 	<-mgr.Elected()
