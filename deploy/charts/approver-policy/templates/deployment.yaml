@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "cert-manager-approver-policy.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
 {{ include "cert-manager-approver-policy.labels" . | indent 4 }}
 spec:
