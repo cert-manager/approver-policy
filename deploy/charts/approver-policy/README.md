@@ -39,6 +39,7 @@ A Helm chart for cert-manager-approver-policy
 | app.webhook.service | object | `{"type":"ClusterIP"}` | Type of Kubernetes Service used by the Webhook |
 | app.webhook.timeoutSeconds | int | `5` | Timeout of webhook HTTP request. |
 | app.webhook.tolerations | list | `[]` | https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
+| commonLabels | object | `{}` | Optional allow custom labels to be placed on resources |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on Deployment. |
 | image.repository | string | `"quay.io/jetstack/cert-manager-approver-policy"` | Target image repository. |
 | image.tag | string | `""` | Target image version tag (if empty, Chart AppVersion will be used) |
