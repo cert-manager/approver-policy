@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "cert-manager-approver-policy.name" . }}-metrics
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-approver-policy.name" . }}
 {{ include "cert-manager-approver-policy.labels" . | indent 4 }}

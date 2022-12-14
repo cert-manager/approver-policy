@@ -27,12 +27,13 @@ COPY pkg/ pkg/
 
 RUN go mod download
 
+ARG VERSION
 # Build
-RUN make build
+RUN make build VERSION=${VERSION}
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static@sha256:bca3c203cdb36f5914ab8568e4c25165643ea9b711b41a8a58b42c80a51ed609
+FROM gcr.io/distroless/static@sha256:5759d194607e472ff80fff5833442d3991dd89b219c96552837a2c8f74058617
 LABEL description="cert-manager Approver based on CertificateRequestPolicy CRD policies"
 
 WORKDIR /

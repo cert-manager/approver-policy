@@ -3,6 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "cert-manager-approver-policy.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-approver-policy.name" . }}
 {{ include "cert-manager-approver-policy.labels" . | indent 4 }}
