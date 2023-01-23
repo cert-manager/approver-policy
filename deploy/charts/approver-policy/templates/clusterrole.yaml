@@ -11,7 +11,7 @@ rules:
 
 - apiGroups: ["policy.cert-manager.io"]
   resources: ["certificaterequestpolicies/status"]
-  verbs: ["update"]
+  verbs: ["patch"]
 
 - apiGroups: ["cert-manager.io"]
   resources: ["certificaterequests"]
@@ -19,7 +19,7 @@ rules:
 
 - apiGroups: ["cert-manager.io"]
   resources: ["certificaterequests/status"]
-  verbs: ["update"]
+  verbs: ["patch"]
 
 - apiGroups: ["cert-manager.io"]
   resources: ["signers"]

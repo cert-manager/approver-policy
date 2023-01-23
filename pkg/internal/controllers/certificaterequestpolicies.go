@@ -23,12 +23,13 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -39,6 +40,7 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/internal/controllers/internal/ssa_client"
 )
 
 // certificaterequestpolicies is a controller-runtime Reconciler which handles
@@ -138,12 +140,35 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 // This function will call each approver Reconciler to build the Ready state of
 // CertificateRequestPolicies.
 func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	result, patch, resultErr := c.reconcileStatusPatch(ctx, req)
+	if patch != nil {
+		con, patch, err := ssa_client.GenerateCertificateRequestPolicyStatusPatch(req.Name, req.Namespace, patch)
+		if err != nil {
+			err = fmt.Errorf("failed to generate connection patch: %w", err)
+			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
+		}
+
+		if err := c.client.Status().Patch(ctx, con, patch, &client.SubResourcePatchOptions{
+			PatchOptions: client.PatchOptions{
+				FieldManager: "approver-policy",
+				Force:        pointer.Bool(true),
+			},
+		}); err != nil {
+			err = fmt.Errorf("failed to apply connection patch: %w", err)
+			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
+		}
+	}
+
+	return result, resultErr
+}
+
+func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, req ctrl.Request) (ctrl.Result, *policyapi.CertificateRequestPolicyStatus, error) {
 	log := c.log.WithValues("name", req.NamespacedName.Name)
 	log.V(2).Info("syncing")
 
 	policy := new(policyapi.CertificateRequestPolicy)
 	if err := c.lister.Get(ctx, req.NamespacedName, policy); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return reconcile.Result{}, nil, client.IgnoreNotFound(err)
 	}
 
 	var (
@@ -158,8 +183,7 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 	for _, reconciler := range c.reconcilers {
 		response, err := reconciler.Ready(ctx, policy)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("failed to evaluate ready state of CertificateRequestPolicy %q: %w",
-				req.NamespacedName.Name, err)
+			return reconcile.Result{}, nil, fmt.Errorf("failed to evaluate ready state of CertificateRequestPolicy %q: %w", req.NamespacedName.Name, err)
 		}
 
 		// If any response is not ready, set ready to false.
@@ -181,45 +205,45 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 
 	log = log.WithValues("ready", ready)
 
-	var (
-		status    corev1.ConditionStatus
-		eventtype string
-		reason    string
-		message   string
+	policyPatch := &policyapi.CertificateRequestPolicyStatus{}
+
+	if !ready {
+		log.V(2).Info("NOT ready for approval evaluation", "errors", el.ToAggregate())
+
+		message := fmt.Sprintf("CertificateRequestPolicy is not ready for approval evaluation: %s", el.ToAggregate())
+		c.recorder.Event(policy, corev1.EventTypeWarning, "NotReady", message)
+
+		c.setCertificateRequestPolicyCondition(
+			&policyPatch.Conditions,
+			policy.Generation,
+			policyapi.CertificateRequestPolicyCondition{
+				Type:    policyapi.CertificateRequestPolicyConditionReady,
+				Status:  corev1.ConditionFalse,
+				Reason:  "NotReady",
+				Message: message,
+			},
+		)
+
+		return result, policyPatch, nil
+	}
+
+	log.V(2).Info("ready for approval evaluation")
+
+	message := "CertificateRequestPolicy is ready for approval evaluation"
+	c.recorder.Event(policy, corev1.EventTypeNormal, "Ready", message)
+
+	c.setCertificateRequestPolicyCondition(
+		&policyPatch.Conditions,
+		policy.Generation,
+		policyapi.CertificateRequestPolicyCondition{
+			Type:    policyapi.CertificateRequestPolicyConditionReady,
+			Status:  corev1.ConditionTrue,
+			Reason:  "Ready",
+			Message: message,
+		},
 	)
 
-	if ready {
-		status = corev1.ConditionTrue
-		eventtype = corev1.EventTypeNormal
-		reason = "Ready"
-		message = "CertificateRequestPolicy is ready for approval evaluation"
-	} else {
-		status = corev1.ConditionFalse
-		eventtype = corev1.EventTypeWarning
-		reason = "NotReady"
-		message = "CertificateRequestPolicy is not ready for approval evaluation"
-		if len(el) > 0 {
-			message = fmt.Sprintf("%s: %s", message, el.ToAggregate().Error())
-			log = log.WithValues("errors", el.ToAggregate().Error())
-		}
-	}
-
-	needsUpdate := c.setCertificateRequestPolicyCondition(policy, policyapi.CertificateRequestPolicyCondition{
-		Type:    policyapi.CertificateRequestPolicyConditionReady,
-		Status:  status,
-		Reason:  reason,
-		Message: message,
-	})
-
-	log.V(2).Info("successfully synced")
-	c.recorder.Event(policy, eventtype, reason, message)
-
-	if needsUpdate {
-		log.Info("updating ready condition status")
-		return result, c.client.Status().Update(ctx, policy)
-	}
-
-	return result, nil
+	return result, policyPatch, nil
 }
 
 // setCertificateRequestPolicyCondition updates the CertificateRequestPolicy
@@ -231,32 +255,31 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 // Type and Status already exists.
 // Returns true if the condition has been updated or an existing condition has
 // been updated. Returns false otherwise.
-func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(policy *policyapi.CertificateRequestPolicy, condition policyapi.CertificateRequestPolicyCondition) bool {
+func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(
+	conditions *[]policyapi.CertificateRequestPolicyCondition,
+	generation int64,
+	condition policyapi.CertificateRequestPolicyCondition,
+) {
 	condition.LastTransitionTime = &metav1.Time{Time: c.clock.Now()}
-	condition.ObservedGeneration = policy.Generation
+	condition.ObservedGeneration = generation
 
-	var updatedConditions []policyapi.CertificateRequestPolicyCondition
-	for _, existingCondition := range policy.Status.Conditions {
-		// Ignore any existing conditions which don't match the incoming type and
-		// add back to set.
+	for idx, existingCondition := range *conditions {
+		// Skip unrelated conditions
 		if existingCondition.Type != condition.Type {
-			updatedConditions = append(updatedConditions, existingCondition)
 			continue
 		}
 
-		// If the status is the same, don't modify the last transaction time.
+		// If this update doesn't contain a state transition, we don't update
+		// the conditions LastTransitionTime to Now()
 		if existingCondition.Status == condition.Status {
 			condition.LastTransitionTime = existingCondition.LastTransitionTime
 		}
 
-		// If the condition hasn't changed the nreturn false early, signalling that
-		// an update is not required.
-		if apiequality.Semantic.DeepEqual(existingCondition, condition) {
-			return false
-		}
+		(*conditions)[idx] = condition
+		return
 	}
 
-	policy.Status.Conditions = append(updatedConditions, condition)
-
-	return true
+	// If we've not found an existing condition of this type, we simply insert
+	// the new condition into the slice.
+	*conditions = append(*conditions, condition)
 }

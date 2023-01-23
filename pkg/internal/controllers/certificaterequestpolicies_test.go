@@ -32,7 +32,6 @@ import (
 	"k8s.io/klog/v2/klogr"
 	fakeclock "k8s.io/utils/clock/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -56,16 +55,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 		existingObjects []runtime.Object
 		reconcilers     []approver.Reconciler
 
-		expResult  ctrl.Result
-		expError   bool
-		expObjects []runtime.Object
-		expEvent   string
+		expResult      ctrl.Result
+		expError       bool
+		expStatusPatch *policyapi.CertificateRequestPolicyStatus
+		expEvent       string
 	}{
 		"if policy doesn't exist, no nothing": {
 			existingObjects: nil,
 			expResult:       ctrl.Result{},
 			expError:        false,
-			expObjects:      nil,
+			expStatusPatch:  nil,
 			expEvent:        "",
 		},
 		"if no reconcilers defined, always update ready status": {
@@ -75,18 +74,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			}},
 			expResult: ctrl.Result{},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if reconciler returns ready response, update to ready": {
@@ -99,18 +96,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			})},
 			expResult: ctrl.Result{},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if reconciler returns not ready response, update to ready": {
@@ -123,18 +118,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			})},
 			expResult: ctrl.Result{},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Warning NotReady CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
 		},
 		"if reconciler returns error, return error": {
@@ -145,13 +138,10 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			reconcilers: []approver.Reconciler{fakeapprover.NewFakeReconciler().WithReady(func(_ context.Context, _ *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 				return approver.ReconcilerReadyResponse{}, errors.New("this is an error")
 			})},
-			expResult: ctrl.Result{},
-			expError:  true,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-			}},
-			expEvent: "",
+			expResult:      ctrl.Result{},
+			expError:       true,
+			expStatusPatch: nil,
+			expEvent:       "",
 		},
 		"if reconciler returns ready response with requeue, update to ready and mark requeue": {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
@@ -163,18 +153,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			})},
 			expResult: ctrl.Result{Requeue: true},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if reconciler returns ready response with requeue and requeueAfter, update to ready and mark requeue with requeueAfter": {
@@ -187,18 +175,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			})},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if reconciler returns ready response with just requeueAfter > 0, update to ready and mark requeue with requeueAfter": {
@@ -211,18 +197,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			})},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if two reconcilers returns ready response with requeue and requeueAfter, update to ready and mark requeue with requeueAfter of smaller duration": {
@@ -240,18 +224,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if one reconciler returns ready response with requeue and requeueAfter but condition already exists, requeue with requeueAfter": {
@@ -272,18 +254,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			})},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if one reconciler returns not-ready response with requeue and requeueAfter but condition already exists, requeue with requeueAfter": {
@@ -304,18 +284,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			})},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Warning NotReady CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
 		},
 		"if two reconcilers returns ready response with only one requeue and requeueAfter, requeue with requeueAfter": {
@@ -341,18 +319,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Normal Ready CertificateRequestPolicy is ready for approval evaluation",
 		},
 		"if two reconcilers returns not-ready response with requeue and requeueAfter exists, update with not ready requeue with requeueAfter": {
@@ -378,18 +354,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: [foo: Forbidden: not allowed, bar: Forbidden: also not allowed]",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Warning NotReady CertificateRequestPolicy is not ready for approval evaluation: [foo: Forbidden: not allowed, bar: Forbidden: also not allowed]",
 		},
 		"if two reconcilers returns ready and not-ready response with requeue and requeueAfter exists, update with not ready requeue with requeueAfter": {
@@ -415,18 +389,16 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			},
 			expResult: ctrl.Result{Requeue: true, RequeueAfter: time.Second},
 			expError:  false,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "4"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
+				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
 						Status:             corev1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
 						ObservedGeneration: policyGeneration},
-				}},
-			}},
+				},
+			},
 			expEvent: "Warning NotReady CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
 		},
 		"if one reconciler returns ready but the other errors, return error": {
@@ -450,21 +422,10 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 					return approver.ReconcilerReadyResponse{}, errors.New("this is an error")
 				}),
 			},
-			expResult: ctrl.Result{},
-			expError:  true,
-			expObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
-				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
-						LastTransitionTime: fixedmetatime,
-						Reason:             "NotReady",
-						Message:            "CertificateRequestPolicy is not ready for approval evaluation: [foo: Forbidden: not allowed, bar: Forbidden: also not allowed]",
-						ObservedGeneration: policyGeneration - 1},
-				}},
-			}},
-			expEvent: "",
+			expResult:      ctrl.Result{},
+			expError:       true,
+			expStatusPatch: nil,
+			expEvent:       "",
 		},
 	}
 
@@ -486,7 +447,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				reconcilers: test.reconcilers,
 			}
 
-			resp, err := c.Reconcile(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Name: policyName}})
+			resp, statusPatch, err := c.reconcileStatusPatch(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Name: policyName}})
 			if (err != nil) != test.expError {
 				t.Errorf("unexpected error, exp=%t got=%v", test.expError, err)
 			}
@@ -504,22 +465,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				t.Errorf("unexpected event, exp=%q got=%q", test.expEvent, event)
 			}
 
-			for _, expectedObject := range test.expObjects {
-				expObj := expectedObject.(client.Object)
-				var actual client.Object
-				switch expObj.(type) {
-				case *policyapi.CertificateRequestPolicy:
-					actual = &policyapi.CertificateRequestPolicy{}
-				default:
-					t.Errorf("unexpected object kind in expected: %#+v", expObj)
-				}
-
-				err := fakeclient.Get(context.TODO(), client.ObjectKeyFromObject(expObj), actual)
-				if err != nil {
-					t.Errorf("unexpected error getting expected object: %s", err)
-				} else if !apiequality.Semantic.DeepEqual(expObj, actual) {
-					t.Errorf("unexpected expected object, exp=%#+v got=%#+v", expObj, actual)
-				}
+			if !apiequality.Semantic.DeepEqual(statusPatch, test.expStatusPatch) {
+				t.Errorf("unexpected Reconcile response, exp=%v got=%v", test.expStatusPatch, statusPatch)
 			}
 		})
 	}
@@ -641,14 +588,14 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			c := &certificaterequestpolicies{clock: fixedclock}
-			policy := &policyapi.CertificateRequestPolicy{
-				ObjectMeta: metav1.ObjectMeta{Generation: policyGeneration},
-				Status:     policyapi.CertificateRequestPolicyStatus{Conditions: test.existingConditions},
-			}
+			c.setCertificateRequestPolicyCondition(
+				&test.existingConditions,
+				policyGeneration,
+				test.newCondition,
+			)
 
-			c.setCertificateRequestPolicyCondition(policy, test.newCondition)
-			if !apiequality.Semantic.DeepEqual(policy.Status.Conditions, test.expectedConditions) {
-				t.Errorf("unexpected resulting conditions, exp=%v got=%v", test.expectedConditions, policy.Status.Conditions)
+			if !apiequality.Semantic.DeepEqual(test.existingConditions, test.expectedConditions) {
+				t.Errorf("unexpected resulting conditions, exp=%v got=%v", test.expectedConditions, test.existingConditions)
 			}
 		})
 	}

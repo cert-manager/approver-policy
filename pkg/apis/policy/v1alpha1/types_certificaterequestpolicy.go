@@ -22,6 +22,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var CertificateRequestPolicyKind = "CertificateRequestPolicy"
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=`.status.conditions[?(@.type == "Ready")].status`,description="CertificateRequestPolicy is ready for evaluation"
@@ -365,6 +367,8 @@ type CertificateRequestPolicyStatus struct {
 	// List of status conditions to indicate the status of the
 	// CertificateRequestPolicy.
 	// Known condition types are `Ready`.
+	// +listType=map
+	// +listMapKey=type
 	// +optional
 	Conditions []CertificateRequestPolicyCondition `json:"conditions,omitempty"`
 }
