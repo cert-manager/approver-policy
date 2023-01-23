@@ -4,11 +4,11 @@ go 1.19
 
 require (
 	github.com/norwoodj/helm-docs v1.11.0
-	github.com/onsi/ginkgo/v2 v2.3.1
+	github.com/onsi/ginkgo/v2 v2.7.0
 	github.com/princjef/gomarkdoc v0.4.1
-	k8s.io/code-generator v0.25.2
-	sigs.k8s.io/controller-tools v0.10.0
-	sigs.k8s.io/kind v0.16.0
+	k8s.io/code-generator v0.26.1
+	sigs.k8s.io/controller-tools v0.11.1
+	sigs.k8s.io/kind v0.17.0
 )
 
 require (
@@ -37,6 +37,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20221010195024-131d412537ea // indirect
+	github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
@@ -67,32 +68,32 @@ require (
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
-	github.com/spf13/cobra v1.6.0 // indirect
+	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.13.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.2 // indirect
-	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20221012135044-0b7e1fb9d458 // indirect
-	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
-	golang.org/x/term v0.0.0-20220919170432-7a66f970e087 // indirect
-	golang.org/x/text v0.3.8 // indirect
-	golang.org/x/tools v0.1.12 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/mod v0.7.0 // indirect
+	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/term v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/tools v0.4.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.25.2 // indirect
-	k8s.io/apiextensions-apiserver v0.25.2 // indirect
-	k8s.io/apimachinery v0.25.2 // indirect
+	k8s.io/api v0.26.0 // indirect
+	k8s.io/apiextensions-apiserver v0.26.0 // indirect
+	k8s.io/apimachinery v0.26.0 // indirect
 	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect
 	k8s.io/helm v2.17.0+incompatible // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
-	k8s.io/utils v0.0.0-20221012122500-cfd413dd9e85 // indirect
+	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	mvdan.cc/xurls/v2 v2.4.0 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
