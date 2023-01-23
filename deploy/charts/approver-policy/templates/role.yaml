@@ -15,5 +15,5 @@ rules:
   resourceNames: ["policy.cert-manager.io"]
 - apiGroups: [""]
   resources: ["secrets"]
-  verbs: ["get", "list", "watch", "update"]
+  verbs: ["get", "list", "watch", "create", "update"]
   resourceNames: ['{{ include "cert-manager-approver-policy.name" . }}-tls']
