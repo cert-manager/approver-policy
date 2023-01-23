@@ -61,6 +61,18 @@ app:
     # -- Type of Kubernetes Service used by the Webhook
     service:
       type: ClusterIP
+    # -- Boolean value, expose pod on hostNetwork
+    # Required when running a custom CNI in managed providers such as AWS EKS
+    # See: https://cert-manager.io/docs/installation/compatibility/#aws-eks
+    hostNetwork: false
+    # -- May need to be changed if hostNetwork: true
+    dnsPolicy: ClusterFirst
+    # -- https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    # -- https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+    nodeSelector: {}
+    # -- https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+    tolerations: []
 
 # -- Optional extra volume mounts. Useful for mounting custom root CAs
 volumeMounts: []

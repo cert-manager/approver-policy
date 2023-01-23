@@ -62,3 +62,17 @@ spec:
       volumes:
 {{ toYaml .Values.volumes | indent 6 }}
       {{- end }}
+      hostNetwork: {{ .Values.app.webhook.hostNetwork }}
+      dnsPolicy: {{ .Values.app.webhook.dnsPolicy }}
+      {{- with .Values.app.webhook.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.app.webhook.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.app.webhook.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -29,11 +29,16 @@ A Helm chart for cert-manager-approver-policy
 | app.metrics.service.servicemonitor | object | `{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"}` | ServiceMonitor resource for this Service. |
 | app.metrics.service.type | string | `"ClusterIP"` | Service type to expose metrics. |
 | app.readinessProbe.port | int | `6060` | Container port to expose approver-policy HTTP readiness probe on default network interface. |
+| app.webhook.affinity | object | `{}` | https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
 | app.webhook.certificateDir | string | `"/tmp"` | Directory to read and store the webhook TLS certificate key pair. |
+| app.webhook.dnsPolicy | string | `"ClusterFirst"` | May need to be changed if hostNetwork: true |
 | app.webhook.host | string | `"0.0.0.0"` | Host that the webhook listens on. |
+| app.webhook.hostNetwork | bool | `false` | Boolean value, expose pod on hostNetwork Required when running a custom CNI in managed providers such as AWS EKS See: https://cert-manager.io/docs/installation/compatibility/#aws-eks |
+| app.webhook.nodeSelector | object | `{}` | https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | app.webhook.port | int | `10250` | Port that the webhook listens on. |
 | app.webhook.service | object | `{"type":"ClusterIP"}` | Type of Kubernetes Service used by the Webhook |
 | app.webhook.timeoutSeconds | int | `5` | Timeout of webhook HTTP request. |
+| app.webhook.tolerations | list | `[]` | https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on Deployment. |
 | image.repository | string | `"quay.io/jetstack/cert-manager-approver-policy"` | Target image repository. |
 | image.tag | string | `""` | Target image version tag (if empty, Chart AppVersion will be used) |
