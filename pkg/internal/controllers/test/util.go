@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+	"sync"
 	"time"
 
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
@@ -117,12 +118,21 @@ func waitForNotReady(ctx context.Context, cl client.Client, name string) {
 	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeTrue(), "expected policy to become not-ready")
 }
 
+var controllerLock sync.Mutex
+
 // startControllers will create a test Namespace and start the approver-policy
 // controllers and ensure they are active and ready. This function is intended
 // to be run in a JustBefore block before any test logic has started. The
 // created namespace as well as a shutdown function to stop the controllers is
 // returned.
 func startControllers(registry *registry.Registry) (context.Context, func(), corev1.Namespace) {
+	if !controllerLock.TryLock() {
+		// The ginkgo tests should only run one at a time, so this should never
+		// happen.
+
+		panic("startControllers called twice without calling stopControllers")
+	}
+
 	// A logr which will print log messages interspersed with the Ginkgo
 	// progress messages to make it easy to understand the context of the log
 	// messages.
@@ -151,6 +161,8 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 	// * https://github.com/kubernetes-sigs/controller-runtime/issues/880
 	// * https://book.kubebuilder.io/reference/envtest.html#testing-considerations
 	shutdown := func() {
+		defer controllerLock.Unlock()
+
 		// Cancel the context and wait for the manager goroutine to exit before
 		// cleaning up the test resources to avoid distracting messages from the
 		// controllers when they attempt to re-reconcile the deleted resources.
@@ -187,15 +199,12 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 
 	mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
 		Scheme:             policyapi.GlobalScheme,
-		LeaderElection:     true,
 		MetricsBindAddress: "0",
-		// Use the default namespace for leader election lock to further avoid
-		// the possibility of running parallel controller-managers in case a
-		// previous controller-manager is somehow still running.
-		LeaderElectionNamespace:       "default",
-		LeaderElectionID:              "cert-manager-approver-policy",
-		LeaderElectionReleaseOnCancel: true,
-		Logger:                        log.WithName("manager"),
+		// we don't need leader election for this test,
+		// there should only be one test running at a time
+		// the controllerLock ensures that
+		LeaderElection: false,
+		Logger:         log.WithName("manager"),
 	})
 	Expect(err).NotTo(HaveOccurred())
 
@@ -211,9 +220,6 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 		Expect(mgr.Start(ctx)).To(Succeed())
 		close(mgrStopped)
 	}()
-
-	By("Waiting for Leader Election")
-	<-mgr.Elected()
 
 	By("Waiting for Informers to Sync")
 	Expect(mgr.GetCache().WaitForCacheSync(ctx)).Should(BeTrue())
