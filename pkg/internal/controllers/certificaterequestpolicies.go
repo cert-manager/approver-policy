@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -70,7 +71,7 @@ type certificaterequestpolicies struct {
 
 // addCertificateRequestPolicyController will register the
 // certificaterequestpolicies controller with the controller-runtime Manager.
-func addCertificateRequestPolicyController(ctx context.Context, opts Options) error {
+func addCertificateRequestPolicyController(_ context.Context, opts Options) error {
 	log := opts.Log.WithName("certificaterequestpolicies")
 	genericChan := make(chan event.GenericEvent)
 
@@ -86,8 +87,9 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 	// Only setup generic event triggers if at least one Reconciler gave an
 	// enqueue channel.
 	if len(enqueueListSelect) > 0 {
-		enqueueListSelect = append(enqueueListSelect, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
-		go func() {
+		opts.Manager.Add(manager.RunnableFunc(func(ctx context.Context) error {
+			enqueueListSelect = append(enqueueListSelect, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
+
 			for {
 				chosen, val, ok := reflect.Select(enqueueListSelect)
 				if !ok {
@@ -95,7 +97,7 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 					// context has been cancelled, and exit go routine if so.
 					if chosen == len(enqueueListSelect)-1 {
 						log.Info("closing certificaterequestpolicy enqueue event watcher")
-						return
+						return nil
 					}
 					enqueueListSelect[chosen].Chan = reflect.ValueOf(nil)
 					continue
@@ -104,12 +106,12 @@ func addCertificateRequestPolicyController(ctx context.Context, opts Options) er
 				// CertificateRequestPolicy controller.
 				select {
 				case <-ctx.Done():
-					return
+					return nil
 				case genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: val.String()}}}:
-					return
+					// Continue with loop
 				}
 			}
-		}()
+		}))
 	}
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
