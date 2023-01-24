@@ -71,7 +71,7 @@ helm-docs: $(BINDIR)/helm-docs # verify helm-docs
 
 .PHONY: test
 test: depend lint vet ## test approver-policy
-	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
+	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) $(BINDIR)/ginkgo -procs=1 -v $(TEST_ARGS) ./cmd/... ./pkg/...
 
 .PHONY: build
 build: $(BINDIR) ## Build manager binary.

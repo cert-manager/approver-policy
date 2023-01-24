@@ -23,5 +23,7 @@ bin
 *.swo
 *~
 
+.vscode
+
 /approver-policy
 /_artifacts
