@@ -109,7 +109,7 @@ def file_passes(filename, refs, regexs):
             print('File %s is missing the year' % filename, file=verbose_out)
             return False
 
-    # Replace all occurrences of the regex "2017|2016|2015|2014" with "YEAR"
+    # Replace all occurrences of the regex "2014|2015|2016|2017|2018|2019|2020|2021|2022|2023" with "YEAR"
     p = regexs["date"]
     for i, d in enumerate(data):
         (data[i], found) = p.subn('YEAR', d)
@@ -189,7 +189,7 @@ def get_regexs():
     # Search for "YEAR" which exists in the boilerplate, but shouldn't in the real thing
     regexs["year"] = re.compile('YEAR')
     # dates can be 2014, 2015, 2016, or 2017; company holder names can be anything
-    regexs["date"] = re.compile('(2014|2015|2016|2017)')
+    regexs["date"] = re.compile('(2014|2015|2016|2017|2018|2019|2020|2021|2022|2023)')
     # strip the following build constraints/tags:
     # //go:build
     # // +build \n\n

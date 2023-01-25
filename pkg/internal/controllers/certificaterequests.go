@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -29,7 +30,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,6 +44,7 @@ import (
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver/manager"
 	internalmanager "github.com/cert-manager/approver-policy/pkg/internal/approver/manager"
+	"github.com/cert-manager/approver-policy/pkg/internal/controllers/ssa_client"
 )
 
 // certificaterequests is a controller-runtime Reconciler which evaluates
@@ -142,12 +146,35 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 // function will call the approver manager to evaluate whether a
 // CertificateRequest should be approved, denied, or left alone.
 func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	result, patch, resultErr := c.reconcileStatusPatch(ctx, req)
+	if patch != nil {
+		con, patch, err := ssa_client.GenerateCertificateRequestStatusPatch(req.Name, req.Namespace, patch)
+		if err != nil {
+			err = fmt.Errorf("failed to generate connection patch: %w", err)
+			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
+		}
+
+		if err := c.client.Status().Patch(ctx, con, patch, &client.SubResourcePatchOptions{
+			PatchOptions: client.PatchOptions{
+				FieldManager: "approver-policy",
+				Force:        pointer.Bool(true),
+			},
+		}); err != nil {
+			err = fmt.Errorf("failed to apply connection patch: %w", err)
+			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
+		}
+	}
+
+	return result, resultErr
+}
+
+func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl.Request) (ctrl.Result, *cmapi.CertificateRequestStatus, error) {
 	log := c.log.WithValues("namespace", req.NamespacedName.Namespace, "name", req.NamespacedName.Name)
 	log.V(2).Info("syncing certificaterequest")
 
 	cr := new(cmapi.CertificateRequest)
 	if err := c.lister.Get(ctx, req.NamespacedName, cr); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, nil, client.IgnoreNotFound(err)
 	}
 
 	// Query review on the approver manager.
@@ -159,44 +186,75 @@ func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (
 		// information about the approver configuration being exposed to the
 		// client.
 		c.recorder.Eventf(cr, corev1.EventTypeWarning, "EvaluationError", "approver-policy failed to review the request and will retry")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil, err
 	}
 
-	var event struct {
-		eventtype string
-		reason    string
-	}
+	crPatch := &cmapi.CertificateRequestStatus{}
+
 	switch response.Result {
 	case manager.ResultApproved:
 		log.V(2).Info("approving request")
-		event.eventtype = corev1.EventTypeNormal
-		event.reason = "Approved"
-		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "policy.cert-manager.io", response.Message)
+		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", response.Message)
+
+		c.setCertificateRequestStatusCondition(
+			&crPatch.Conditions,
+			cmapi.CertificateRequestConditionApproved,
+			cmmeta.ConditionTrue,
+			"policy.cert-manager.io",
+			response.Message,
+		)
+
+		return ctrl.Result{}, crPatch, nil
 
 	case manager.ResultDenied:
 		log.V(2).Info("denying request")
-		event.eventtype = corev1.EventTypeWarning
-		event.reason = "Denied"
-		apiutil.SetCertificateRequestCondition(cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "policy.cert-manager.io", response.Message)
+		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", response.Message)
+
+		c.setCertificateRequestStatusCondition(
+			&crPatch.Conditions,
+			cmapi.CertificateRequestConditionDenied,
+			cmmeta.ConditionTrue,
+			"policy.cert-manager.io",
+			response.Message,
+		)
+
+		return ctrl.Result{}, crPatch, nil
 
 	case manager.ResultUnprocessed:
 		log.V(2).Info("request was unprocessed")
 		c.recorder.Event(cr, corev1.EventTypeNormal, "Unprocessed", "Request is not applicable for any policy so ignoring")
-		return ctrl.Result{}, nil
+
+		return ctrl.Result{}, nil, nil
 
 	default:
 		log.Error(errors.New(response.Message), "manager responded with an unknown result", "result", response.Result)
 		c.recorder.Event(cr, corev1.EventTypeWarning, "UnknownResponse", "Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue")
 
 		// We can do nothing but keep retrying the review here.
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil, nil
+
+	}
+}
+
+// Update the status with the provided condition details & return
+// the added condition.
+// NOTE: this code is just a workaround for apiutil only accepting the certificaterequest object
+func (c *certificaterequests) setCertificateRequestStatusCondition(
+	conditions *[]cmapi.CertificateRequestCondition,
+	conditionType cmapi.CertificateRequestConditionType,
+	status cmmeta.ConditionStatus,
+	reason, message string,
+) *cmapi.CertificateRequestCondition {
+	cr := cmapi.CertificateRequest{
+		Status: cmapi.CertificateRequestStatus{
+			Conditions: *conditions,
+		},
 	}
 
-	if err := c.client.Status().Update(ctx, cr); err != nil {
-		return ctrl.Result{}, err
-	}
+	apiutil.SetCertificateRequestCondition(&cr, conditionType, status, reason, message)
+	condition := apiutil.GetCertificateRequestCondition(&cr, conditionType)
 
-	c.recorder.Event(cr, event.eventtype, event.reason, response.Message)
+	*conditions = cr.Status.Conditions
 
-	return ctrl.Result{}, nil
+	return condition
 }

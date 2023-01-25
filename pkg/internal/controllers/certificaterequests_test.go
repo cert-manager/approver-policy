@@ -34,7 +34,6 @@ import (
 	"k8s.io/klog/v2/klogr"
 	fakeclock "k8s.io/utils/clock/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -69,16 +68,16 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 		existingObjects []runtime.Object
 		manager         manager.Interface
 
-		expResult  ctrl.Result
-		expError   bool
-		expObjects []runtime.Object
-		expEvent   string
+		expResult      ctrl.Result
+		expError       bool
+		expStatusPatch *cmapi.CertificateRequestStatus
+		expEvent       string
 	}{
 		"if request doesn't exist, no nothing": {
 			existingObjects: nil,
 			expResult:       ctrl.Result{},
 			expError:        false,
-			expObjects:      nil,
+			expStatusPatch:  nil,
 			expEvent:        "",
 		},
 		"if manager review returns an error, fire event and return an error": {
@@ -86,40 +85,40 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 				return manager.ReviewResponse{Message: "a review error"}, errors.New("this is an error")
 			}),
-			expResult:  ctrl.Result{},
-			expError:   true,
-			expObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
-			expEvent:   "Warning EvaluationError approver-policy failed to review the request and will retry",
+			expResult:      ctrl.Result{},
+			expError:       true,
+			expStatusPatch: nil,
+			expEvent:       "Warning EvaluationError approver-policy failed to review the request and will retry",
 		},
 		"if manager review returns an empty response, fire event and return a re-queue response": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
 			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 				return manager.ReviewResponse{}, nil
 			}),
-			expResult:  ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
-			expError:   false,
-			expObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
-			expEvent:   "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
+			expResult:      ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
+			expError:       false,
+			expStatusPatch: nil,
+			expEvent:       "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
 		},
 		"if manager review returns an unknown response, fire event and return a re-queue response": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
 			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 				return manager.ReviewResponse{Result: 5, Message: "unknown result"}, nil
 			}),
-			expResult:  ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
-			expError:   false,
-			expObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
-			expEvent:   "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
+			expResult:      ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
+			expError:       false,
+			expStatusPatch: nil,
+			expEvent:       "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
 		},
 		"if manager review returns an unprocessed response, fire event and do nothing": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
 			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 				return manager.ReviewResponse{Result: manager.ResultUnprocessed, Message: "unprocessed result"}, nil
 			}),
-			expResult:  ctrl.Result{},
-			expError:   false,
-			expObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
-			expEvent:   "Normal Unprocessed Request is not applicable for any policy so ignoring",
+			expResult:      ctrl.Result{},
+			expError:       false,
+			expStatusPatch: nil,
+			expEvent:       "Normal Unprocessed Request is not applicable for any policy so ignoring",
 		},
 		"if manager review returns denied, fire event and update request with denied": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
@@ -128,19 +127,17 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			}),
 			expResult: ctrl.Result{},
 			expError:  false,
-			expObjects: []runtime.Object{
-				gen.CertificateRequestFrom(baseRequest,
-					func(cr *cmapi.CertificateRequest) {
-						cr.ResourceVersion = "1000"
-					},
-					gen.SetCertificateRequestStatusCondition(cmapi.CertificateRequestCondition{
+			expStatusPatch: &cmapi.CertificateRequestStatus{
+				Conditions: []cmapi.CertificateRequestCondition{
+					cmapi.CertificateRequestCondition{
 						Type:               cmapi.CertificateRequestConditionDenied,
 						Status:             cmmeta.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "policy.cert-manager.io",
 						Message:            "denied due to some violation",
-					}),
-				)},
+					},
+				},
+			},
 			expEvent: "Warning Denied denied due to some violation",
 		},
 		"if manager review returns true, fire event and update request with approved": {
@@ -150,19 +147,17 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			}),
 			expResult: ctrl.Result{},
 			expError:  false,
-			expObjects: []runtime.Object{
-				gen.CertificateRequestFrom(baseRequest,
-					func(cr *cmapi.CertificateRequest) {
-						cr.ResourceVersion = "1000"
-					},
-					gen.SetCertificateRequestStatusCondition(cmapi.CertificateRequestCondition{
+			expStatusPatch: &cmapi.CertificateRequestStatus{
+				Conditions: []cmapi.CertificateRequestCondition{
+					cmapi.CertificateRequestCondition{
 						Type:               cmapi.CertificateRequestConditionApproved,
 						Status:             cmmeta.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "policy.cert-manager.io",
 						Message:            "policy is happy :)",
-					}),
-				)},
+					},
+				},
+			},
 			expEvent: "Normal Approved policy is happy :)",
 		},
 	}
@@ -186,7 +181,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 				log:      klogr.New(),
 			}
 
-			resp, err := c.Reconcile(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: gen.DefaultTestNamespace, Name: requestName}})
+			resp, statusPatch, err := c.reconcileStatusPatch(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: gen.DefaultTestNamespace, Name: requestName}})
 			if (err != nil) != test.expError {
 				t.Errorf("unexpected error, exp=%t got=%v", test.expError, err)
 			}
@@ -204,22 +199,8 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 				t.Errorf("unexpected event, exp=%q got=%q", test.expEvent, event)
 			}
 
-			for _, expectedObject := range test.expObjects {
-				expObj := expectedObject.(client.Object)
-				var actual client.Object
-				switch expObj.(type) {
-				case *cmapi.CertificateRequest:
-					actual = &cmapi.CertificateRequest{}
-				default:
-					t.Errorf("unexpected object kind in expected: %#+v", expObj)
-				}
-
-				err := fakeclient.Get(context.TODO(), client.ObjectKeyFromObject(expObj), actual)
-				if err != nil {
-					t.Errorf("unexpected error getting expected object: %s", err)
-				} else if !apiequality.Semantic.DeepEqual(expObj, actual) {
-					t.Errorf("unexpected expected object, exp=%#+v got=%#+v", expObj, actual)
-				}
+			if !apiequality.Semantic.DeepEqual(statusPatch, test.expStatusPatch) {
+				t.Errorf("unexpected Reconcile response, exp=%v got=%v", test.expStatusPatch, statusPatch)
 			}
 		})
 	}
