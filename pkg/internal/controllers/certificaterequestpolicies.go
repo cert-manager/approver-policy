@@ -40,7 +40,7 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
-	"github.com/cert-manager/approver-policy/pkg/internal/controllers/internal/ssa_client"
+	"github.com/cert-manager/approver-policy/pkg/internal/controllers/ssa_client"
 )
 
 // certificaterequestpolicies is a controller-runtime Reconciler which handles
