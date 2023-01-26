@@ -95,3 +95,7 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+# -- Optional allow custom labels to be placed on resources
+commonLabels: {}
+
