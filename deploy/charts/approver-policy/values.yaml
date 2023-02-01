@@ -99,3 +99,6 @@ resources: {}
 # -- Optional allow custom labels to be placed on resources
 commonLabels: {}
 
+# -- Optional allow custom annotations to be placed on cert-manager-approver pod
+podAnnotations: {}
+
