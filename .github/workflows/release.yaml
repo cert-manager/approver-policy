@@ -21,7 +21,7 @@ jobs:
           registry: quay.io
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
-      - uses: docker/build-push-action@v3
+      - uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
