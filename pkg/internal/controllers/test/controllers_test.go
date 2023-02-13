@@ -35,7 +35,7 @@ func Test_Controllers(t *testing.T) {
 	rootDir := testenv.RootDirOrSkip(t)
 
 	env = testenv.RunControlPlane(t, ctx,
-		filepath.Join(rootDir, "bin/cert-manager"),
+		filepath.Join(rootDir, "_bin/cert-manager"),
 		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
 	)
 	testenv.RunSuite(t, "approver-policy-controllers", "../../../../_artifacts")
