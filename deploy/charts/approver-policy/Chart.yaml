@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 
 name: cert-manager-approver-policy
 type: application
@@ -12,5 +12,5 @@ maintainers:
 sources:
 - https://github.com/cert-manager/approver-policy
 
-appVersion: v0.4.0
-version: v0.4.2
+appVersion: v0.0.0
+version: v0.0.0

@@ -27,10 +27,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-logr/logr"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/cert-manager/cert-manager/pkg/util/pki"
 	"github.com/cert-manager/cert-manager/pkg/webhook/authority"
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 )

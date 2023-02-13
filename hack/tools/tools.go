@@ -7,6 +7,8 @@
 package bin
 
 import (
+	_ "sigs.k8s.io/kustomize/kustomize/v4"
+	_ "k8s.io/code-generator/cmd/deepcopy-gen"
 	_ "github.com/norwoodj/helm-docs/cmd/helm-docs"
 	_ "github.com/onsi/ginkgo/v2/ginkgo"
 	_ "github.com/princjef/gomarkdoc/cmd/gomarkdoc"
