@@ -132,6 +132,14 @@ verify-pod-security-standards: $(helm_chart_archive) | $(BINDIR)/kyverno $(BINDI
 verify-helm-lint: $(helm_chart_archive) | $(BINDIR)/helm
 	$(BINDIR)/helm lint $(helm_chart_archive)
 
+# instead of running verify-generate-api-docs, this target uses the gomarkdoc --check flag to verify that the docs are up to date
+.PHONY: verify-api-docs
+verify-api-docs: $(BINDIR)/gomarkdoc
+	@$(BINDIR)/gomarkdoc \
+		--check $(GOMARKDOC_FLAGS) \
+		--output docs/api/api.md github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1 \
+		|| (echo "docs are not up to date; run 'make generate' and commit the result" && exit 1)
+
 # Run the supplied make target argument in a temporary workspace and diff the results.
 verify-%: FORCE
 	./hack/util/verify.sh $(MAKE) -s $*
@@ -142,16 +150,11 @@ verify: vet
 verify: verify-generate-manifests
 verify: verify-generate-deepcopy
 verify: verify-generate-helm-docs
-verify: verify-generate-api-docs
+verify: verify-api-docs
 	@echo "The following targets create temporary files in the current directory, that is why they have to be run last:"
 	$(MAKE) \
 		verify-helm-lint \
 		verify-pod-security-standards
-
-	@$(BINDIR)/gomarkdoc \
-		--check $(GOMARKDOC_FLAGS) \
-		--output docs/api/api.md github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1 \
-		|| (echo "docs are not up to date; run 'make generate' and commit the result" && exit 1)
 
 cert_manager_crds: $(BINDIR)/cert-manager/crds.yaml
 $(BINDIR)/cert-manager/crds.yaml: | $(BINDIR)
