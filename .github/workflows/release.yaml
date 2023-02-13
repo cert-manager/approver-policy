@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: create_helm_archive
-        run: make helm-archive
+        run: make helm-chart         
       - id: create_release
         uses: actions/create-release@v1
         env:

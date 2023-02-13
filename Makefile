@@ -189,9 +189,13 @@ $(helm_chart_archive): $(helm_chart_sources) | $(BINDIR)/helm
 		--version $(VERSION) \
 		--destination $(dir $@)
 
+# Allow target to create GitHub outputs when run via GitHub Actions
+GITHUB_OUTPUT ?= /dev/null
+
 .PHONY: helm-chart
 helm-chart: ## Create a helm chart
 helm-chart: $(helm_chart_archive)
+	@echo path=$(helm_chart_archive) >> $(GITHUB_OUTPUT)
 
 ##@ Tools
 
