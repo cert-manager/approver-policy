@@ -55,10 +55,12 @@ spec:
           - --webhook-ca-secret-namespace={{.Release.Namespace}}
           - --webhook-certificate-dir={{.Values.app.webhook.certificateDir}}
 
-        {{- if .Values.volumeMounts }}
         volumeMounts:
-{{ toYaml .Values.volumeMounts | indent 10 }}
+        {{- with .Values.volumeMounts }}
+        {{- toYaml . | nindent 10 }}
         {{- end }}
+        - mountPath: /tmp
+          name: temp-dir
 
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
@@ -68,10 +70,13 @@ spec:
           capabilities: { drop: ["ALL"] }
           readOnlyRootFilesystem: true
 
-      {{- if .Values.volumes }}
       volumes:
-{{ toYaml .Values.volumes | indent 6 }}
+      {{- with .Values.volumes }}
+      {{- toYaml . | nindent 6 }}
       {{- end }}
+      - name: temp-dir
+        emptyDir: {}
+
       hostNetwork: {{ .Values.app.webhook.hostNetwork }}
       dnsPolicy: {{ .Values.app.webhook.dnsPolicy }}
       {{- with .Values.app.webhook.nodeSelector }}
