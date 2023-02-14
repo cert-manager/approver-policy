@@ -43,7 +43,7 @@ func Test_Review(t *testing.T) {
 
 	rootDir := env.RootDirOrSkip(t)
 	env := env.RunControlPlane(t, ctx,
-		filepath.Join(rootDir, "bin/cert-manager"),
+		filepath.Join(rootDir, "_bin/cert-manager"),
 		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
 	)
 

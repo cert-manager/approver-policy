@@ -58,11 +58,12 @@ type policyMessage struct {
 // CertificateRequests should be approved or denied, managing registered
 // evaluators.
 // CertificateRequestPolicies will be filtered on Review for evaluation with the predicates:
-// - CertificateRequestPolicy is ready
-// - CertificateRequestPolicy Selector.IssuerRef matches the CertificateRequest
+//   - CertificateRequestPolicy is ready
+//   - CertificateRequestPolicy Selector.IssuerRef matches the CertificateRequest
+//
 // IssuerRef
-// - CertificateRequestPolicy is bound to the user that appears in the
-//   CertificateRequest
+//   - CertificateRequestPolicy is bound to the user that appears in the
+//     CertificateRequest
 func New(lister client.Reader, client client.Client, evaluators []approver.Evaluator) manager.Interface {
 	return &mngr{
 		lister: lister,

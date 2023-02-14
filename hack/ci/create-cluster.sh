@@ -3,15 +3,15 @@
 set -o errexit
 
 REPO_ROOT="${REPO_ROOT:-$(dirname "${BASH_SOURCE}")/../..}"
-KUBECTL_BIN="${KUBECTL_BIN:-$REPO_ROOT/bin/kubectl}"
-HELM_BIN="${HELM_BIN:-$REPO_ROOT/bin/helm}"
-KIND_BIN="${KIND_BIN:-$REPO_ROOT/bin/kind}"
+KUBECTL_BIN="${KUBECTL_BIN:-$REPO_ROOT/_bin/kubectl}"
+HELM_BIN="${HELM_BIN:-$REPO_ROOT/_bin/helm}"
+KIND_BIN="${KIND_BIN:-$REPO_ROOT/_bin/kind}"
 POLICY_APPROVER_TAG="${POLICY_APPROVER_TAG:-smoke}"
 POLICY_APPROVER_REPO="${POLICY_APPROVER_REPO:-quay.io/jetstack/cert-manager-approver-policy}"
 POLICY_APPROVER_IMAGE="$POLICY_APPROVER_REPO:$POLICY_APPROVER_TAG"
 
 echo ">> building approver-policy binary..."
-GOARCH=$(go env GOARCH) GOOS=linux CGO_ENABLED=0 go build -o $REPO_ROOT/bin/approver-policy-linux $REPO_ROOT/cmd/.
+GOARCH=$(go env GOARCH) GOOS=linux CGO_ENABLED=0 go build -o $REPO_ROOT/_bin/approver-policy-linux $REPO_ROOT/cmd/.
 
 echo ">> building docker image..."
 docker build -t $POLICY_APPROVER_IMAGE .
