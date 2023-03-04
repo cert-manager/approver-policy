@@ -330,6 +330,46 @@ func Test_Evaluate(t *testing.T) {
 				Message: "",
 			},
 		},
+		"if all allowed uses template and attributes follows, return Not-Denied": {
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+				gen.SetCSRCommonName("hello-ns"),
+				gen.SetCSRDNSNames("name.ns.svc"),
+				gen.SetCSRURIs(uri1),
+				gen.SetCSREmails([]string{"john@ns"}),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.Organization = []string{"company-ns"} }),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.Country = []string{"country-ns"} }),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.OrganizationalUnit = []string{"org-ns"} }),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.Locality = []string{"loc-ns"} }),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.Province = []string{"prov-ns"} }),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.StreetAddress = []string{"street-ns"} }),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.PostalCode = []string{"post-ns"} }),
+				noErrModifier(func(csr *x509.CertificateRequest) { csr.Subject.SerialNumber = "serial-ns" }),
+			)),
+				gen.SetCertificateRequestNamespace("ns"),
+			),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: pointer.Bool(true), Value: pointer.String("*-{{ .Request.Namespace }}")},
+					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.{{ .Request.Namespace }}.svc"}},
+					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"spiffe://cluster.local/{{ .Request.Namespace }}/foo/sa/bar"}},
+					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"john@{{ .Request.Namespace }}"}},
+					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"*-{{ .Request.Namespace }}"}},
+						Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"*-{{ .Request.Namespace }}"}},
+						OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"*-{{ .Request.Namespace }}"}},
+						Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"*-{{ .Request.Namespace }}"}},
+						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"*-{{ .Request.Namespace }}"}},
+						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"*-{{ .Request.Namespace }}"}},
+						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: pointer.Bool(true), Values: &[]string{"*-{{ .Request.Namespace }}"}},
+						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: pointer.Bool(true), Value: pointer.String("*-{{ .Request.Namespace }}")},
+					},
+				},
+			},
+			expResponse: approver.EvaluationResponse{
+				Result:  approver.ResultNotDenied,
+				Message: "",
+			},
+		},
 	}
 
 	for name, test := range tests {
