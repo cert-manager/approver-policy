@@ -15,6 +15,10 @@ spec:
       labels:
         app: {{ include "cert-manager-approver-policy.name" . }}
         {{- include "cert-manager-approver-policy.labels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       securityContext:
         runAsNonRoot: true
