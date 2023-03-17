@@ -128,9 +128,11 @@ verify-pod-security-standards: $(helm_chart_archive) | $(BINDIR)/kyverno $(BINDI
 	$(BINDIR)/kyverno apply <($(BINDIR)/kustomize build https://github.com/kyverno/policies/pod-security/enforce) \
 		--resource <($(BINDIR)/helm template $(helm_chart_archive)) 2>/dev/null
 
+# Run both `helm lint` and `helm template`, to check that the templates can be rendered.
 .PHONY: verify-helm-lint
 verify-helm-lint: $(helm_chart_archive) | $(BINDIR)/helm
 	$(BINDIR)/helm lint $(helm_chart_archive)
+	$(BINDIR)/helm template $(helm_chart_archive) --values hack/helm/sample-chart-values.yaml
 
 # instead of running verify-generate-api-docs, this target uses the gomarkdoc --check flag to verify that the docs are up to date
 .PHONY: verify-api-docs
