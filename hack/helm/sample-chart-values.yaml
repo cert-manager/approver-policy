@@ -1,0 +1,15 @@
+# An example values file, which will be used when linting the Helm chart, to
+# verify that the templates can be rendered.
+# See make verify-helm-lint
+#
+# Volumes and volume mounts can be overridden
+volumeMounts:
+  - name: ca-cert-example-volume
+    mountPath: "/etc/ssl/certs/ca-cert-example-ca.crt"
+    subPath: ca.crt
+    readOnly: true
+volumes:
+  - name: ca-cert-example-volume
+    configMap:
+      name: ca-cert-example
+      optional: false
