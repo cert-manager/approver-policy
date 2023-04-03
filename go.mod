@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/cert-manager/cert-manager v1.11.0
-	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/logr v1.2.4
 	github.com/onsi/ginkgo/v2 v2.9.1
 	github.com/onsi/gomega v1.27.4
 	github.com/spf13/cobra v1.6.1
