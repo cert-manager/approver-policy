@@ -5,7 +5,7 @@ metadata:
   name: {{ include "cert-manager-approver-policy.name" . }}-metrics
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    app: {{ include "cert-manager-approver-policy.name" . }}
+    app: {{ include "cert-manager-approver-policy.name" . }}-metrics
 {{ include "cert-manager-approver-policy.labels" . | indent 4 }}
 spec:
   type: {{ .Values.app.metrics.service.type }}
