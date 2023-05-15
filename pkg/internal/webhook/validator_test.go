@@ -22,10 +22,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	admissionv1 "k8s.io/api/admission/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2/klogr"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -33,436 +32,132 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
-	"github.com/cert-manager/approver-policy/pkg/approver/fake"
+	fakeapprover "github.com/cert-manager/approver-policy/pkg/approver/fake"
 )
 
-func Test_validatorHandle(t *testing.T) {
+func Test_validate(t *testing.T) {
+	someError := field.Invalid(field.NewPath("spec"), "foo", "some error occurred")
+	testObjectMeta := metav1.ObjectMeta{Name: "test-policy", ResourceVersion: "3"}
+	testTypeMeta := metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"}
+	notAllowedWebhook := fakeapprover.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+		return approver.WebhookValidationResponse{Allowed: false, Errors: field.ErrorList{someError}}, nil
+	})
+	passingWebhook := fakeapprover.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+		return approver.WebhookValidationResponse{Allowed: true}, nil
+	})
+	failingWebhook := fakeapprover.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+		return approver.WebhookValidationResponse{}, errors.New("some error")
+	})
 	tests := map[string]struct {
-		req               admission.Request
-		webhook           approver.Webhook
-		expResp           admission.Response
+		crp               runtime.Object
+		expectedWarnings  admission.Warnings
+		wantsErr          bool
+		webhooks          []approver.Webhook
 		registeredPlugins []string
 	}{
-		"a request with no kind sent should return an Error response": {
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID:       types.UID("abc"),
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "NotCertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-}
-`),
-					},
-				},
-			},
-
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Message: "no resource kind sent in request", Code: 400},
-				},
-			},
+		"if the object being validated is not a CertificateRequestPolicy return an error": {
+			crp:      &corev1.Pod{},
+			wantsErr: true,
 		},
-		"a resource who's type is not recognised should return a Denied response": {
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "NotCertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
-	"apiVersion": "policy.cert-manager.io/v1alpha1",
-	 "kind": "NotCertificateRequestPolicy",
-	 "metadata": {
-	 	"name": "testing"
-	 },
-}
-		`),
-					},
+		"if the CertificateRequestPolicy refers to a plugin that is not registered return an error": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
 				},
 			},
-
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Reason: "validation request for unrecognised resource type: policy.cert-manager.io/v1alpha1 NotCertificateRequestPolicy", Code: 403},
-				},
-			},
+			registeredPlugins: []string{"foo", "baz"},
+			wantsErr:          true,
 		},
-		"a CertificateRequestPolicy that fails to decode should return an Error response": {
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-	  "foo": "bar",
-	}
-}
-`),
-					},
+		"if neither issuer ref nor namespace are defined, return error": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
 				},
 			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Message: "couldn't get version/kind; json parse error: invalid character '}' looking for beginning of object key string", Code: 400},
-				},
-			},
+			wantsErr:          true,
+			registeredPlugins: []string{"foo", "bar"},
 		},
-		"a CertificateRequestPolicy which fails validation should return a Denied response": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{
-					Allowed: false, Errors: field.ErrorList{field.Forbidden(field.NewPath("hello-world"), "this is a denied message")},
-				}, nil
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-		"selector": {
-		  "issuerRef": {}
-		}
-	}
-}
-`),
+		"if an invalid namespace label selector is defined, return error": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
+					Selector: policyapi.CertificateRequestPolicySelector{
+						Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+							MatchLabels: map[string]string{"$%234": "8dsdk"},
+						},
 					},
 				},
 			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Reason: "hello-world: Forbidden: this is a denied message", Code: 403},
-				},
-			},
+			registeredPlugins: []string{"foo", "bar"},
+			wantsErr:          true,
 		},
-		"a CertificateRequestPolicy which succeeds validation should return an Allowed response": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: true}, nil
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-		"selector": {
-		  "issuerRef": {}
-		}
-	}
-}
-`),
+		"if a registered webhook does not allow CertificateRequestPolicy, return an error": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
+					Selector: policyapi.CertificateRequestPolicySelector{
+						Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
 					},
 				},
 			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: true,
-					Result:  &metav1.Status{Reason: "CertificateRequestPolicy validated", Code: 200},
-				},
-			},
+			registeredPlugins: []string{"foo", "bar"},
+			webhooks:          []approver.Webhook{passingWebhook, notAllowedWebhook},
+			wantsErr:          true,
 		},
-		"a CertificateRequestPolicy where a webhook returns an error should return an internal error response": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{}, errors.New("this is an internal error")
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-		"selector": {
-		  "issuerRef": {}
-		}
-	}
-}
-`),
+		"if a registered webhook errors when validating CertificateRequestPolicy, return an error": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
+					Selector: policyapi.CertificateRequestPolicySelector{
+						Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
 					},
 				},
 			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Message: "this is an internal error", Code: 500},
-				},
-			},
+			registeredPlugins: []string{"foo", "bar"},
+			webhooks:          []approver.Webhook{passingWebhook, failingWebhook},
+			wantsErr:          true,
 		},
-		"a CertificateRequestPolicy whose issuerRef or namespace selector has not been defined should return 403": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: true}, nil
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-		"selector": {}
-	}
-}
-`),
+		"if a  CertificateRequestPolicy with a defined issuer ref passes validation, allow it": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
+					Selector: policyapi.CertificateRequestPolicySelector{
+						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					},
 				},
 			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Reason: "spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything", Code: 403},
-				},
-			},
+			registeredPlugins: []string{"foo", "bar"},
+			webhooks:          []approver.Webhook{passingWebhook},
 		},
-		"a CertificateRequestPolicy whose defined plugins have not been registered and issuerRef and namespace selector not defined should return a 403": {
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: true}, nil
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-	  "plugins": {
-			"plugin-1": {},
-			"plugin-2": {},
-			"plugin-3": {}
-		},
-		"selector": {}
-	}
-}
-`),
+		"if a  CertificateRequestPolicy with a defined namespace selector passes validation, allow it": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
+					Selector: policyapi.CertificateRequestPolicySelector{
+						Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{},
 					},
 				},
 			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Reason: "[spec.plugins: Unsupported value: \"plugin-1\", spec.plugins: Unsupported value: \"plugin-2\", spec.plugins: Unsupported value: \"plugin-3\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]", Code: 403},
-				},
-			},
-		},
-		"a CertificateRequestPolicy whose some of the defined plugins have not been registered and issuerRef or namespace selector not defined should return a 403": {
-			registeredPlugins: []string{"plugin-1", "plugin-2"},
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: true}, nil
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-	  "plugins": {
-			"plugin-1": {},
-			"plugin-2": {},
-			"plugin-3": {},
-			"plugin-4": {}
-		},
-		"selector": {}
-	}
-}
-`),
-					},
-				},
-			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result:  &metav1.Status{Reason: "[spec.plugins: Unsupported value: \"plugin-3\": supported values: \"plugin-1\", \"plugin-2\", spec.plugins: Unsupported value: \"plugin-4\": supported values: \"plugin-1\", \"plugin-2\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]", Code: 403},
-				},
-			},
-		},
-		"a CertificateRequestPolicy where all plugins used are registered with a valid issuerRef or namespace selector should return Allowed": {
-			registeredPlugins: []string{"plugin-1", "plugin-2"},
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: true}, nil
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-	  "plugins": {
-			"plugin-1": {},
-			"plugin-2": {}
-		},
-		"selector": {
-		  "issuerRef": {
-			  "name": "foo-bar"
-			}
-		}
-	}
-}
-`),
-					},
-				},
-			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: true,
-					Result:  &metav1.Status{Reason: "CertificateRequestPolicy validated", Code: 200},
-				},
-			},
-		},
-		"a CertificateRequestPolicy where the namespace selector matchLabels definition is invalid, should return error of invalid": {
-			registeredPlugins: []string{"plugin-1", "plugin-2"},
-			webhook: fake.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
-				return approver.WebhookValidationResponse{Allowed: true}, nil
-			}),
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					UID: types.UID("abc"),
-					RequestKind: &metav1.GroupVersionKind{
-						Group:   "policy.cert-manager.io",
-						Version: "v1alpha1",
-						Kind:    "CertificateRequestPolicy",
-					},
-					Operation: admissionv1.Create,
-					Object: runtime.RawExtension{
-						Raw: []byte(`
-{
- "apiVersion": "policy.cert-manager.io/v1alpha1",
-	"kind": "CertificateRequestPolicy",
-	"metadata": {
-		"name": "testing"
-	},
-	"spec": {
-	  "plugins": {
-			"plugin-1": {},
-			"plugin-2": {}
-		},
-		"selector": {
-		  "namespace": {
-				"matchLabels": {
-				  "%%%": "@@@"
-				}
-			}
-		}
-	}
-}
-`),
-					},
-				},
-			},
-			expResp: admission.Response{
-				AdmissionResponse: admissionv1.AdmissionResponse{
-					Allowed: false,
-					Result: &metav1.Status{
-						Reason: `spec.selector.namespace.matchLabels: Invalid value: map[string]string{"%%%":"@@@"}: [key: Invalid value: "%%%": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]'), values[0][%%%]: Invalid value: "@@@": a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue',  or 'my_value',  or '12345', regex used for validation is '(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')]`,
-						Code:   403,
-					},
-				},
-			},
+			registeredPlugins: []string{"foo", "bar"},
+			webhooks:          []approver.Webhook{passingWebhook},
 		},
 	}
 
@@ -472,13 +167,12 @@ func Test_validatorHandle(t *testing.T) {
 				WithScheme(policyapi.GlobalScheme).
 				Build()
 
-			decoder, err := admission.NewDecoder(policyapi.GlobalScheme)
-			if err != nil {
-				t.Fatal(err)
+			v := &validator{lister: fakeclient, log: klogr.New(), webhooks: test.webhooks, registeredPlugins: test.registeredPlugins}
+			gotWarnings, gotErr := v.validate(context.Background(), test.crp)
+			if test.wantsErr != (gotErr != nil) {
+				t.Errorf("wants error: %t got: %v", test.wantsErr, gotErr)
 			}
-
-			v := &validator{lister: fakeclient, decoder: decoder, log: klogr.New(), webhooks: []approver.Webhook{test.webhook}, registeredPlugins: test.registeredPlugins}
-			assert.Equal(t, test.expResp, v.Handle(context.TODO(), test.req), "expected the same admission response")
+			assert.Equal(t, test.expectedWarnings, gotWarnings)
 		})
 	}
 }
