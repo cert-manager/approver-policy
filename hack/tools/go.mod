@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/norwoodj/helm-docs v1.11.0
-	github.com/onsi/ginkgo/v2 v2.9.4
+	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/princjef/gomarkdoc v0.4.1
 	k8s.io/code-generator v0.27.1
 	sigs.k8s.io/controller-tools v0.12.0
