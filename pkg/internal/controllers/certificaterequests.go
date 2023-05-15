@@ -39,7 +39,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver/manager"
@@ -83,7 +82,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		manager:  internalmanager.New(opts.Manager.GetCache(), opts.Manager.GetClient(), opts.Evaluators),
 	}
 
-	enqueueRequestFromMapFunc := func(_ client.Object) []reconcile.Request {
+	enqueueRequestFromMapFunc := func(_ context.Context, _ client.Object) []reconcile.Request {
 		// If an error happens here and we do nothing, we run the risk of not
 		// processing CertificateRequests.
 		// Exiting error is the safest option, as it will force a resync on all
@@ -110,7 +109,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 	}
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
-		For(new(cmapi.CertificateRequest), builder.WithPredicates(
+		For(&cmapi.CertificateRequest{}, builder.WithPredicates(
 			// Only process CertificateRequests which have not yet got an approval
 			// status.
 			predicate.NewPredicateFuncs(func(obj client.Object) bool {
@@ -122,7 +121,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		// Watch CertificateRequestPolicies. If a policy is created or updated,
 		// then we need to process all CertificateRequests that do not yet have an
 		// approved or denied condition since they may be relevant for the policy.
-		Watches(&source.Kind{Type: new(policyapi.CertificateRequestPolicy)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
+		Watches(&policyapi.CertificateRequestPolicy{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
 
 		// Watch Roles, RoleBindings, ClusterRoles, and ClusterRoleBindings. If
 		// RBAC changes in the cluster then CertificateRequestPolicies may become
@@ -130,11 +129,11 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		// CertificateRequests that are neither Approved or Denied.
 		// Only need to cache metadata for RBAC resources since we do not need any
 		// information in the spec.
-		Watches(&source.Kind{Type: new(rbacv1.Role)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
-		Watches(&source.Kind{Type: new(rbacv1.RoleBinding)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
-		Watches(&source.Kind{Type: new(rbacv1.ClusterRole)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
-		Watches(&source.Kind{Type: new(rbacv1.ClusterRoleBinding)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
-		Watches(&source.Kind{Type: new(corev1.Namespace)}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), builder.OnlyMetadata).
+		WatchesMetadata(&rbacv1.Role{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
+		WatchesMetadata(&rbacv1.RoleBinding{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
+		WatchesMetadata(&rbacv1.ClusterRole{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
+		WatchesMetadata(&rbacv1.ClusterRoleBinding{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
+		WatchesMetadata(&corev1.Namespace{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
 
 		// Complete the controller builder.
 		Complete(c)
