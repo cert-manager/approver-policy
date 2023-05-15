@@ -18,6 +18,7 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -67,7 +68,7 @@ func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission
 		return nil, fmt.Errorf("expected a CertificateRequestPolicy, but got a %T", obj)
 	}
 	var (
-		el       field.ErrorList
+		el       []error
 		warnings admission.Warnings
 		fldPath  = field.NewPath("spec")
 	)
@@ -112,7 +113,15 @@ func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission
 			return nil, err
 		}
 		if !response.Allowed {
-			el = append(el, response.Errors...)
+			for _, e := range response.Errors {
+				el = append(el, e)
+			}
+			// do not allow a CertificateRequestPolicy if it was not
+			// allowed by a plugin that did not set any errors
+			// TODO: when webhooks implement Name() method, provide a plugin name here
+			if len(response.Errors) < 1 {
+				el = append(el, errors.New("a plugin did not allow the CertificateRequest for unknown reasons"))
+			}
 		}
 		warnings = append(warnings, response.Warnings...)
 	}

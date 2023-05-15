@@ -42,6 +42,9 @@ func Test_validate(t *testing.T) {
 	notAllowedWebhook := fakeapprover.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 		return approver.WebhookValidationResponse{Allowed: false, Errors: field.ErrorList{someError}}, nil
 	})
+	notAllowedWebhookNoDetail := fakeapprover.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
+		return approver.WebhookValidationResponse{Allowed: false}, nil
+	})
 	passingWebhook := fakeapprover.NewFakeWebhook().WithValidate(func(context.Context, *policyapi.CertificateRequestPolicy) (approver.WebhookValidationResponse, error) {
 		return approver.WebhookValidationResponse{Allowed: true}, nil
 	})
@@ -132,6 +135,23 @@ func Test_validate(t *testing.T) {
 			},
 			registeredPlugins: []string{"foo", "bar"},
 			webhooks:          []approver.Webhook{passingWebhook, failingWebhook},
+			wantsErr:          true,
+		},
+		"if a registered webhook does not allow CertificteRequestPolicy without further detail, return an error": {
+			crp: &policyapi.CertificateRequestPolicy{
+				TypeMeta:   testTypeMeta,
+				ObjectMeta: testObjectMeta,
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"foo": {}, "bar": {}},
+					Selector: policyapi.CertificateRequestPolicySelector{
+						Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
+					},
+				},
+			},
+			registeredPlugins: []string{"foo", "bar"},
+			webhooks:          []approver.Webhook{passingWebhook, notAllowedWebhookNoDetail},
 			wantsErr:          true,
 		},
 		"if a webhook validation returns warnings, add return them": {
