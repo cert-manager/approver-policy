@@ -33,7 +33,8 @@ RUN make build VERSION=${VERSION}
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static@sha256:5759d194607e472ff80fff5833442d3991dd89b219c96552837a2c8f74058617
+# To get latest SHA run crane digest gcr.io/distroless/static:latest
+FROM gcr.io/distroless/static@sha256:7198a357ff3a8ef750b041324873960cf2153c11cc50abb9d8d5f8bb089f6b4e
 LABEL description="cert-manager Approver based on CertificateRequestPolicy CRD policies"
 
 WORKDIR /
