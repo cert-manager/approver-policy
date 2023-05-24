@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	webhooktesting "github.com/cert-manager/cert-manager/cmd/webhook/app/testing"
+	webhooktesting "github.com/cert-manager/cert-manager/test/webhook"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
