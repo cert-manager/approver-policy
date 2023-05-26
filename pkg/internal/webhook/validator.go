@@ -55,7 +55,8 @@ func (v *validator) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.O
 }
 
 func (v *validator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	return v.validate(ctx, obj)
+	// always allow deletes
+	return nil, nil
 }
 
 // certificateRequestPolicy validates the given CertificateRequestPolicy with
