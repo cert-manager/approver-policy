@@ -18,19 +18,17 @@ package webhook
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"sort"
 	"sync"
 
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	"github.com/cert-manager/approver-policy/pkg/apis/policy"
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
 )
@@ -43,59 +41,38 @@ type validator struct {
 	registeredPlugins []string
 	webhooks          []approver.Webhook
 
-	lister  client.Reader
-	decoder *admission.Decoder
+	lister client.Reader
 }
 
-// Handle is a Kubernetes validation webhook server handler. Returns an
-// admission response containing whether the request is allowed or not.
-func (v *validator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	log := v.log.WithValues("name", req.Name)
-	log.V(2).Info("received validation request")
+var _ admission.CustomValidator = &validator{}
 
-	if req.RequestKind == nil {
-		return admission.Errored(http.StatusBadRequest, errors.New("no resource kind sent in request"))
-	}
+func (v *validator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	return v.validate(ctx, obj)
+}
 
-	switch *req.RequestKind {
-	case metav1.GroupVersionKind{Group: policy.GroupName, Version: "v1alpha1", Kind: "CertificateRequestPolicy"}:
-		log = log.WithValues("kind", "CertificateRequestPolicy")
+func (v *validator) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	return v.validate(ctx, newObj)
+}
 
-		var policy policyapi.CertificateRequestPolicy
-		v.lock.RLock()
-		err := v.decoder.Decode(req, &policy)
-		v.lock.RUnlock()
-
-		if err != nil {
-			log.Error(err, "failed to decode CertificateRequestPolicy")
-			return admission.Errored(http.StatusBadRequest, err)
-		}
-
-		el, err := v.certificateRequestPolicy(ctx, &policy)
-		if err != nil {
-			log.Error(err, "internal error occurred validating request")
-			return admission.Errored(http.StatusInternalServerError, err)
-		}
-
-		if len(el) > 0 {
-			v.log.V(2).Info("denied admission", "errors", err)
-			return admission.Denied(el.ToAggregate().Error())
-		}
-
-		log.V(2).Info("allowed request")
-		return admission.Allowed("CertificateRequestPolicy validated")
-
-	default:
-		return admission.Denied(fmt.Sprintf("validation request for unrecognised resource type: %s/%s %s", req.RequestKind.Group, req.RequestKind.Version, req.RequestKind.Kind))
-	}
+func (v *validator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	// always allow deletes
+	return nil, nil
 }
 
 // certificateRequestPolicy validates the given CertificateRequestPolicy with
 // the base validations, along with all webhook validations registered.
-func (v *validator) certificateRequestPolicy(ctx context.Context, policy *policyapi.CertificateRequestPolicy) (field.ErrorList, error) {
+func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	policy, ok := obj.(*policyapi.CertificateRequestPolicy)
+	if !ok {
+		return nil, fmt.Errorf("expected a CertificateRequestPolicy, but got a %T", obj)
+	}
 	var (
-		el      field.ErrorList
-		fldPath = field.NewPath("spec")
+		el field.ErrorList
+		// TODO: currently there will never be any warnings. Add
+		// warnings to WebhookValidationResponse so that validation
+		// checks implemented in plugins can return warnings.
+		warnings admission.Warnings
+		fldPath  = field.NewPath("spec")
 	)
 
 	// Ensure no plugin has been defined which is not registered.
@@ -142,28 +119,5 @@ func (v *validator) certificateRequestPolicy(ctx context.Context, policy *policy
 		}
 	}
 
-	return el, nil
-}
-
-// InjectDecoder is used by the controller-runtime manager to inject an object
-// decoder to convert into know policy.cert-manager.io types.
-func (v *validator) InjectDecoder(d *admission.Decoder) error {
-	v.lock.Lock()
-	defer v.lock.Unlock()
-
-	v.decoder = d
-	return nil
-}
-
-// check is used by the shared readiness manager to expose whether the server
-// is ready.
-func (v *validator) check(_ *http.Request) error {
-	v.lock.RLock()
-	defer v.lock.RUnlock()
-
-	if v.decoder != nil {
-		return nil
-	}
-
-	return errors.New("not ready")
+	return warnings, el.ToAggregate()
 }

@@ -21,9 +21,10 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
 	"github.com/cert-manager/approver-policy/pkg/internal/webhook/tls"
 	"github.com/cert-manager/approver-policy/pkg/registry"
@@ -96,8 +97,15 @@ func Register(ctx context.Context, opts Options) error {
 		registeredPlugins: registerdPlugins,
 	}
 
-	opts.Manager.GetWebhookServer().Register("/validate", &webhook.Admission{Handler: validator})
-	opts.Manager.AddReadyzCheck("validator", validator.check)
+	err = builder.WebhookManagedBy(opts.Manager).
+		For(&policyapi.CertificateRequestPolicy{}).
+		WithValidator(validator).
+		Complete()
+	if err != nil {
+		return fmt.Errorf("error registering webhook: %v", err)
+	}
+
+	opts.Manager.AddReadyzCheck("validator", opts.Manager.GetWebhookServer().StartedChecker())
 
 	return nil
 }

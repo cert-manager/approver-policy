@@ -49,7 +49,7 @@ webhooks:
       service:
         name: {{ include "cert-manager-approver-policy.name" . }}
         namespace: {{ .Release.Namespace | quote }}
-        path: /validate
+        path: /validate-policy-cert-manager-io-v1alpha1-certificaterequestpolicy
 ---
 apiVersion: v1
 kind: Secret

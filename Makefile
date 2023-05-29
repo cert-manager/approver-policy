@@ -220,7 +220,7 @@ $(BINDIR)/kind: | $(BINDIR)
 	cd hack/tools && go build -o $@ sigs.k8s.io/kind
 
 $(BINDIR)/kustomize: | $(BINDIR)
-	cd hack/tools && go build -o $@ sigs.k8s.io/kustomize/kustomize/v4
+	cd hack/tools && go build -o $@ sigs.k8s.io/kustomize/kustomize/v5
 
 $(BINDIR)/helm: | $(BINDIR)
 	curl -o $(BINDIR)/helm.tar.gz -sSL "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
