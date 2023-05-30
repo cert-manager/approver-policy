@@ -21,11 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"sync"
 
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -36,8 +36,7 @@ import (
 
 // validator validates against policy.cert-manager.io resources.
 type validator struct {
-	lock sync.RWMutex
-	log  logr.Logger
+	log logr.Logger
 
 	registeredPlugins []string
 	webhooks          []approver.Webhook
@@ -68,9 +67,9 @@ func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission
 		return nil, fmt.Errorf("expected a CertificateRequestPolicy, but got a %T", obj)
 	}
 	var (
-		el       []error
-		warnings admission.Warnings
-		fldPath  = field.NewPath("spec")
+		fieldErrs field.ErrorList
+		warnings  admission.Warnings
+		fldPath   = field.NewPath("spec")
 	)
 
 	// Ensure no plugin has been defined which is not registered.
@@ -93,38 +92,46 @@ func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission
 		// Sort list so testing is deterministic.
 		sort.Strings(unrecognisedNames)
 		for _, name := range unrecognisedNames {
-			el = append(el, field.NotSupported(fldPath.Child("plugins"), name, v.registeredPlugins))
+			fieldErrs = append(fieldErrs, field.NotSupported(fldPath.Child("plugins"), name, v.registeredPlugins))
 		}
 	}
 
 	if policy.Spec.Selector.IssuerRef == nil && policy.Spec.Selector.Namespace == nil {
-		el = append(el, field.Required(fldPath.Child("selector"), "one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"))
+		fieldErrs = append(fieldErrs, field.Required(fldPath.Child("selector"), "one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"))
 	}
 
 	if nsSel := policy.Spec.Selector.Namespace; nsSel != nil && len(nsSel.MatchLabels) > 0 {
 		if _, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: nsSel.MatchLabels}); err != nil {
-			el = append(el, field.Invalid(fldPath.Child("selector", "namespace", "matchLabels"), nsSel.MatchLabels, err.Error()))
+			fieldErrs = append(fieldErrs, field.Invalid(fldPath.Child("selector", "namespace", "matchLabels"), nsSel.MatchLabels, err.Error()))
 		}
 	}
 
+	allAllowed := true
 	for _, webhook := range v.webhooks {
 		response, err := webhook.Validate(ctx, policy)
 		if err != nil {
 			return nil, err
 		}
 		if !response.Allowed {
-			for _, e := range response.Errors {
-				el = append(el, e)
-			}
-			// do not allow a CertificateRequestPolicy if it was not
-			// allowed by a plugin that did not set any errors
-			// TODO: when webhooks implement Name() method, provide a plugin name here
-			if len(response.Errors) < 1 {
-				el = append(el, errors.New("a plugin did not allow the CertificateRequest for unknown reasons"))
-			}
+			fieldErrs = append(fieldErrs, response.Errors...)
+
+			allAllowed = false
 		}
 		warnings = append(warnings, response.Warnings...)
 	}
 
-	return warnings, el.ToAggregate()
+	var errs []error
+
+	if aggregateError := fieldErrs.ToAggregate(); aggregateError != nil {
+		errs = append(errs, aggregateError.Errors()...)
+	}
+
+	// do not allow a CertificateRequestPolicy if it was not
+	// allowed by a plugin that did not set any errors
+	// TODO: when webhooks implement Name() method, provide a plugin name
+	if !allAllowed && len(errs) == 0 {
+		errs = append(errs, errors.New("a plugin did not allow the CertificateRequest for unknown reasons"))
+	}
+
+	return warnings, utilerrors.NewAggregate(errs)
 }
