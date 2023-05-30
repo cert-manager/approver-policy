@@ -67,10 +67,7 @@ func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission
 		return nil, fmt.Errorf("expected a CertificateRequestPolicy, but got a %T", obj)
 	}
 	var (
-		el field.ErrorList
-		// TODO: currently there will never be any warnings. Add
-		// warnings to WebhookValidationResponse so that validation
-		// checks implemented in plugins can return warnings.
+		el       field.ErrorList
 		warnings admission.Warnings
 		fldPath  = field.NewPath("spec")
 	)
@@ -117,6 +114,7 @@ func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission
 		if !response.Allowed {
 			el = append(el, response.Errors...)
 		}
+		warnings = append(warnings, response.Warnings...)
 	}
 
 	return warnings, el.ToAggregate()

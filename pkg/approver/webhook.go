@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 )
@@ -32,6 +33,11 @@ type WebhookValidationResponse struct {
 
 	// Errors are errors in response to the validation request being not Allowed.
 	Errors field.ErrorList
+
+	// Warnings are non-fatal warnings when validating a CertificateRequestPolicy
+	// Will be displayed as admission warnings when a CertificateRequestPolicy is applied
+	// https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#response
+	Warnings admission.Warnings
 }
 
 // Webhook is responsible for making decisions about whether a
