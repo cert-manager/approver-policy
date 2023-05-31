@@ -30,9 +30,13 @@ all: help
 ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
-HELM_VERSION ?= 3.10.0
-KUBEBUILDER_TOOLS_VERSION ?= 1.25.0
-KYVERNO_VERSION ?= v1.8.1
+# Check https://github.com/helm/helm/releases for latest available release
+HELM_VERSION ?= 3.11.3
+# Check https://github.com/kubernetes-sigs/kubebuilder/blob/tools-releases/build/cloudbuild_tools.yaml
+# for latest available tag
+KUBEBUILDER_TOOLS_VERSION ?= 1.27.1
+# Check https://github.com/kyverno/kyverno/releases for latest available release
+KYVERNO_VERSION ?= v1.10.0
 K8S_CLUSTER_NAME ?= approver-policy
 IMAGE_REGISTRY ?= quay.io/jetstack
 IMAGE_NAME := cert-manager-approver-policy
