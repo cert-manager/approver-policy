@@ -50,4 +50,5 @@ type Webhook interface {
 	// Similarly, any error will cause the object not to be committed
 	// immediately, and no other webhooks will be run.
 	Validate(context.Context, *policyapi.CertificateRequestPolicy) (WebhookValidationResponse, error)
+	// TODO: add a Name() method
 }
