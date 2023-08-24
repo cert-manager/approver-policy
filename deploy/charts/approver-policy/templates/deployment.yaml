@@ -42,7 +42,6 @@ spec:
             path: "/readyz"
           initialDelaySeconds: 3
           periodSeconds: 7
-        command: ["cert-manager-approver-policy"]
         args:
           - --log-level={{.Values.app.logLevel}}
 
