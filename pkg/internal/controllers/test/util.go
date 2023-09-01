@@ -141,6 +141,8 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 	log, ctx := ktesting.NewTestContext(GinkgoT())
 	ctx, cancel := context.WithCancel(ctx)
 
+	ctrl.SetLogger(log)
+
 	namespace := corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-policy-",
