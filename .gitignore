@@ -6,6 +6,7 @@
 *.so
 *.dylib
 _bin
+bin
 
 # Test binary, build with `go test -c`
 *.test
@@ -19,6 +20,7 @@ _bin
 
 # editor and IDE paraphernalia
 .idea
+*.iml
 *.swp
 *.swo
 *~

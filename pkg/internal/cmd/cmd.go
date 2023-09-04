@@ -50,6 +50,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			logf.Log = opts.Logr.WithName("apiutil")
 			log := opts.Logr.WithName("main")
 
+			mlog := opts.Logr.WithName("controller-manager")
+
+			ctrl.SetLogger(mlog)
+
 			mgr, err := ctrl.NewManager(opts.RestConfig, ctrl.Options{
 				Scheme:                        policyapi.GlobalScheme,
 				LeaderElection:                true,
@@ -63,7 +67,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Port:                          opts.Webhook.Port,
 				Host:                          opts.Webhook.Host,
 				CertDir:                       opts.Webhook.CertDir,
-				Logger:                        opts.Logr.WithName("controller-manager"),
+				Logger:                        mlog,
 			})
 			if err != nil {
 				return fmt.Errorf("unable to create controller manager: %w", err)
