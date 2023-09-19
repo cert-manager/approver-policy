@@ -23,6 +23,8 @@ import (
 	logf "github.com/cert-manager/cert-manager/pkg/logs"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/internal/cmd/options"
@@ -63,11 +65,15 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
 				ReadinessEndpointName:         "/readyz",
 				HealthProbeBindAddress:        opts.ReadyzAddress,
-				MetricsBindAddress:            opts.MetricsAddress,
-				Port:                          opts.Webhook.Port,
-				Host:                          opts.Webhook.Host,
-				CertDir:                       opts.Webhook.CertDir,
-				Logger:                        mlog,
+				Metrics: server.Options{
+					BindAddress: opts.MetricsAddress,
+				},
+				WebhookServer: ctrlwebhook.NewServer(ctrlwebhook.Options{
+					Port:    opts.Webhook.Port,
+					Host:    opts.Webhook.Host,
+					CertDir: opts.Webhook.CertDir,
+				}),
+				Logger: mlog,
 			})
 			if err != nil {
 				return fmt.Errorf("unable to create controller manager: %w", err)

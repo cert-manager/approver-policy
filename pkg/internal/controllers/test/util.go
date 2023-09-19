@@ -33,6 +33,7 @@ import (
 	"k8s.io/klog/v2/ktesting"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/internal/controllers"
@@ -200,8 +201,10 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 	}
 
 	mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
-		Scheme:             policyapi.GlobalScheme,
-		MetricsBindAddress: "0",
+		Scheme: policyapi.GlobalScheme,
+		Metrics: server.Options{
+			BindAddress: "0",
+		},
 		// we don't need leader election for this test,
 		// there should only be one test running at a time
 		// the controllerLock ensures that
