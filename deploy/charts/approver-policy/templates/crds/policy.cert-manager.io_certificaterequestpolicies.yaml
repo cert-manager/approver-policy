@@ -71,7 +71,7 @@ spec:
                           be present on the request. Accepts wildcards "*". An omitted
                           field or value of `nil` forbids the value from being requested.
                           An empty string is equivalent to `nil`, however an empty
-                          string pared with Required as `true` is an impossible condition
+                          string paired with Required as `true` is an impossible condition
                           that always denies. Value may not be `nil` if Required is
                           `true`.
                         type: string
@@ -91,7 +91,7 @@ spec:
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
-                          is equivalent to `nil`, however an empty slice pared with
+                          is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
                           Values may not be `nil` if Required is `true`.
                         items:
@@ -113,7 +113,7 @@ spec:
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
-                          is equivalent to `nil`, however an empty slice pared with
+                          is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
                           Values may not be `nil` if Required is `true`.
                         items:
@@ -135,7 +135,7 @@ spec:
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
-                          is equivalent to `nil`, however an empty slice pared with
+                          is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
                           Values may not be `nil` if Required is `true`.
                         items:
@@ -170,7 +170,7 @@ spec:
                               field or value of `nil` forbids any value on the related
                               field in the request from being requested. An empty
                               slice `[]` is equivalent to `nil`, however an empty
-                              slice pared with Required `true` is an impossible condition
+                              slice paired with Required `true` is an impossible condition
                               that always denies. Values may not be `nil` if Required
                               is `true`.
                             items:
@@ -193,7 +193,7 @@ spec:
                               field or value of `nil` forbids any value on the related
                               field in the request from being requested. An empty
                               slice `[]` is equivalent to `nil`, however an empty
-                              slice pared with Required `true` is an impossible condition
+                              slice paired with Required `true` is an impossible condition
                               that always denies. Values may not be `nil` if Required
                               is `true`.
                             items:
@@ -216,7 +216,7 @@ spec:
                               field or value of `nil` forbids any value on the related
                               field in the request from being requested. An empty
                               slice `[]` is equivalent to `nil`, however an empty
-                              slice pared with Required `true` is an impossible condition
+                              slice paired with Required `true` is an impossible condition
                               that always denies. Values may not be `nil` if Required
                               is `true`.
                             items:
@@ -239,7 +239,7 @@ spec:
                               field or value of `nil` forbids any value on the related
                               field in the request from being requested. An empty
                               slice `[]` is equivalent to `nil`, however an empty
-                              slice pared with Required `true` is an impossible condition
+                              slice paired with Required `true` is an impossible condition
                               that always denies. Values may not be `nil` if Required
                               is `true`.
                             items:
@@ -262,7 +262,7 @@ spec:
                               field or value of `nil` forbids any value on the related
                               field in the request from being requested. An empty
                               slice `[]` is equivalent to `nil`, however an empty
-                              slice pared with Required `true` is an impossible condition
+                              slice paired with Required `true` is an impossible condition
                               that always denies. Values may not be `nil` if Required
                               is `true`.
                             items:
@@ -285,7 +285,7 @@ spec:
                               field or value of `nil` forbids any value on the related
                               field in the request from being requested. An empty
                               slice `[]` is equivalent to `nil`, however an empty
-                              slice pared with Required `true` is an impossible condition
+                              slice paired with Required `true` is an impossible condition
                               that always denies. Values may not be `nil` if Required
                               is `true`.
                             items:
@@ -306,7 +306,7 @@ spec:
                               to be present on the request. Accepts wildcards "*".
                               An omitted field or value of `nil` forbids the value
                               from being requested. An empty string is equivalent
-                              to `nil`, however an empty string pared with Required
+                              to `nil`, however an empty string paired with Required
                               as `true` is an impossible condition that always denies.
                               Value may not be `nil` if Required is `true`.
                             type: string
@@ -327,7 +327,7 @@ spec:
                               field or value of `nil` forbids any value on the related
                               field in the request from being requested. An empty
                               slice `[]` is equivalent to `nil`, however an empty
-                              slice pared with Required `true` is an impossible condition
+                              slice paired with Required `true` is an impossible condition
                               that always denies. Values may not be `nil` if Required
                               is `true`.
                             items:
@@ -350,7 +350,7 @@ spec:
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
-                          is equivalent to `nil`, however an empty slice pared with
+                          is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
                           Values may not be `nil` if Required is `true`.
                         items:

@@ -201,7 +201,7 @@ type CertificateRequestPolicyAllowedString struct {
     // Value defines the value that is permissible to be present on the request.
     // Accepts wildcards "*".
     // An omitted field or value of `nil` forbids the value from being requested.
-    // An empty string is equivalent to `nil`, however an empty string pared with
+    // An empty string is equivalent to `nil`, however an empty string paired with
     // Required as `true` is an impossible condition that always denies.
     // Value may not be `nil` if Required is `true`.
     // +optional
@@ -240,7 +240,7 @@ type CertificateRequestPolicyAllowedStringSlice struct {
     // Accepts wildcards "*".
     // An omitted field or value of `nil` forbids any value on the related field
     // in the request from being requested.
-    // An empty slice `[]` is equivalent to `nil`, however an empty slice pared
+    // An empty slice `[]` is equivalent to `nil`, however an empty slice paired
     // with Required `true` is an impossible condition that always denies.
     // Values may not be `nil` if Required is `true`.
     // +optional
