@@ -125,7 +125,7 @@ type CertificateRequestPolicyAllowed struct {
 	// on the CertificateRequest `spec.keyUsages` field.
 	// An omitted field or value of `nil` forbids any Usages being requested.
 	// An empty slice `[]` is equivalent to `nil`.
-	// +listType=set
+	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
 	Usages *[]cmapi.KeyUsage `json:"usages,omitempty"`
 
@@ -189,7 +189,7 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 	// An empty slice `[]` is equivalent to `nil`, however an empty slice paired
 	// with Required `true` is an impossible condition that always denies.
 	// Values may not be `nil` if Required is `true`.
-	// +listType=set
+	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
 	Values *[]string `json:"values,omitempty"`
 
@@ -353,7 +353,7 @@ type CertificateRequestPolicySelectorNamespace struct {
 	// MatchNames are the set of Namespace names that select on
 	// CertificateRequests that have been created in a matching Namespace.
 	// Accepts wildcards "*".
-	// +listType=set
+	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
 	MatchNames []string `json:"matchNames,omitempty"`
 
