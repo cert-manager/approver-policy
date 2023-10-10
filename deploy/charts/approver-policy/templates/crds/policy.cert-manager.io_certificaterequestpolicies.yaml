@@ -87,13 +87,14 @@ spec:
                           not required.
                         type: boolean
                       values:
-                        description: Defines the values that are permissible to be
+                        description: 'Defines the values that are permissible to be
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
                           is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
-                          Values may not be `nil` if Required is `true`.
+                          Values may not be `nil` if Required is `true`. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2'
                         items:
                           type: string
                         type: array
@@ -109,13 +110,14 @@ spec:
                           not required.
                         type: boolean
                       values:
-                        description: Defines the values that are permissible to be
+                        description: 'Defines the values that are permissible to be
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
                           is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
-                          Values may not be `nil` if Required is `true`.
+                          Values may not be `nil` if Required is `true`. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2'
                         items:
                           type: string
                         type: array
@@ -131,13 +133,14 @@ spec:
                           not required.
                         type: boolean
                       values:
-                        description: Defines the values that are permissible to be
+                        description: 'Defines the values that are permissible to be
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
                           is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
-                          Values may not be `nil` if Required is `true`.
+                          Values may not be `nil` if Required is `true`. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2'
                         items:
                           type: string
                         type: array
@@ -165,14 +168,15 @@ spec:
                               as not required.
                             type: boolean
                           values:
-                            description: Defines the values that are permissible to
-                              be present on request. Accepts wildcards "*". An omitted
-                              field or value of `nil` forbids any value on the related
-                              field in the request from being requested. An empty
-                              slice `[]` is equivalent to `nil`, however an empty
-                              slice paired with Required `true` is an impossible condition
-                              that always denies. Values may not be `nil` if Required
-                              is `true`.
+                            description: 'Defines the values that are permissible
+                              to be present on request. Accepts wildcards "*". An
+                              omitted field or value of `nil` forbids any value on
+                              the related field in the request from being requested.
+                              An empty slice `[]` is equivalent to `nil`, however
+                              an empty slice paired with Required `true` is an impossible
+                              condition that always denies. Values may not be `nil`
+                              if Required is `true`. TODO: add x-kubernetes-list-type:
+                              set in v1alpha2'
                             items:
                               type: string
                             type: array
@@ -188,14 +192,15 @@ spec:
                               as not required.
                             type: boolean
                           values:
-                            description: Defines the values that are permissible to
-                              be present on request. Accepts wildcards "*". An omitted
-                              field or value of `nil` forbids any value on the related
-                              field in the request from being requested. An empty
-                              slice `[]` is equivalent to `nil`, however an empty
-                              slice paired with Required `true` is an impossible condition
-                              that always denies. Values may not be `nil` if Required
-                              is `true`.
+                            description: 'Defines the values that are permissible
+                              to be present on request. Accepts wildcards "*". An
+                              omitted field or value of `nil` forbids any value on
+                              the related field in the request from being requested.
+                              An empty slice `[]` is equivalent to `nil`, however
+                              an empty slice paired with Required `true` is an impossible
+                              condition that always denies. Values may not be `nil`
+                              if Required is `true`. TODO: add x-kubernetes-list-type:
+                              set in v1alpha2'
                             items:
                               type: string
                             type: array
@@ -211,14 +216,15 @@ spec:
                               as not required.
                             type: boolean
                           values:
-                            description: Defines the values that are permissible to
-                              be present on request. Accepts wildcards "*". An omitted
-                              field or value of `nil` forbids any value on the related
-                              field in the request from being requested. An empty
-                              slice `[]` is equivalent to `nil`, however an empty
-                              slice paired with Required `true` is an impossible condition
-                              that always denies. Values may not be `nil` if Required
-                              is `true`.
+                            description: 'Defines the values that are permissible
+                              to be present on request. Accepts wildcards "*". An
+                              omitted field or value of `nil` forbids any value on
+                              the related field in the request from being requested.
+                              An empty slice `[]` is equivalent to `nil`, however
+                              an empty slice paired with Required `true` is an impossible
+                              condition that always denies. Values may not be `nil`
+                              if Required is `true`. TODO: add x-kubernetes-list-type:
+                              set in v1alpha2'
                             items:
                               type: string
                             type: array
@@ -234,14 +240,15 @@ spec:
                               as not required.
                             type: boolean
                           values:
-                            description: Defines the values that are permissible to
-                              be present on request. Accepts wildcards "*". An omitted
-                              field or value of `nil` forbids any value on the related
-                              field in the request from being requested. An empty
-                              slice `[]` is equivalent to `nil`, however an empty
-                              slice paired with Required `true` is an impossible condition
-                              that always denies. Values may not be `nil` if Required
-                              is `true`.
+                            description: 'Defines the values that are permissible
+                              to be present on request. Accepts wildcards "*". An
+                              omitted field or value of `nil` forbids any value on
+                              the related field in the request from being requested.
+                              An empty slice `[]` is equivalent to `nil`, however
+                              an empty slice paired with Required `true` is an impossible
+                              condition that always denies. Values may not be `nil`
+                              if Required is `true`. TODO: add x-kubernetes-list-type:
+                              set in v1alpha2'
                             items:
                               type: string
                             type: array
@@ -257,14 +264,15 @@ spec:
                               as not required.
                             type: boolean
                           values:
-                            description: Defines the values that are permissible to
-                              be present on request. Accepts wildcards "*". An omitted
-                              field or value of `nil` forbids any value on the related
-                              field in the request from being requested. An empty
-                              slice `[]` is equivalent to `nil`, however an empty
-                              slice paired with Required `true` is an impossible condition
-                              that always denies. Values may not be `nil` if Required
-                              is `true`.
+                            description: 'Defines the values that are permissible
+                              to be present on request. Accepts wildcards "*". An
+                              omitted field or value of `nil` forbids any value on
+                              the related field in the request from being requested.
+                              An empty slice `[]` is equivalent to `nil`, however
+                              an empty slice paired with Required `true` is an impossible
+                              condition that always denies. Values may not be `nil`
+                              if Required is `true`. TODO: add x-kubernetes-list-type:
+                              set in v1alpha2'
                             items:
                               type: string
                             type: array
@@ -280,14 +288,15 @@ spec:
                               as not required.
                             type: boolean
                           values:
-                            description: Defines the values that are permissible to
-                              be present on request. Accepts wildcards "*". An omitted
-                              field or value of `nil` forbids any value on the related
-                              field in the request from being requested. An empty
-                              slice `[]` is equivalent to `nil`, however an empty
-                              slice paired with Required `true` is an impossible condition
-                              that always denies. Values may not be `nil` if Required
-                              is `true`.
+                            description: 'Defines the values that are permissible
+                              to be present on request. Accepts wildcards "*". An
+                              omitted field or value of `nil` forbids any value on
+                              the related field in the request from being requested.
+                              An empty slice `[]` is equivalent to `nil`, however
+                              an empty slice paired with Required `true` is an impossible
+                              condition that always denies. Values may not be `nil`
+                              if Required is `true`. TODO: add x-kubernetes-list-type:
+                              set in v1alpha2'
                             items:
                               type: string
                             type: array
@@ -322,14 +331,15 @@ spec:
                               as not required.
                             type: boolean
                           values:
-                            description: Defines the values that are permissible to
-                              be present on request. Accepts wildcards "*". An omitted
-                              field or value of `nil` forbids any value on the related
-                              field in the request from being requested. An empty
-                              slice `[]` is equivalent to `nil`, however an empty
-                              slice paired with Required `true` is an impossible condition
-                              that always denies. Values may not be `nil` if Required
-                              is `true`.
+                            description: 'Defines the values that are permissible
+                              to be present on request. Accepts wildcards "*". An
+                              omitted field or value of `nil` forbids any value on
+                              the related field in the request from being requested.
+                              An empty slice `[]` is equivalent to `nil`, however
+                              an empty slice paired with Required `true` is an impossible
+                              condition that always denies. Values may not be `nil`
+                              if Required is `true`. TODO: add x-kubernetes-list-type:
+                              set in v1alpha2'
                             items:
                               type: string
                             type: array
@@ -346,22 +356,24 @@ spec:
                           not required.
                         type: boolean
                       values:
-                        description: Defines the values that are permissible to be
+                        description: 'Defines the values that are permissible to be
                           present on request. Accepts wildcards "*". An omitted field
                           or value of `nil` forbids any value on the related field
                           in the request from being requested. An empty slice `[]`
                           is equivalent to `nil`, however an empty slice paired with
                           Required `true` is an impossible condition that always denies.
-                          Values may not be `nil` if Required is `true`.
+                          Values may not be `nil` if Required is `true`. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2'
                         items:
                           type: string
                         type: array
                     type: object
                   usages:
-                    description: Usages defines the list of permissible key usages
+                    description: 'Usages defines the list of permissible key usages
                       that may appear on the CertificateRequest `spec.keyUsages` field.
                       An omitted field or value of `nil` forbids any Usages being
-                      requested. An empty slice `[]` is equivalent to `nil`.
+                      requested. An empty slice `[]` is equivalent to `nil`. TODO:
+                      add x-kubernetes-list-type: set in v1alpha2'
                     items:
                       description: "KeyUsage specifies valid usage contexts for keys.
                         See: https://tools.ietf.org/html/rfc5280#section-4.2.1.3 https://tools.ietf.org/html/rfc5280#section-4.2.1.12
@@ -518,9 +530,10 @@ spec:
                           a Namespace matching the selector.
                         type: object
                       matchNames:
-                        description: MatchNames are the set of Namespace names that
+                        description: 'MatchNames are the set of Namespace names that
                           select on CertificateRequests that have been created in
-                          a matching Namespace. Accepts wildcards "*".
+                          a matching Namespace. Accepts wildcards "*". TODO: add x-kubernetes-list-type:
+                          set in v1alpha2'
                         items:
                           type: string
                         type: array
