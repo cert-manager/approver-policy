@@ -25,17 +25,20 @@ import (
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
+	"github.com/cert-manager/approver-policy/pkg/internal/approver/validation"
 	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
 // Load the allowed approver.
 func init() {
-	registry.Shared.Store(allowed{})
+	registry.Shared.Store(Approver())
 }
 
 // Approver returns an instance on the allowed approver.
 func Approver() approver.Interface {
-	return allowed{}
+	return allowed{
+		validators: validation.NewCache(),
+	}
 }
 
 // allowed is a base approver-policy Approver that is responsible for ensuring
@@ -44,7 +47,9 @@ func Approver() approver.Interface {
 // attributes which they are allowed to in the policy are permitted. It is
 // expected that allowed must _always_ be registered for all
 // approver-policy builds.
-type allowed struct{}
+type allowed struct {
+	validators validation.Cache
+}
 
 // Name of Approver is "allowed"
 func (a allowed) Name() string {

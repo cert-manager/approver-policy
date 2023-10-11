@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package cm.io.policy.pkg.internal.approver.validation;
+
+option go_package = "github.com/cert-manager/approver-policy/pkg/internal/approver/validation";
+
+message CertificateRequest {
+  string name = 1;
+  string namespace = 2;
+}

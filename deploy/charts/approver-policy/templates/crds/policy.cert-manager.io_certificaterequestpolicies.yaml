@@ -66,14 +66,51 @@ spec:
                         description: Required marks that the related field must be
                           provided and not be an empty string. Defaults to `false`.
                         type: boolean
+                      validations:
+                        description: Validations applies rules using Common Expression
+                          Language (CEL) to validate attribute value present on request
+                          beyond what is possible to express using value/required.
+                          An attribute value on the related CertificateRequest field
+                          must pass ALL validations for the request to be granted
+                          by this policy.
+                        items:
+                          description: ValidationRule describes a validation rule
+                            expressed in CEL.
+                          properties:
+                            message:
+                              description: 'Message is the message to display when
+                                validation fails. Message is required if the Rule
+                                contains line breaks. Note that Message must not contain
+                                line breaks. If unset, a fallback message is used:
+                                "failed rule: {Rule}". e.g. "must be a URL with the
+                                host matching spec.host"'
+                              type: string
+                            rule:
+                              description: "Rule represents the expression which will
+                                be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                The Rule is scoped to the location of the validations
+                                in the schema. The `self` variable in the CEL expression
+                                is bound to the scoped value. To enable more advanced
+                                validation rules, approver-policy provides the `cr`
+                                (map) variable to the CEL expression containing `namespace`
+                                and `name` of the `CertificateRequest` resource. \n
+                                Examples: - Rule for namespaced DNSNames: {\"rule\":
+                                \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                              type: string
+                          required:
+                          - rule
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - rule
+                        x-kubernetes-list-type: map
                       value:
                         description: "Value defines the allowed attribute value on
                           the related CertificateRequest field. Accepts wildcards
                           \"*\". If set, the related field must match the specified
-                          pattern. If `\"\"` or unset, the related field must be empty.
-                          \n NOTE:`value: \"\"` paired with `required: true` establishes
-                          a policy that will never grant a `CertificateRequest`, but
-                          other policies may."
+                          pattern. \n NOTE:`value: \"\"` paired with `required: true`
+                          establishes a policy that will never grant a `CertificateRequest`,
+                          but other policies may."
                         type: string
                     type: object
                   dnsNames:
@@ -83,15 +120,52 @@ spec:
                         description: Required controls whether the related field must
                           have at least one value. Defaults to `false`.
                         type: boolean
+                      validations:
+                        description: Validations applies rules using Common Expression
+                          Language (CEL) to validate attribute values present on request
+                          beyond what is possible to express using values/required.
+                          ALL attribute values on the related CertificateRequest field
+                          must pass ALL validations for the request to be granted
+                          by this policy.
+                        items:
+                          description: ValidationRule describes a validation rule
+                            expressed in CEL.
+                          properties:
+                            message:
+                              description: 'Message is the message to display when
+                                validation fails. Message is required if the Rule
+                                contains line breaks. Note that Message must not contain
+                                line breaks. If unset, a fallback message is used:
+                                "failed rule: {Rule}". e.g. "must be a URL with the
+                                host matching spec.host"'
+                              type: string
+                            rule:
+                              description: "Rule represents the expression which will
+                                be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                The Rule is scoped to the location of the validations
+                                in the schema. The `self` variable in the CEL expression
+                                is bound to the scoped value. To enable more advanced
+                                validation rules, approver-policy provides the `cr`
+                                (map) variable to the CEL expression containing `namespace`
+                                and `name` of the `CertificateRequest` resource. \n
+                                Examples: - Rule for namespaced DNSNames: {\"rule\":
+                                \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                              type: string
+                          required:
+                          - rule
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - rule
+                        x-kubernetes-list-type: map
                       values:
                         description: "Values defines allowed attribute values on the
                           related CertificateRequest field. Accepts wildcards \"*\".
                           If set, the related field can only include items contained
-                          in the allowed values. If `[]` or unset, the related field
-                          must be empty. \n NOTE:`values: []` paired with `required:
-                          true` establishes a policy that will never grant a `CertificateRequest`,
-                          but other policies may. TODO: add x-kubernetes-list-type:
-                          set in v1alpha2"
+                          in the allowed values. \n NOTE:`values: []` paired with
+                          `required: true` establishes a policy that will never grant
+                          a `CertificateRequest`, but other policies may. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2"
                         items:
                           type: string
                         type: array
@@ -104,15 +178,52 @@ spec:
                         description: Required controls whether the related field must
                           have at least one value. Defaults to `false`.
                         type: boolean
+                      validations:
+                        description: Validations applies rules using Common Expression
+                          Language (CEL) to validate attribute values present on request
+                          beyond what is possible to express using values/required.
+                          ALL attribute values on the related CertificateRequest field
+                          must pass ALL validations for the request to be granted
+                          by this policy.
+                        items:
+                          description: ValidationRule describes a validation rule
+                            expressed in CEL.
+                          properties:
+                            message:
+                              description: 'Message is the message to display when
+                                validation fails. Message is required if the Rule
+                                contains line breaks. Note that Message must not contain
+                                line breaks. If unset, a fallback message is used:
+                                "failed rule: {Rule}". e.g. "must be a URL with the
+                                host matching spec.host"'
+                              type: string
+                            rule:
+                              description: "Rule represents the expression which will
+                                be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                The Rule is scoped to the location of the validations
+                                in the schema. The `self` variable in the CEL expression
+                                is bound to the scoped value. To enable more advanced
+                                validation rules, approver-policy provides the `cr`
+                                (map) variable to the CEL expression containing `namespace`
+                                and `name` of the `CertificateRequest` resource. \n
+                                Examples: - Rule for namespaced DNSNames: {\"rule\":
+                                \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                              type: string
+                          required:
+                          - rule
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - rule
+                        x-kubernetes-list-type: map
                       values:
                         description: "Values defines allowed attribute values on the
                           related CertificateRequest field. Accepts wildcards \"*\".
                           If set, the related field can only include items contained
-                          in the allowed values. If `[]` or unset, the related field
-                          must be empty. \n NOTE:`values: []` paired with `required:
-                          true` establishes a policy that will never grant a `CertificateRequest`,
-                          but other policies may. TODO: add x-kubernetes-list-type:
-                          set in v1alpha2"
+                          in the allowed values. \n NOTE:`values: []` paired with
+                          `required: true` establishes a policy that will never grant
+                          a `CertificateRequest`, but other policies may. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2"
                         items:
                           type: string
                         type: array
@@ -125,15 +236,52 @@ spec:
                         description: Required controls whether the related field must
                           have at least one value. Defaults to `false`.
                         type: boolean
+                      validations:
+                        description: Validations applies rules using Common Expression
+                          Language (CEL) to validate attribute values present on request
+                          beyond what is possible to express using values/required.
+                          ALL attribute values on the related CertificateRequest field
+                          must pass ALL validations for the request to be granted
+                          by this policy.
+                        items:
+                          description: ValidationRule describes a validation rule
+                            expressed in CEL.
+                          properties:
+                            message:
+                              description: 'Message is the message to display when
+                                validation fails. Message is required if the Rule
+                                contains line breaks. Note that Message must not contain
+                                line breaks. If unset, a fallback message is used:
+                                "failed rule: {Rule}". e.g. "must be a URL with the
+                                host matching spec.host"'
+                              type: string
+                            rule:
+                              description: "Rule represents the expression which will
+                                be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                The Rule is scoped to the location of the validations
+                                in the schema. The `self` variable in the CEL expression
+                                is bound to the scoped value. To enable more advanced
+                                validation rules, approver-policy provides the `cr`
+                                (map) variable to the CEL expression containing `namespace`
+                                and `name` of the `CertificateRequest` resource. \n
+                                Examples: - Rule for namespaced DNSNames: {\"rule\":
+                                \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                              type: string
+                          required:
+                          - rule
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - rule
+                        x-kubernetes-list-type: map
                       values:
                         description: "Values defines allowed attribute values on the
                           related CertificateRequest field. Accepts wildcards \"*\".
                           If set, the related field can only include items contained
-                          in the allowed values. If `[]` or unset, the related field
-                          must be empty. \n NOTE:`values: []` paired with `required:
-                          true` establishes a policy that will never grant a `CertificateRequest`,
-                          but other policies may. TODO: add x-kubernetes-list-type:
-                          set in v1alpha2"
+                          in the allowed values. \n NOTE:`values: []` paired with
+                          `required: true` establishes a policy that will never grant
+                          a `CertificateRequest`, but other policies may. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2"
                         items:
                           type: string
                         type: array
@@ -158,14 +306,51 @@ spec:
                             description: Required controls whether the related field
                               must have at least one value. Defaults to `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute values present
+                              on request beyond what is possible to express using
+                              values/required. ALL attribute values on the related
+                              CertificateRequest field must pass ALL validations for
+                              the request to be granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           values:
                             description: "Values defines allowed attribute values
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field can only include items
-                              contained in the allowed values. If `[]` or unset, the
-                              related field must be empty. \n NOTE:`values: []` paired
-                              with `required: true` establishes a policy that will
-                              never grant a `CertificateRequest`, but other policies
+                              contained in the allowed values. \n NOTE:`values: []`
+                              paired with `required: true` establishes a policy that
+                              will never grant a `CertificateRequest`, but other policies
                               may. TODO: add x-kubernetes-list-type: set in v1alpha2"
                             items:
                               type: string
@@ -179,14 +364,51 @@ spec:
                             description: Required controls whether the related field
                               must have at least one value. Defaults to `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute values present
+                              on request beyond what is possible to express using
+                              values/required. ALL attribute values on the related
+                              CertificateRequest field must pass ALL validations for
+                              the request to be granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           values:
                             description: "Values defines allowed attribute values
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field can only include items
-                              contained in the allowed values. If `[]` or unset, the
-                              related field must be empty. \n NOTE:`values: []` paired
-                              with `required: true` establishes a policy that will
-                              never grant a `CertificateRequest`, but other policies
+                              contained in the allowed values. \n NOTE:`values: []`
+                              paired with `required: true` establishes a policy that
+                              will never grant a `CertificateRequest`, but other policies
                               may. TODO: add x-kubernetes-list-type: set in v1alpha2"
                             items:
                               type: string
@@ -200,14 +422,51 @@ spec:
                             description: Required controls whether the related field
                               must have at least one value. Defaults to `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute values present
+                              on request beyond what is possible to express using
+                              values/required. ALL attribute values on the related
+                              CertificateRequest field must pass ALL validations for
+                              the request to be granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           values:
                             description: "Values defines allowed attribute values
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field can only include items
-                              contained in the allowed values. If `[]` or unset, the
-                              related field must be empty. \n NOTE:`values: []` paired
-                              with `required: true` establishes a policy that will
-                              never grant a `CertificateRequest`, but other policies
+                              contained in the allowed values. \n NOTE:`values: []`
+                              paired with `required: true` establishes a policy that
+                              will never grant a `CertificateRequest`, but other policies
                               may. TODO: add x-kubernetes-list-type: set in v1alpha2"
                             items:
                               type: string
@@ -221,14 +480,51 @@ spec:
                             description: Required controls whether the related field
                               must have at least one value. Defaults to `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute values present
+                              on request beyond what is possible to express using
+                              values/required. ALL attribute values on the related
+                              CertificateRequest field must pass ALL validations for
+                              the request to be granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           values:
                             description: "Values defines allowed attribute values
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field can only include items
-                              contained in the allowed values. If `[]` or unset, the
-                              related field must be empty. \n NOTE:`values: []` paired
-                              with `required: true` establishes a policy that will
-                              never grant a `CertificateRequest`, but other policies
+                              contained in the allowed values. \n NOTE:`values: []`
+                              paired with `required: true` establishes a policy that
+                              will never grant a `CertificateRequest`, but other policies
                               may. TODO: add x-kubernetes-list-type: set in v1alpha2"
                             items:
                               type: string
@@ -242,14 +538,51 @@ spec:
                             description: Required controls whether the related field
                               must have at least one value. Defaults to `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute values present
+                              on request beyond what is possible to express using
+                              values/required. ALL attribute values on the related
+                              CertificateRequest field must pass ALL validations for
+                              the request to be granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           values:
                             description: "Values defines allowed attribute values
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field can only include items
-                              contained in the allowed values. If `[]` or unset, the
-                              related field must be empty. \n NOTE:`values: []` paired
-                              with `required: true` establishes a policy that will
-                              never grant a `CertificateRequest`, but other policies
+                              contained in the allowed values. \n NOTE:`values: []`
+                              paired with `required: true` establishes a policy that
+                              will never grant a `CertificateRequest`, but other policies
                               may. TODO: add x-kubernetes-list-type: set in v1alpha2"
                             items:
                               type: string
@@ -263,14 +596,51 @@ spec:
                             description: Required controls whether the related field
                               must have at least one value. Defaults to `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute values present
+                              on request beyond what is possible to express using
+                              values/required. ALL attribute values on the related
+                              CertificateRequest field must pass ALL validations for
+                              the request to be granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           values:
                             description: "Values defines allowed attribute values
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field can only include items
-                              contained in the allowed values. If `[]` or unset, the
-                              related field must be empty. \n NOTE:`values: []` paired
-                              with `required: true` establishes a policy that will
-                              never grant a `CertificateRequest`, but other policies
+                              contained in the allowed values. \n NOTE:`values: []`
+                              paired with `required: true` establishes a policy that
+                              will never grant a `CertificateRequest`, but other policies
                               may. TODO: add x-kubernetes-list-type: set in v1alpha2"
                             items:
                               type: string
@@ -285,12 +655,49 @@ spec:
                               be provided and not be an empty string. Defaults to
                               `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute value present on
+                              request beyond what is possible to express using value/required.
+                              An attribute value on the related CertificateRequest
+                              field must pass ALL validations for the request to be
+                              granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           value:
                             description: "Value defines the allowed attribute value
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field must match the specified
-                              pattern. If `\"\"` or unset, the related field must
-                              be empty. \n NOTE:`value: \"\"` paired with `required:
+                              pattern. \n NOTE:`value: \"\"` paired with `required:
                               true` establishes a policy that will never grant a `CertificateRequest`,
                               but other policies may."
                             type: string
@@ -303,14 +710,51 @@ spec:
                             description: Required controls whether the related field
                               must have at least one value. Defaults to `false`.
                             type: boolean
+                          validations:
+                            description: Validations applies rules using Common Expression
+                              Language (CEL) to validate attribute values present
+                              on request beyond what is possible to express using
+                              values/required. ALL attribute values on the related
+                              CertificateRequest field must pass ALL validations for
+                              the request to be granted by this policy.
+                            items:
+                              description: ValidationRule describes a validation rule
+                                expressed in CEL.
+                              properties:
+                                message:
+                                  description: 'Message is the message to display
+                                    when validation fails. Message is required if
+                                    the Rule contains line breaks. Note that Message
+                                    must not contain line breaks. If unset, a fallback
+                                    message is used: "failed rule: {Rule}". e.g. "must
+                                    be a URL with the host matching spec.host"'
+                                  type: string
+                                rule:
+                                  description: "Rule represents the expression which
+                                    will be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                    The Rule is scoped to the location of the validations
+                                    in the schema. The `self` variable in the CEL
+                                    expression is bound to the scoped value. To enable
+                                    more advanced validation rules, approver-policy
+                                    provides the `cr` (map) variable to the CEL expression
+                                    containing `namespace` and `name` of the `CertificateRequest`
+                                    resource. \n Examples: - Rule for namespaced DNSNames:
+                                    {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                  type: string
+                              required:
+                              - rule
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - rule
+                            x-kubernetes-list-type: map
                           values:
                             description: "Values defines allowed attribute values
                               on the related CertificateRequest field. Accepts wildcards
                               \"*\". If set, the related field can only include items
-                              contained in the allowed values. If `[]` or unset, the
-                              related field must be empty. \n NOTE:`values: []` paired
-                              with `required: true` establishes a policy that will
-                              never grant a `CertificateRequest`, but other policies
+                              contained in the allowed values. \n NOTE:`values: []`
+                              paired with `required: true` establishes a policy that
+                              will never grant a `CertificateRequest`, but other policies
                               may. TODO: add x-kubernetes-list-type: set in v1alpha2"
                             items:
                               type: string
@@ -324,15 +768,52 @@ spec:
                         description: Required controls whether the related field must
                           have at least one value. Defaults to `false`.
                         type: boolean
+                      validations:
+                        description: Validations applies rules using Common Expression
+                          Language (CEL) to validate attribute values present on request
+                          beyond what is possible to express using values/required.
+                          ALL attribute values on the related CertificateRequest field
+                          must pass ALL validations for the request to be granted
+                          by this policy.
+                        items:
+                          description: ValidationRule describes a validation rule
+                            expressed in CEL.
+                          properties:
+                            message:
+                              description: 'Message is the message to display when
+                                validation fails. Message is required if the Rule
+                                contains line breaks. Note that Message must not contain
+                                line breaks. If unset, a fallback message is used:
+                                "failed rule: {Rule}". e.g. "must be a URL with the
+                                host matching spec.host"'
+                              type: string
+                            rule:
+                              description: "Rule represents the expression which will
+                                be evaluated by CEL. ref: https://github.com/google/cel-spec
+                                The Rule is scoped to the location of the validations
+                                in the schema. The `self` variable in the CEL expression
+                                is bound to the scoped value. To enable more advanced
+                                validation rules, approver-policy provides the `cr`
+                                (map) variable to the CEL expression containing `namespace`
+                                and `name` of the `CertificateRequest` resource. \n
+                                Examples: - Rule for namespaced DNSNames: {\"rule\":
+                                \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                              type: string
+                          required:
+                          - rule
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - rule
+                        x-kubernetes-list-type: map
                       values:
                         description: "Values defines allowed attribute values on the
                           related CertificateRequest field. Accepts wildcards \"*\".
                           If set, the related field can only include items contained
-                          in the allowed values. If `[]` or unset, the related field
-                          must be empty. \n NOTE:`values: []` paired with `required:
-                          true` establishes a policy that will never grant a `CertificateRequest`,
-                          but other policies may. TODO: add x-kubernetes-list-type:
-                          set in v1alpha2"
+                          in the allowed values. \n NOTE:`values: []` paired with
+                          `required: true` establishes a policy that will never grant
+                          a `CertificateRequest`, but other policies may. TODO: add
+                          x-kubernetes-list-type: set in v1alpha2"
                         items:
                           type: string
                         type: array

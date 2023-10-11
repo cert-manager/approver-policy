@@ -76,14 +76,32 @@ func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateReques
 	}
 
 	for _, stringSlice := range stringSlices {
-		if stringSlice.slice != nil && stringSlice.slice.Required != nil && *stringSlice.slice.Required && stringSlice.slice.Values == nil {
-			el = append(el, field.Required(stringSlice.path.Child("values"), "values must be defined if required field"))
+		if stringSlice.slice != nil {
+			if stringSlice.slice.Required != nil && *stringSlice.slice.Required {
+				if stringSlice.slice.Values == nil && len(stringSlice.slice.Validations) == 0 {
+					el = append(el, field.Required(stringSlice.path.Child("values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"))
+				}
+			}
+			for i, validation := range stringSlice.slice.Validations {
+				if _, err := a.validators.Get(validation.Rule); err != nil {
+					el = append(el, field.Invalid(stringSlice.path.Child("validations").Index(i), validation.Rule, err.Error()))
+				}
+			}
 		}
 	}
 
 	for _, stringI := range strings {
-		if stringI.string != nil && stringI.string.Required != nil && *stringI.string.Required && stringI.string.Value == nil {
-			el = append(el, field.Required(stringI.path.Child("value"), "value must be defined if required field"))
+		if stringI.string != nil {
+			if stringI.string.Required != nil && *stringI.string.Required {
+				if stringI.string.Value == nil && len(stringI.string.Validations) == 0 {
+					el = append(el, field.Required(stringI.path.Child("value"), "at least one of 'value' or 'validations' must be defined if field is 'required'"))
+				}
+			}
+			for i, validation := range stringI.string.Validations {
+				if _, err := a.validators.Get(validation.Rule); err != nil {
+					el = append(el, field.Invalid(stringI.path.Child("validations").Index(i), validation.Rule, err.Error()))
+				}
+			}
 		}
 	}
 
