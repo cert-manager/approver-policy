@@ -53,149 +53,149 @@ type CertificateRequestPolicyList struct {
 // CertificateRequestPolicySpec defines the desired state of
 // CertificateRequestPolicy.
 type CertificateRequestPolicySpec struct {
-	// Allowed is the set of attributes that are "allowed" by this policy. A
-	// CertificateRequest will only be considered permissible for this policy if
-	// the CertificateRequest has the same or less as what is allowed.  Empty or
-	// `nil` allowed fields mean CertificateRequests are not allowed to have that
-	// field present to be permissible.
+	// Allowed defines the allowed attributes for a CertificateRequest.
+	// A CertificateRequest can request _less_ than what is allowed,
+	// but _not more_, i.e. a CertificateRequest can request a subset of what
+	// is declared as allowed by the policy.
+	// Omitted fields declare that the equivalent CertificateRequest
+	// field _must_ be omitted or have an empty value for the request to be
+	// permitted.
 	// +optional
 	Allowed *CertificateRequestPolicyAllowed `json:"allowed,omitempty"`
 
-	// Constraints is the set of attributes that _must_ be satisfied by the
-	// CertificateRequest for the request to be permissible by the policy. Empty
-	// or `nil` constraint fields mean CertificateRequests satisfy that field
-	// with any value of their corresponding attribute.
+	// Constraints define fields that _must_ be satisfied by a
+	// CertificateRequest for the request to be allowed by this policy.
+	// Omitted fields place no restrictions on the corresponding
+	// attribute in a request.
 	// +optional
 	Constraints *CertificateRequestPolicyConstraints `json:"constraints,omitempty"`
 
-	// Plugins define a set of plugins and their configuration that should be
-	// executed when this policy is evaluated against a CertificateRequest. A
-	// plugin must already be built within approver-policy for it to be
-	// available.
+	// Plugins are approvers that are built into approver-policy at
+	// compile-time. This is an advanced feature typically used to extend
+	// approver-policy core features. This field define plugins and their
+	// configuration that should be executed when this policy is evaluated
+	// against a CertificateRequest.
 	// +optional
 	Plugins map[string]CertificateRequestPolicyPluginData `json:"plugins,omitempty"`
 
 	// Selector is used for selecting over which CertificateRequests this
-	// CertificateRequestPolicy is appropriate for and so will used for its
+	// CertificateRequestPolicy is appropriate for and so will be used for its
 	// approval evaluation.
 	Selector CertificateRequestPolicySelector `json:"selector"`
 }
 
-// CertificateRequestPolicyAllowed is a set of attributes that are declared as
-// permissible for a CertificateRequest to have those values present. It is
-// permissible for a CertificateRequest to request _less_ than what is allowed,
-// but _not more_, i.e. it is permissible for a CertificateRequest to request a
-// subset of what is allowed.
-// Empty fields or `nil` values declares that the equivalent CertificateRequest
-// field _must_ be omitted or empty for the request to be permitted.
+// CertificateRequestPolicyAllowed defines the allowed attributes for a
+// CertificateRequest.
+// A CertificateRequest can request _less_ than what is allowed,
+// but _not more_, i.e. a CertificateRequest can request a subset of what is
+// declared as allowed by the policy.
+// Omitted fields declares that the equivalent CertificateRequest field _must_
+// be omitted or have an empty value for the request to be permitted.
 type CertificateRequestPolicyAllowed struct {
-	// CommonName defines the X.509 Common Name that is permissible.
+	// CommonName defines the X.509 Common Name that may be requested.
 	// +optional
 	CommonName *CertificateRequestPolicyAllowedString `json:"commonName,omitempty"`
 
-	// DNSNames defines the X.509 DNS SANs that may be requested for.
-	// Accepts wildcards "*".
+	// DNSNames defines the X.509 DNS SANs that may be requested.
 	// +optional
 	DNSNames *CertificateRequestPolicyAllowedStringSlice `json:"dnsNames,omitempty"`
 
-	// IPAddresses defines the X.509 IP SANs that may be requested
-	// for.
+	// IPAddresses defines the X.509 IP SANs that may be requested.
 	// +optional
 	IPAddresses *CertificateRequestPolicyAllowedStringSlice `json:"ipAddresses,omitempty"`
 
-	// URIs defines the X.509 URI SANs that may be requested for.
+	// URIs defines the X.509 URI SANs that may be requested.
 	// +optional
 	URIs *CertificateRequestPolicyAllowedStringSlice `json:"uris,omitempty"`
 
-	// EmailAddresses defines the X.509 Email SANs that may be
-	// requested for.
+	// EmailAddresses defines the X.509 Email SANs that may be requested.
 	// +optional
 	EmailAddresses *CertificateRequestPolicyAllowedStringSlice `json:"emailAddresses,omitempty"`
 
-	// IsCA defines whether it is permissible for a CertificateRequest to have
-	// the `spec.IsCA` field set to `true`.
-	// An omitted field, value of `nil` or `false`, forbids the `spec.IsCA` field
-	// from bring `true`.
-	// A value of `true` permits CertificateRequests setting the `spec.IsCA` field
-	// to `true`.
+	// IsCA defines if a CertificateRequest is allowed to set the `spec.isCA`
+	// field set to `true`.
+	// If `true`, the `spec.isCA` field can be `true` or `false`.
+	// If `false` or unset, the `spec.isCA` field must be `false`.
 	// +optional
 	IsCA *bool `json:"isCA,omitempty"`
 
-	// Usages defines the list of permissible key usages that may appear
-	// on the CertificateRequest `spec.keyUsages` field.
-	// An omitted field or value of `nil` forbids any Usages being requested.
-	// An empty slice `[]` is equivalent to `nil`.
+	// Usages defines the key usages that may be included in a
+	// CertificateRequest `spec.keyUsages` field.
+	// If set, `spec.keyUsages` in a CertificateRequest must be a subset of the
+	// specified values.
+	// If `[]` or unset, no `spec.keyUsages` are allowed.
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
 	Usages *[]cmapi.KeyUsage `json:"usages,omitempty"`
 
-	// Subject defines the X.509 subject that is permissible. An omitted field or
-	// value of `nil` forbids any Subject being requested.
+	// Subject declares the X.509 Subject attributes allowed in a
+	// CertificateRequest. An omitted field forbids any Subject attributes
+	// from being requested.
+	// A CertificateRequest can request a subset of the allowed X.509 Subject
+	// attributes.
 	// +optional
 	Subject *CertificateRequestPolicyAllowedX509Subject `json:"subject,omitempty"`
 }
 
-// CertificateRequestPolicyAllowedX509Subject declares the X.509 Subject
-// attributes that are permissible for a CertificateRequest to request for this
-// policy. It is permissible for CertificateRequests to request a subset of
-// Allowed X.509 Subject attributes defined.
+// CertificateRequestPolicyAllowedX509Subject declares allowed X.509 Subject
+// attributes for a CertificateRequest.
+// A CertificateRequest can request a subset of the allowed X.509 Subject
+// attributes.
 type CertificateRequestPolicyAllowedX509Subject struct {
-	// Organizations define the X.509 Subject Organizations that may be requested
-	// for.
+	// Organizations define the X.509 Subject Organizations that may be
+	// requested.
 	// +optional
 	Organizations *CertificateRequestPolicyAllowedStringSlice `json:"organizations,omitempty"`
 
-	// Countries define the X.509 Subject Countries that may be requested for.
+	// Countries define the X.509 Subject Countries that may be requested.
 	// +optional
 	Countries *CertificateRequestPolicyAllowedStringSlice `json:"countries,omitempty"`
 
 	// OrganizationalUnits defines the X.509 Subject Organizational Units that
-	// may be requested for.
+	// may be requested.
 	// +optional
 	OrganizationalUnits *CertificateRequestPolicyAllowedStringSlice `json:"organizationalUnits,omitempty"`
 
-	// Localities defines the X.509 Subject Localities that may be requested for.
+	// Localities defines the X.509 Subject Localities that may be requested.
 	// +optional
 	Localities *CertificateRequestPolicyAllowedStringSlice `json:"localities,omitempty"`
 
-	// Provinces defines the X.509 Subject Provinces that may be requested for.
+	// Provinces defines the X.509 Subject Provinces that may be requested.
 	// +optional
 	Provinces *CertificateRequestPolicyAllowedStringSlice `json:"provinces,omitempty"`
 
 	// StreetAddresses defines the X.509 Subject Street Addresses that may be
-	// requested for.
+	// requested.
 	// +optional
 	StreetAddresses *CertificateRequestPolicyAllowedStringSlice `json:"streetAddresses,omitempty"`
 
-	// PostalCodes defines the X.509 Subject Postal Codes that may be requested
-	// for.
+	// PostalCodes defines the X.509 Subject Postal Codes that may be requested.
 	// +optional
 	PostalCodes *CertificateRequestPolicyAllowedStringSlice `json:"postalCodes,omitempty"`
 
-	// SerialNumber defines the X.509 Subject Serial Number that may be requested
-	// for.
+	// SerialNumber defines the X.509 Subject Serial Number that may be
+	// requested.
 	// +optional
 	SerialNumber *CertificateRequestPolicyAllowedString `json:"serialNumber,omitempty"`
 }
 
-// CertificateRequestPolicyAllowedStringSlice represents an allowed string
-// slice value paired with whether the field is a required value on the
-// request.
+// CertificateRequestPolicyAllowedStringSlice represents allowed string values
+// paired with whether the field is a required value on the request.
 type CertificateRequestPolicyAllowedStringSlice struct {
-	// Defines the values that are permissible to be present on request.
+	// Values defines allowed attribute values on the related
+	// CertificateRequest field.
 	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids any value on the related field
-	// in the request from being requested.
-	// An empty slice `[]` is equivalent to `nil`, however an empty slice paired
-	// with Required `true` is an impossible condition that always denies.
-	// Values may not be `nil` if Required is `true`.
+	// If set, the related field can only include items contained in the allowed values.
+	// If `[]` or unset, the related field must be empty.
+	//
+	// NOTE:`values: []` paired with `required: true` establishes a policy that
+	// will never grant a `CertificateRequest`, but other policies may.
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
 	Values *[]string `json:"values,omitempty"`
 
-	// Required marks this field as being a required value on the request.
-	// May only be set to true if Values is also defined.
-	// Default is nil which marks the field as not required.
+	// Required controls whether the related field must have at least one value.
+	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 }
@@ -203,77 +203,73 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 // CertificateRequestPolicyAllowedString represents an allowed string value
 // paired with whether the field is a required value on the request.
 type CertificateRequestPolicyAllowedString struct {
-	// Value defines the value that is permissible to be present on the request.
+	// Value defines the allowed attribute value on the related
+	// CertificateRequest field.
 	// Accepts wildcards "*".
-	// An omitted field or value of `nil` forbids the value from being requested.
-	// An empty string is equivalent to `nil`, however an empty string paired with
-	// Required as `true` is an impossible condition that always denies.
-	// Value may not be `nil` if Required is `true`.
+	// If set, the related field must match the specified pattern.
+	// If `""` or unset, the related field must be empty.
+	//
+	// NOTE:`value: ""` paired with `required: true` establishes a policy that
+	// will never grant a `CertificateRequest`, but other policies may.
 	// +optional
 	Value *string `json:"value,omitempty"`
 
-	// Required marks this field as being a required value on the request.
-	// May only be set to true if Value is also defined.
+	// Required marks that the related field must be provided and not be an
+	// empty string.
+	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 }
 
-// CertificateRequestPolicyConstraints define fields that, if defined, _must_
-// be satisfied by the CertificateRequest for the request to be permissible by
-// this policy. Fields that are omitted or have a value of `nil` will be
-// satisfied by any value on the corresponding attribute on the request.
+// CertificateRequestPolicyConstraints define fields that _must_ be satisfied
+// by the CertificateRequest for the request to be allowed by this policy.
+// Omitted fields will be satisfied by any value in the corresponding attribute
+// of the request.
 type CertificateRequestPolicyConstraints struct {
-	// MinDuration defines the minimum duration a certificate may be requested
-	// for.
-	// Values are inclusive (i.e. a min value of `1h` will accept a duration of
+	// MinDuration defines the minimum duration for a certificate request.
+	// Values are inclusive (i.e. a value of `1h` will accept a duration of
 	// `1h`). MinDuration and MaxDuration may be the same value.
-	// An omitted field or value of `nil` permits any minimum duration.
-	// If MinDuration is defined, a duration _must_ be requested on the
-	// CertificateRequest.
+	// If set, a duration _must_ be requested in the CertificateRequest.
+	// An omitted field applies no minimum constraint for duration.
 	// +optional
 	MinDuration *metav1.Duration `json:"minDuration,omitempty"`
 
-	// MaxDuration defines the maximum duration a certificate may be requested
+	// MaxDuration defines the maximum duration for a certificate request.
 	// for.
-	// Values are inclusive (i.e. a max value of `1h` will accept a duration of
-	// `1h`). MaxDuration and MinDuration may be the same value.
-	// An omitted field or value of `nil` permits any maximum duration.
-	// If MaxDuration is defined, a duration _must_ be requested on the
-	// CertificateRequest.
+	// Values are inclusive (i.e. a value of `1h` will accept a duration of
+	// `1h`). MinDuration and MaxDuration may be the same value.
+	// If set, a duration _must_ be requested in the CertificateRequest.
+	// An omitted field applies no maximum constraint for duration.
 	// +optional
 	MaxDuration *metav1.Duration `json:"maxDuration,omitempty"`
 
-	// PrivateKey defines the shape of permissible private keys that may be used
-	// for the request with this policy.
-	// An omitted field or value of `nil` permits the use of any private key by
-	// the requestor.
+	// PrivateKey defines constraints on the shape of private key
+	// allowed for a CertificateRequest.
+	// An omitted field applies no private key shape constraints.
 	// +optional
 	PrivateKey *CertificateRequestPolicyConstraintsPrivateKey `json:"privateKey,omitempty"`
 }
 
-// CertificateRequestPolicyConstraintsPrivateKey defines constraints on what
-// shape of private key is permissible for a CertificateRequest to have used
-// for its request.
+// CertificateRequestPolicyConstraintsPrivateKey defines constraints on the shape of private key
+// allowed for a CertificateRequest.
 type CertificateRequestPolicyConstraintsPrivateKey struct {
-	// Algorithm defines the allowed crypto algorithm that is used by the
-	// requestor for their private key in their request.
-	// An omitted field or value of `nil` permits any Algorithm.
+	// Algorithm defines the allowed crypto algorithm for the private key
+	// in a request.
+	// An omitted field permits any algorithm.
 	// +optional
 	Algorithm *cmapi.PrivateKeyAlgorithm `json:"algorithm,omitempty"`
 
-	// MinSize defines the minimum key size a requestor may use for their private
-	// key.
+	// MinSize defines the minimum key size for a private key.
 	// Values are inclusive (i.e. a min value of `2048` will accept a size
 	// of `2048`). MinSize and MaxSize may be the same value.
-	// An omitted field or value of `nil` permits any minimum size.
+	// An omitted field applies no minimum constraint on size.
 	// +optional
 	MinSize *int `json:"minSize,omitempty"`
 
-	// MaxSize defines the maximum key size a requestor may use for their private
-	// key.
+	// MaxSize defines the maximum key size for a private key.
 	// Values are inclusive (i.e. a min value of `2048` will accept a size
 	// of `2048`). MaxSize and MinSize may be the same value.
-	// An omitted field or value of `nil` permits any maximum size.
+	// An omitted field applies no maximum constraint on size.
 	// +optional
 	MaxSize *int `json:"maxSize,omitempty"`
 }
@@ -281,9 +277,9 @@ type CertificateRequestPolicyConstraintsPrivateKey struct {
 // CertificateRequestPolicyPluginData is configuration needed by the plugin
 // approver to evaluate a CertificateRequest on this policy.
 type CertificateRequestPolicyPluginData struct {
-	// Values define a set of well-known, to the plugin, key value pairs that are
-	// required for the plugin to successfully evaluate a request based on this
-	// policy.
+	// Values define a set of well-known, to the plugin, key value pairs that
+	// are required for the plugin to successfully evaluate a request based on
+	// this policy.
 	// +optional
 	Values map[string]string `json:"values,omitempty"`
 }
@@ -291,74 +287,69 @@ type CertificateRequestPolicyPluginData struct {
 // CertificateRequestPolicySelector is used for selecting over which
 // CertificateRequests this CertificateRequestPolicy is appropriate for, and if
 // so, will be used to evaluate the request.
-// All selectors that have been configured must _all_ match a
-// CertificateRequest in order for the CertificateRequestPolicy to be chosen
-// for evaluation.
-// At least one of issuerRef or namespace must be defined.
+// All selectors that have been configured must match a CertificateRequest
+// in order for the CertificateRequestPolicy to be chosen for evaluation.
+// At least one of IssuerRef or Namespace must be defined.
 type CertificateRequestPolicySelector struct {
-	// IssuerRef is used to match this CertificateRequestPolicy against processed
-	// CertificateRequests. This policy will only be evaluated against a
-	// CertificateRequest whose `spec.issuerRef` field matches
-	// `spec.selector.issuerRef`. CertificateRequests will not be processed on
-	// unmatched `issuerRef` if defined, regardless of whether the requestor is
-	// bound by RBAC.
-	// Accepts wildcards "*".
-	// Omitted values are equivalent to "*".
+	// IssuerRef is used to match by issuer, meaning the
+	// CertificateRequestPolicy will only evaluate CertificateRequests
+	// referring to matching issuers.
+	// CertificateRequests will not be processed if the issuer does not match,
+	// regardless of whether the requestor is bound by RBAC.
 	//
-	// The following value will match _all_ `issuerRefs`:
+	// The following value will match _all_ issuers:
 	// ```
 	// issuerRef: {}
 	// ```
 	// +optional
 	IssuerRef *CertificateRequestPolicySelectorIssuerRef `json:"issuerRef"`
 
-	// Namespace is used to select on Namespaces, meaning the
-	// CertificateRequestPolicy will only match on CertificateRequests that have
-	// been created in matching selected Namespaces.
-	// If this field is omitted, all Namespaces are selected.
+	// Namespace is used to match by namespace, meaning the
+	// CertificateRequestPolicy will only match CertificateRequests
+	// created in matching namespaces.
+	// If this field is omitted, resources in all namespaces are checked.
 	// +optional
 	Namespace *CertificateRequestPolicySelectorNamespace `json:"namespace"`
 }
 
 // CertificateRequestPolicySelectorIssuerRef defines the selector for matching
-// on `issuerRef` of requests.
+// the issuer reference of requests.
 type CertificateRequestPolicySelectorIssuerRef struct {
-	// Name is the wildcard selector to match the `spec.issuerRef.name` field on
-	// requests.
+	// Name is a wildcard enabled selector that matches the
+	// `spec.issuerRef.name` field of requests.
 	// Accepts wildcards "*".
-	// An omitted field or value of `nil` matches all.
+	// An omitted field matches all names.
 	// +optional
 	Name *string `json:"name,omitempty"`
 
-	// Kind is the wildcard selector to match the `spec.issuerRef.kind` field on
-	// requests.
+	// Kind is the wildcard selector to match the `spec.issuerRef.kind` field
+	// on requests.
 	// Accepts wildcards "*".
-	// An omitted field or value of `nil` matches all.
+	// An omitted field matches all kinds.
 	// +optional
 	Kind *string `json:"kind,omitempty"`
 
 	// Group is the wildcard selector to match the `spec.issuerRef.group` field
 	// on requests.
 	// Accepts wildcards "*".
-	// An omitted field or value of `nil` matches all.
+	// An omitted field matches all groups.
 	// +optional
 	Group *string `json:"group,omitempty"`
 }
 
 // CertificateRequestPolicySelectorNamespace defines the selector for matching
-// on the `Namespace` of requests. Note that all selectors in the Namespace
-// selector must match in order for the request to be considered for evaluation
-// by this policy.
+// the namespace of requests. Note that all selectors must match in order
+// for the request to be considered for evaluation by this policy.
 type CertificateRequestPolicySelectorNamespace struct {
-	// MatchNames are the set of Namespace names that select on
-	// CertificateRequests that have been created in a matching Namespace.
+	// MatchNames is the set of namespace names that select on
+	// CertificateRequests that have been created in a matching namespace.
 	// Accepts wildcards "*".
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
 	MatchNames []string `json:"matchNames,omitempty"`
 
 	// MatchLabels is the set of Namespace labels that select on
-	// CertificateRequests which have been created in a Namespace matching the
+	// CertificateRequests which have been created in a namespace matching the
 	// selector.
 	// +optional
 	MatchLabels map[string]string `json:"matchLabels,omitempty"`
@@ -403,8 +394,8 @@ type CertificateRequestPolicyCondition struct {
 	// If set, this represents the .metadata.generation that the condition was
 	// set based upon.
 	// For instance, if .metadata.generation is currently 12, but the
-	// .status.condition[x].observedGeneration is 9, the condition is out of date
-	// with respect to the current state of the CertificateRequestPolicy.
+	// .status.condition[x].observedGeneration is 9, the condition is out of
+	// date with respect to the current state of the CertificateRequestPolicy.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
