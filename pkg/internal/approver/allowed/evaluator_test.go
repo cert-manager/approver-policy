@@ -25,6 +25,7 @@ import (
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/cert-manager/cert-manager/test/unit/gen"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
@@ -336,7 +337,9 @@ func Test_Evaluate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			response, err := allowed{}.Evaluate(context.TODO(), &policyapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
 			assert.Equal(t, test.expErr, err != nil, "%v", err)
-			assert.Equal(t, test.expResponse, response, "unexpected evaluation response")
+			if diff := cmp.Diff(response, test.expResponse); diff != "" {
+				t.Errorf("unexpected evaluation response (-want +got):\n%v", diff)
+			}
 		})
 	}
 }

@@ -65,7 +65,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	}
 	evaluateSubject := evaluate.Subject()
 
-	evaluateFns := []func() *field.Error{
+	evaluateFns := []func() field.ErrorList{
 		evaluate.CommonName,
 		evaluate.DNSNames,
 		evaluate.IPAddresses,
@@ -84,7 +84,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	}
 	for _, fn := range evaluateFns {
 		if e := fn(); e != nil {
-			el = append(el, e)
+			el = append(el, e...)
 		}
 	}
 
@@ -104,15 +104,15 @@ type evaluator struct {
 	fldPath *field.Path
 }
 
-func (e evaluator) CommonName() *field.Error {
+func (e evaluator) CommonName() field.ErrorList {
 	return evaluateString(e.csr.Subject.CommonName, e.allowed.CommonName, e.fldPath.Child("commonName"))
 }
 
-func (e evaluator) DNSNames() *field.Error {
+func (e evaluator) DNSNames() field.ErrorList {
 	return evaluateSlice(e.csr.DNSNames, e.allowed.DNSNames, e.fldPath.Child("dnsNames"))
 }
 
-func (e evaluator) IPAddresses() *field.Error {
+func (e evaluator) IPAddresses() field.ErrorList {
 	var ips []string
 	for _, ip := range e.csr.IPAddresses {
 		ips = append(ips, ip.String())
@@ -120,7 +120,7 @@ func (e evaluator) IPAddresses() *field.Error {
 	return evaluateSlice(ips, e.allowed.IPAddresses, e.fldPath.Child("ipAddresses"))
 }
 
-func (e evaluator) URIs() *field.Error {
+func (e evaluator) URIs() field.ErrorList {
 	var uris []string
 	for _, uri := range e.csr.URIs {
 		uris = append(uris, uri.String())
@@ -128,33 +128,34 @@ func (e evaluator) URIs() *field.Error {
 	return evaluateSlice(uris, e.allowed.URIs, e.fldPath.Child("uris"))
 }
 
-func (e evaluator) EmailAddresses() *field.Error {
+func (e evaluator) EmailAddresses() field.ErrorList {
 	return evaluateSlice(e.csr.EmailAddresses, e.allowed.EmailAddresses, e.fldPath.Child("emailAddresses"))
 }
 
-func (e evaluator) IsCA() *field.Error {
+func (e evaluator) IsCA() field.ErrorList {
 	return evaluateBool(e.request.Spec.IsCA, e.allowed.IsCA, e.fldPath.Child("isCA"))
 }
 
-func (e evaluator) Usages() *field.Error {
+func (e evaluator) Usages() field.ErrorList {
+	var el field.ErrorList
 	if len(e.request.Spec.Usages) > 0 {
 		var requestUsages []string
 		for _, usage := range e.request.Spec.Usages {
 			requestUsages = append(requestUsages, string(usage))
 		}
 		if e.allowed.Usages == nil {
-			return field.Invalid(e.fldPath.Child("usages"), requestUsages, "nil")
+			el = append(el, field.Invalid(e.fldPath.Child("usages"), requestUsages, "nil"))
 		} else {
 			var policyUsages []string
 			for _, usage := range *e.allowed.Usages {
 				policyUsages = append(policyUsages, string(usage))
 			}
 			if !util.WildcardSubset(policyUsages, requestUsages) {
-				return field.Invalid(e.fldPath.Child("usages"), requestUsages, strings.Join(policyUsages, ", "))
+				el = append(el, field.Invalid(e.fldPath.Child("usages"), requestUsages, strings.Join(policyUsages, ", ")))
 			}
 		}
 	}
-	return nil
+	return el
 }
 
 func (e evaluator) Subject() subjectEvaluator {
@@ -175,71 +176,74 @@ type subjectEvaluator struct {
 	fldPath *field.Path
 }
 
-func (e subjectEvaluator) Organization() *field.Error {
+func (e subjectEvaluator) Organization() field.ErrorList {
 	return evaluateSlice(e.sub.Organization, e.allowed.Organizations, e.fldPath.Child("organizations"))
 }
 
-func (e subjectEvaluator) Country() *field.Error {
+func (e subjectEvaluator) Country() field.ErrorList {
 	return evaluateSlice(e.sub.Country, e.allowed.Countries, e.fldPath.Child("countries"))
 }
 
-func (e subjectEvaluator) OrganizationalUnit() *field.Error {
+func (e subjectEvaluator) OrganizationalUnit() field.ErrorList {
 	return evaluateSlice(e.sub.OrganizationalUnit, e.allowed.OrganizationalUnits, e.fldPath.Child("organizationalUnits"))
 }
 
-func (e subjectEvaluator) Locality() *field.Error {
+func (e subjectEvaluator) Locality() field.ErrorList {
 	return evaluateSlice(e.sub.Locality, e.allowed.Localities, e.fldPath.Child("localities"))
 }
 
-func (e subjectEvaluator) Province() *field.Error {
+func (e subjectEvaluator) Province() field.ErrorList {
 	return evaluateSlice(e.sub.Province, e.allowed.Provinces, e.fldPath.Child("provinces"))
 }
 
-func (e subjectEvaluator) StreetAddress() *field.Error {
+func (e subjectEvaluator) StreetAddress() field.ErrorList {
 	return evaluateSlice(e.sub.StreetAddress, e.allowed.StreetAddresses, e.fldPath.Child("streetAddresses"))
 }
 
-func (e subjectEvaluator) PostalCode() *field.Error {
+func (e subjectEvaluator) PostalCode() field.ErrorList {
 	return evaluateSlice(e.sub.PostalCode, e.allowed.PostalCodes, e.fldPath.Child("postalCodes"))
 }
 
-func (e subjectEvaluator) SerialNumber() *field.Error {
+func (e subjectEvaluator) SerialNumber() field.ErrorList {
 	return evaluateString(e.sub.SerialNumber, e.allowed.SerialNumber, e.fldPath.Child("serialNumber"))
 }
 
-func evaluateString(s string, crp *policyapi.CertificateRequestPolicyAllowedString, fldPath *field.Path) *field.Error {
+func evaluateString(s string, crp *policyapi.CertificateRequestPolicyAllowedString, fldPath *field.Path) field.ErrorList {
+	var el field.ErrorList
 	if len(s) > 0 {
 		if crp == nil || crp.Value == nil {
-			return field.Invalid(fldPath.Child("value"), s, "nil")
+			el = append(el, field.Invalid(fldPath.Child("value"), s, "nil"))
 		} else if !util.WildcardMatches(*crp.Value, s) {
-			return field.Invalid(fldPath.Child("value"), s, *crp.Value)
+			el = append(el, field.Invalid(fldPath.Child("value"), s, *crp.Value))
 		}
 	} else if crp != nil && crp.Required != nil && *crp.Required {
-		return field.Required(fldPath.Child("required"), strconv.FormatBool(*crp.Required))
+		el = append(el, field.Required(fldPath.Child("required"), strconv.FormatBool(*crp.Required)))
 	}
-	return nil
+	return el
 }
 
-func evaluateSlice(s []string, crp *policyapi.CertificateRequestPolicyAllowedStringSlice, fldPath *field.Path) *field.Error {
+func evaluateSlice(s []string, crp *policyapi.CertificateRequestPolicyAllowedStringSlice, fldPath *field.Path) field.ErrorList {
+	var el field.ErrorList
 	if len(s) > 0 {
 		if crp == nil || crp.Values == nil {
-			return field.Invalid(fldPath.Child("values"), s, "nil")
+			el = append(el, field.Invalid(fldPath.Child("values"), s, "nil"))
 		} else if !util.WildcardSubset(*crp.Values, s) {
-			return field.Invalid(fldPath.Child("values"), s, strings.Join(*crp.Values, ", "))
+			el = append(el, field.Invalid(fldPath.Child("values"), s, strings.Join(*crp.Values, ", ")))
 		}
 	} else if crp != nil && crp.Required != nil && *crp.Required {
-		return field.Required(fldPath.Child("required"), strconv.FormatBool(*crp.Required))
+		el = append(el, field.Required(fldPath.Child("required"), strconv.FormatBool(*crp.Required)))
 	}
-	return nil
+	return el
 }
 
-func evaluateBool(b bool, crp *bool, fldPath *field.Path) *field.Error {
+func evaluateBool(b bool, crp *bool, fldPath *field.Path) field.ErrorList {
+	var el field.ErrorList
 	if b {
 		if crp == nil {
-			return field.Invalid(fldPath, b, "nil")
+			el = append(el, field.Invalid(fldPath, b, "nil"))
 		} else if !*crp {
-			return field.Invalid(fldPath, b, strconv.FormatBool(*crp))
+			el = append(el, field.Invalid(fldPath, b, strconv.FormatBool(*crp)))
 		}
 	}
-	return nil
+	return el
 }
