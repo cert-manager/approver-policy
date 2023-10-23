@@ -111,9 +111,7 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 	count := make(map[label]int)
 
 	for _, cr := range list.Items {
-		approvedStatus, _ := getReason(cr.Status.Conditions, "Approved", func(c cmapi.CertificateRequestCondition) (typ, status, reason string) {
-			return string(c.Type), string(c.Status), string(c.Reason)
-		})
+		approvedStatus := getApprovedStatus(cr.Status.Conditions)
 		if approvedStatus == "Unknown" {
 			continue
 		}
@@ -151,10 +149,7 @@ func collectCRsOrphans(logger logr.Logger, c cache.Cache, ch chan<- prometheus.M
 	}
 
 	for _, cr := range list.Items {
-		approvedStatus, _ := getReason(cr.Status.Conditions, "Approved", func(c cmapi.CertificateRequestCondition) (typ, status, reason string) {
-			return string(c.Type), string(c.Status), string(c.Reason)
-		})
-
+		approvedStatus := getApprovedStatus(cr.Status.Conditions)
 		if approvedStatus != "Unknown" {
 			continue
 		}
@@ -169,30 +164,14 @@ func collectCRsOrphans(logger logr.Logger, c cache.Cache, ch chan<- prometheus.M
 	}
 }
 
-// getReason returns the status and reason of a condition of a given type (e.g.,
-// "Ready"). When this condition type isn't found in the list of conditions,
-// getReason returns "Unknown" and "Unknown".
-//
-// Imagine you have the following conditions:
-//
-//	conditions:
-//	- type: Ready
-//	  status: "True"
-//	  reason: Issued
-//	  message: The Certificate has been issued
-//
-// You can use getReason to fetch the status and reason of that "Ready"
-// condition:
-//
-//	status, reason := getReason(conditions, "Ready", func(cond ConnectionCondition) (typ, sta, reason string) {
-//	  return string(cond.Type), string(cond.Status), string(cond.Reason)
-//	})
-func getReason[C any](conditions []C, typ string, readCond func(cond C) (typ, status, reason string)) (status, reason string) {
+// Returns "True" or "False", or "Unknown" if the condition `Approved` is not
+// found.
+func getApprovedStatus(conditions []cmapi.CertificateRequestCondition) (status string) {
 	for _, cond := range conditions {
-		t, status, reason := readCond(cond)
-		if t == typ {
-			return status, reason
+		if cond.Type == cmapi.CertificateRequestConditionApproved {
+			return string(cond.Status)
 		}
 	}
-	return "Unknown", "Unknown"
+
+	return "Unknown"
 }
