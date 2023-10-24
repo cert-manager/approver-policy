@@ -5,6 +5,7 @@ import (
 	"time"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -102,7 +103,8 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 	}
 
 	type label struct {
-		namespace, approvedStatus string
+		namespace      string
+		approvedStatus cmmeta.ConditionStatus
 	}
 
 	// Let's remember the order of the labels so that we can send the metrics
@@ -118,7 +120,7 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 
 		k := label{
 			namespace:      cr.Namespace,
-			approvedStatus: string(approvedStatus),
+			approvedStatus: approvedStatus,
 		}
 
 		_, exists := count[k]
@@ -135,7 +137,7 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 			prometheus.GaugeValue,
 			float64(count[key]),
 			key.namespace,
-			key.approvedStatus,
+			string(key.approvedStatus),
 		)
 	}
 }
@@ -166,12 +168,12 @@ func collectCRsOrphans(logger logr.Logger, c cache.Cache, ch chan<- prometheus.M
 
 // Returns "True" or "False", or "Unknown" if the condition `Approved` is not
 // found.
-func getApprovedStatus(conditions []cmapi.CertificateRequestCondition) (status string) {
+func getApprovedStatus(conditions []cmapi.CertificateRequestCondition) cmmeta.ConditionStatus {
 	for _, cond := range conditions {
 		if cond.Type == cmapi.CertificateRequestConditionApproved {
-			return string(cond.Status)
+			return cond.Status
 		}
 	}
 
-	return "Unknown"
+	return cmmeta.ConditionUnknown
 }
