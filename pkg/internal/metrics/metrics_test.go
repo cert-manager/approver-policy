@@ -57,12 +57,13 @@ func Test_Metrics(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("orphan_count is only about CRs with no Approved condition", func(t *testing.T) {
+	t.Run("unmatched_count is only about CRs with no Approved condition", func(t *testing.T) {
 		mock := mockCollector(t, []cmapi.CertificateRequest{
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
-					// This is an orphan because it has no Approved condition.
+					// This one is "unmatched" because it has no Approved
+					// condition.
 					{Type: "Ready", Status: "False"},
 				}},
 			},
@@ -82,11 +83,11 @@ func Test_Metrics(t *testing.T) {
 			},
 		})
 		const expected = `
-			# HELP approverpolicy_certificaterequest_orphan_count Number of orphan CertificateRequests, i.e., that don't have an Approved condition set.
-			# TYPE approverpolicy_certificaterequest_orphan_count gauge
-      		approverpolicy_certificaterequest_orphan_count{name="foo1",namespace="bar"} 1
+			# HELP approverpolicy_certificaterequest_unmatched_count Number of CertificateRequests that weren't matched to any policy approver, i.e., that don't have an Approved condition set.
+			# TYPE approverpolicy_certificaterequest_unmatched_count gauge
+      		approverpolicy_certificaterequest_unmatched_count{name="foo1",namespace="bar"} 1
 		`
-		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "approverpolicy_certificaterequest_orphan_count")
+		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "approverpolicy_certificaterequest_unmatched_count")
 		require.NoError(t, err)
 	})
 

@@ -35,12 +35,13 @@ var (
 		nil,
 	)
 
-	// orphanCount counts the current number of certificate requests that have
-	// not been matched by any approvers. We call then "orphans". Orphans don't
-	// have the Approved condition.
-	orphanCount = prometheus.NewDesc(
-		"approverpolicy_certificaterequest_orphan_count",
-		"Number of orphan CertificateRequests, i.e., that don't have an Approved condition set.",
+	// unmatchedCount counts the current number of certificate requests that
+	// have not been matched by any approvers. An unmatched certificate request
+	// is defined as a certificate requests that doesn't have the Approved
+	// condition.
+	unmatchedCount = prometheus.NewDesc(
+		"approverpolicy_certificaterequest_unmatched_count",
+		"Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved condition set yet.",
 		[]string{
 			"name",
 			"namespace",
@@ -78,7 +79,7 @@ func (cc collector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	collectCRsApproved(cc.ctx, cc.log, cc.cache, ch)
-	collectCRsOrphans(cc.log, cc.cache, ch)
+	collectCRsUnmatched(cc.log, cc.cache, ch)
 }
 
 // hasSynced returns true if the cache has synced. Otherwise, it returns false.
@@ -142,7 +143,7 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 	}
 }
 
-func collectCRsOrphans(logger logr.Logger, c cache.Cache, ch chan<- prometheus.Metric) {
+func collectCRsUnmatched(logger logr.Logger, c cache.Cache, ch chan<- prometheus.Metric) {
 	list := &cmapi.CertificateRequestList{}
 	err := c.List(context.Background(), list)
 	if err != nil {
@@ -157,7 +158,7 @@ func collectCRsOrphans(logger logr.Logger, c cache.Cache, ch chan<- prometheus.M
 		}
 
 		ch <- prometheus.MustNewConstMetric(
-			orphanCount,
+			unmatchedCount,
 			prometheus.GaugeValue,
 			1.,
 			cr.Name,
