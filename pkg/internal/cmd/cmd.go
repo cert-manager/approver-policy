@@ -29,6 +29,7 @@ import (
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/internal/cmd/options"
 	"github.com/cert-manager/approver-policy/pkg/internal/controllers"
+	"github.com/cert-manager/approver-policy/pkg/internal/metrics"
 	"github.com/cert-manager/approver-policy/pkg/internal/webhook"
 	"github.com/cert-manager/approver-policy/pkg/registry"
 )
@@ -78,6 +79,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("unable to create controller manager: %w", err)
 			}
+
+			metrics.RegisterMetrics(ctx, opts.Logr.WithName("metrics"), mgr.GetCache())
 
 			if err := webhook.Register(ctx, webhook.Options{
 				Log:                    opts.Logr,
