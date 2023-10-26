@@ -43,7 +43,6 @@ var (
 		"approverpolicy_certificaterequest_unmatched_count",
 		"Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved condition set yet.",
 		[]string{
-			"name",
 			"namespace",
 		},
 		nil,
@@ -151,18 +150,35 @@ func collectCRsUnmatched(logger logr.Logger, c cache.Cache, ch chan<- prometheus
 		return
 	}
 
+	type label struct {
+		namespace string
+	}
+
+	var labels []label
+	count := make(map[label]int)
+
 	for _, cr := range list.Items {
 		approvedStatus := getApprovedStatus(cr.Status.Conditions)
 		if approvedStatus != "Unknown" {
 			continue
 		}
 
+		k := label{namespace: cr.Namespace}
+
+		_, exists := count[k]
+		if !exists {
+			labels = append(labels, k)
+		}
+
+		count[k] += 1
+	}
+
+	for _, key := range labels {
 		ch <- prometheus.MustNewConstMetric(
 			unmatchedCount,
 			prometheus.GaugeValue,
-			1.,
-			cr.Name,
-			cr.Namespace,
+			float64(count[key]),
+			key.namespace,
 		)
 	}
 }

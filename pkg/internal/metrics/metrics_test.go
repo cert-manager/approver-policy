@@ -59,11 +59,10 @@ func Test_Metrics(t *testing.T) {
 
 	t.Run("unmatched_count is only about CRs with no Approved condition", func(t *testing.T) {
 		mock := mockCollector(t, []cmapi.CertificateRequest{
+			// Three unmatched CRs.
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
-					// This one is "unmatched" because it has no Approved
-					// condition.
 					{Type: "Ready", Status: "False"},
 				}},
 			},
@@ -71,11 +70,24 @@ func Test_Metrics(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo2", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "baz"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+				}},
+			},
+			// Two happy CRs.
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo4", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "bar"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo5", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "False"},
@@ -83,9 +95,10 @@ func Test_Metrics(t *testing.T) {
 			},
 		})
 		const expected = `
-			# HELP approverpolicy_certificaterequest_unmatched_count Number of CertificateRequests that weren't matched to any policy approver, i.e., that don't have an Approved condition set.
-			# TYPE approverpolicy_certificaterequest_unmatched_count gauge
-      		approverpolicy_certificaterequest_unmatched_count{name="foo1",namespace="bar"} 1
+        	# HELP approverpolicy_certificaterequest_unmatched_count Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved condition set yet.
+        	# TYPE approverpolicy_certificaterequest_unmatched_count gauge
+        	approverpolicy_certificaterequest_unmatched_count{namespace="bar"} 2
+            approverpolicy_certificaterequest_unmatched_count{namespace="baz"} 1
 		`
 		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "approverpolicy_certificaterequest_unmatched_count")
 		require.NoError(t, err)
