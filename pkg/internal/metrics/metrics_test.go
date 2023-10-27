@@ -35,29 +35,68 @@ func Test_Metrics(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
-					{Type: "Approved", Status: "False"},
+					{Type: "Approved", Status: "True"},
 				}},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: "baz", Namespace: "other"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
-					{Type: "Approved", Status: "False"},
+					{Type: "Approved", Status: "True"},
 				}},
 			},
 		})
 		const expected = `
-			# HELP approverpolicy_certificaterequest_approved_count Number of CertificateRequests that were been approved or denied (Approved=True or Approved=False).
+            # HELP approverpolicy_certificaterequest_approved_count Number of CertificateRequests that have been approved (Approved=True).
 			# TYPE approverpolicy_certificaterequest_approved_count gauge
-			approverpolicy_certificaterequest_approved_count{approved_status="False",namespace="bar"} 1
-			approverpolicy_certificaterequest_approved_count{approved_status="False",namespace="other"} 1
-			approverpolicy_certificaterequest_approved_count{approved_status="True",namespace="bar"} 1
+            approverpolicy_certificaterequest_approved_count{namespace="bar"} 2
+            approverpolicy_certificaterequest_approved_count{namespace="other"} 1
 		`
 		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "approverpolicy_certificaterequest_approved_count")
 		require.NoError(t, err)
 	})
 
-	t.Run("unmatched_count is only about CRs with no Approved condition", func(t *testing.T) {
+	t.Run("denied_count counts the CRs that have the Denied condition", func(t *testing.T) {
+		mock := mockCollector(t, []cmapi.CertificateRequest{
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo2", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Denied", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Denied", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "baz", Namespace: "other"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Denied", Status: "True"},
+				}},
+			},
+		})
+		const expected = `
+		# HELP approverpolicy_certificaterequest_denied_count Number of CertificateRequests that have been denied (Denied=True).
+		# TYPE approverpolicy_certificaterequest_denied_count gauge
+		approverpolicy_certificaterequest_denied_count{namespace="bar"} 2
+		approverpolicy_certificaterequest_denied_count{namespace="other"} 1
+		`
+		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "approverpolicy_certificaterequest_denied_count")
+		require.NoError(t, err)
+	})
+
+	t.Run("unmatched_count is only about CRs with no Approved and Denied condition", func(t *testing.T) {
 		mock := mockCollector(t, []cmapi.CertificateRequest{
 			// Three unmatched CRs.
 			{
@@ -73,12 +112,13 @@ func Test_Metrics(t *testing.T) {
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "baz"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "other"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},
 			},
-			// Two happy CRs.
+			// The three following CRs have been happily matched by an approver,
+			// and the last one has been denied.
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo4", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
@@ -90,15 +130,22 @@ func Test_Metrics(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo5", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
-					{Type: "Approved", Status: "False"},
+					{Type: "Approved", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo6", Namespace: "other"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Denied", Status: "True"},
 				}},
 			},
 		})
 		const expected = `
-        	# HELP approverpolicy_certificaterequest_unmatched_count Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved condition set yet.
+        	# HELP approverpolicy_certificaterequest_unmatched_count Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved or Denied condition set yet.
         	# TYPE approverpolicy_certificaterequest_unmatched_count gauge
-        	approverpolicy_certificaterequest_unmatched_count{namespace="bar"} 2
-            approverpolicy_certificaterequest_unmatched_count{namespace="baz"} 1
+			approverpolicy_certificaterequest_unmatched_count{namespace="bar"} 2
+            approverpolicy_certificaterequest_unmatched_count{namespace="other"} 1
 		`
 		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "approverpolicy_certificaterequest_unmatched_count")
 		require.NoError(t, err)

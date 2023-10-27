@@ -27,10 +27,26 @@ var (
 	// get removed over time e.g. with revisionHistoryLimit.
 	approvedCount = prometheus.NewDesc(
 		"approverpolicy_certificaterequest_approved_count",
-		"Number of CertificateRequests that were been approved or denied (Approved=True or Approved=False).",
+		"Number of CertificateRequests that have been approved (Approved=True).",
 		[]string{
 			"namespace",
-			"approved_status",
+		},
+		nil,
+	)
+
+	// deniedCount counts the number of CertificateRequest currently denied by
+	// looking at the Denied condition.
+	//
+	// - type: Denied
+	//   status: "True"
+	//   reason: policy.cert-manager.io
+	//   message: 'No policy approved this request: [issuer-2: spec.allowed.dnsNames.values:
+	//     Invalid value: []string{"forbidden-domain-41.com"}: *.example.com, *.ca-wont-accept.org]'
+	deniedCount = prometheus.NewDesc(
+		"approverpolicy_certificaterequest_denied_count",
+		"Number of CertificateRequests that have been denied (Denied=True).",
+		[]string{
+			"namespace",
 		},
 		nil,
 	)
@@ -41,7 +57,7 @@ var (
 	// condition.
 	unmatchedCount = prometheus.NewDesc(
 		"approverpolicy_certificaterequest_unmatched_count",
-		"Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved condition set yet.",
+		"Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved or Denied condition set yet.",
 		[]string{
 			"namespace",
 		},
@@ -78,6 +94,7 @@ func (cc collector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	collectCRsApproved(cc.ctx, cc.log, cc.cache, ch)
+	collectCRsDenied(cc.ctx, cc.log, cc.cache, ch)
 	collectCRsUnmatched(cc.log, cc.cache, ch)
 }
 
@@ -102,10 +119,7 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 		return
 	}
 
-	type label struct {
-		namespace      string
-		approvedStatus cmmeta.ConditionStatus
-	}
+	type label struct{ namespace string }
 
 	// Let's remember the order of the labels so that we can send the metrics
 	// deterministically. Undeterministic outputs are a pain to test and debug.
@@ -113,21 +127,18 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 	count := make(map[label]int)
 
 	for _, cr := range list.Items {
-		approvedStatus := getApprovedStatus(cr.Status.Conditions)
-		if approvedStatus == "Unknown" {
+		// A certificate request is said to be approved if it has the condition
+		// Approved=True.
+		approvedStatus := getStatus(cmapi.CertificateRequestConditionApproved, cr.Status.Conditions)
+		if approvedStatus != "True" {
 			continue
 		}
 
-		k := label{
-			namespace:      cr.Namespace,
-			approvedStatus: approvedStatus,
-		}
-
+		k := label{namespace: cr.Namespace}
 		_, exists := count[k]
 		if !exists {
 			labels = append(labels, k)
 		}
-
 		count[k] += 1
 	}
 
@@ -137,7 +148,45 @@ func collectCRsApproved(ctx context.Context, log logr.Logger, c cache.Cache, ch 
 			prometheus.GaugeValue,
 			float64(count[key]),
 			key.namespace,
-			string(key.approvedStatus),
+		)
+	}
+}
+
+func collectCRsDenied(ctx context.Context, log logr.Logger, c cache.Cache, ch chan<- prometheus.Metric) {
+	list := &cmapi.CertificateRequestList{}
+	err := c.List(ctx, list)
+	if err != nil {
+		log.Error(err, "unable to list CertificateRequests")
+		return
+	}
+
+	type label struct{ namespace string }
+
+	var labels []label
+	count := make(map[label]int)
+
+	for _, cr := range list.Items {
+		deniedStatus := getStatus(cmapi.CertificateRequestConditionDenied, cr.Status.Conditions)
+		// A certificate request is said to be denied if it has the condition
+		// Denied=True.
+		if deniedStatus != "True" {
+			continue
+		}
+
+		k := label{namespace: cr.Namespace}
+		_, exists := count[k]
+		if !exists {
+			labels = append(labels, k)
+		}
+		count[k] += 1
+	}
+
+	for _, key := range labels {
+		ch <- prometheus.MustNewConstMetric(
+			deniedCount,
+			prometheus.GaugeValue,
+			float64(count[key]),
+			key.namespace,
 		)
 	}
 }
@@ -158,18 +207,19 @@ func collectCRsUnmatched(logger logr.Logger, c cache.Cache, ch chan<- prometheus
 	count := make(map[label]int)
 
 	for _, cr := range list.Items {
-		approvedStatus := getApprovedStatus(cr.Status.Conditions)
-		if approvedStatus != "Unknown" {
+		// A certificate request is said to be unmatched if it doesn't have the
+		// Approved and Denied conditions.
+		approvedStatus := getStatus(cmapi.CertificateRequestConditionApproved, cr.Status.Conditions)
+		deniedStatus := getStatus(cmapi.CertificateRequestConditionDenied, cr.Status.Conditions)
+		if approvedStatus == "True" || deniedStatus == "True" {
 			continue
 		}
 
 		k := label{namespace: cr.Namespace}
-
 		_, exists := count[k]
 		if !exists {
 			labels = append(labels, k)
 		}
-
 		count[k] += 1
 	}
 
@@ -183,11 +233,11 @@ func collectCRsUnmatched(logger logr.Logger, c cache.Cache, ch chan<- prometheus
 	}
 }
 
-// Returns "True" or "False", or "Unknown" if the condition `Approved` is not
-// found.
-func getApprovedStatus(conditions []cmapi.CertificateRequestCondition) cmmeta.ConditionStatus {
+// Returns "True" or "False", or "Unknown" if the condition with the given type
+// (e.g., "Approved" or "Denied") exists, or "" if the condition is not found.
+func getStatus(condTyp cmapi.CertificateRequestConditionType, conditions []cmapi.CertificateRequestCondition) cmmeta.ConditionStatus {
 	for _, cond := range conditions {
-		if cond.Type == cmapi.CertificateRequestConditionApproved {
+		if cond.Type == condTyp {
 			return cond.Status
 		}
 	}
