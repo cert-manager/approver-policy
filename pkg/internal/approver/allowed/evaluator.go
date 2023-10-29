@@ -58,10 +58,11 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	}
 
 	evaluate := evaluator{
-		request: request,
-		csr:     csr,
-		allowed: allowed,
-		fldPath: fldPath,
+		Evaluator: a,
+		request:   request,
+		csr:       csr,
+		allowed:   allowed,
+		fldPath:   fldPath,
 	}
 	evaluateSubject := evaluate.Subject()
 
@@ -98,6 +99,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 }
 
 type evaluator struct {
+	Evaluator
 	request *cmapi.CertificateRequest
 	csr     *x509.CertificateRequest
 	allowed *policyapi.CertificateRequestPolicyAllowed
@@ -105,11 +107,11 @@ type evaluator struct {
 }
 
 func (e evaluator) CommonName() field.ErrorList {
-	return evaluateString(e.csr.Subject.CommonName, e.allowed.CommonName, e.fldPath.Child("commonName"))
+	return e.EvalString(e.csr.Subject.CommonName, e.allowed.CommonName, e.fldPath.Child("commonName"))
 }
 
 func (e evaluator) DNSNames() field.ErrorList {
-	return evaluateSlice(e.csr.DNSNames, e.allowed.DNSNames, e.fldPath.Child("dnsNames"))
+	return e.EvalSlice(e.csr.DNSNames, e.allowed.DNSNames, e.fldPath.Child("dnsNames"))
 }
 
 func (e evaluator) IPAddresses() field.ErrorList {
@@ -117,7 +119,7 @@ func (e evaluator) IPAddresses() field.ErrorList {
 	for _, ip := range e.csr.IPAddresses {
 		ips = append(ips, ip.String())
 	}
-	return evaluateSlice(ips, e.allowed.IPAddresses, e.fldPath.Child("ipAddresses"))
+	return e.EvalSlice(ips, e.allowed.IPAddresses, e.fldPath.Child("ipAddresses"))
 }
 
 func (e evaluator) URIs() field.ErrorList {
@@ -125,15 +127,15 @@ func (e evaluator) URIs() field.ErrorList {
 	for _, uri := range e.csr.URIs {
 		uris = append(uris, uri.String())
 	}
-	return evaluateSlice(uris, e.allowed.URIs, e.fldPath.Child("uris"))
+	return e.EvalSlice(uris, e.allowed.URIs, e.fldPath.Child("uris"))
 }
 
 func (e evaluator) EmailAddresses() field.ErrorList {
-	return evaluateSlice(e.csr.EmailAddresses, e.allowed.EmailAddresses, e.fldPath.Child("emailAddresses"))
+	return e.EvalSlice(e.csr.EmailAddresses, e.allowed.EmailAddresses, e.fldPath.Child("emailAddresses"))
 }
 
 func (e evaluator) IsCA() field.ErrorList {
-	return evaluateBool(e.request.Spec.IsCA, e.allowed.IsCA, e.fldPath.Child("isCA"))
+	return e.EvalBool(e.request.Spec.IsCA, e.allowed.IsCA, e.fldPath.Child("isCA"))
 }
 
 func (e evaluator) Usages() field.ErrorList {
@@ -164,51 +166,59 @@ func (e evaluator) Subject() subjectEvaluator {
 		allowed = new(policyapi.CertificateRequestPolicyAllowedX509Subject)
 	}
 	return subjectEvaluator{
-		sub:     e.csr.Subject,
-		allowed: allowed,
-		fldPath: e.fldPath.Child("subject"),
+		Evaluator: e.Evaluator,
+		sub:       e.csr.Subject,
+		allowed:   allowed,
+		fldPath:   e.fldPath.Child("subject"),
 	}
 }
 
 type subjectEvaluator struct {
+	Evaluator
 	sub     pkix.Name
 	allowed *policyapi.CertificateRequestPolicyAllowedX509Subject
 	fldPath *field.Path
 }
 
 func (e subjectEvaluator) Organization() field.ErrorList {
-	return evaluateSlice(e.sub.Organization, e.allowed.Organizations, e.fldPath.Child("organizations"))
+	return e.EvalSlice(e.sub.Organization, e.allowed.Organizations, e.fldPath.Child("organizations"))
 }
 
 func (e subjectEvaluator) Country() field.ErrorList {
-	return evaluateSlice(e.sub.Country, e.allowed.Countries, e.fldPath.Child("countries"))
+	return e.EvalSlice(e.sub.Country, e.allowed.Countries, e.fldPath.Child("countries"))
 }
 
 func (e subjectEvaluator) OrganizationalUnit() field.ErrorList {
-	return evaluateSlice(e.sub.OrganizationalUnit, e.allowed.OrganizationalUnits, e.fldPath.Child("organizationalUnits"))
+	return e.EvalSlice(e.sub.OrganizationalUnit, e.allowed.OrganizationalUnits, e.fldPath.Child("organizationalUnits"))
 }
 
 func (e subjectEvaluator) Locality() field.ErrorList {
-	return evaluateSlice(e.sub.Locality, e.allowed.Localities, e.fldPath.Child("localities"))
+	return e.EvalSlice(e.sub.Locality, e.allowed.Localities, e.fldPath.Child("localities"))
 }
 
 func (e subjectEvaluator) Province() field.ErrorList {
-	return evaluateSlice(e.sub.Province, e.allowed.Provinces, e.fldPath.Child("provinces"))
+	return e.EvalSlice(e.sub.Province, e.allowed.Provinces, e.fldPath.Child("provinces"))
 }
 
 func (e subjectEvaluator) StreetAddress() field.ErrorList {
-	return evaluateSlice(e.sub.StreetAddress, e.allowed.StreetAddresses, e.fldPath.Child("streetAddresses"))
+	return e.EvalSlice(e.sub.StreetAddress, e.allowed.StreetAddresses, e.fldPath.Child("streetAddresses"))
 }
 
 func (e subjectEvaluator) PostalCode() field.ErrorList {
-	return evaluateSlice(e.sub.PostalCode, e.allowed.PostalCodes, e.fldPath.Child("postalCodes"))
+	return e.EvalSlice(e.sub.PostalCode, e.allowed.PostalCodes, e.fldPath.Child("postalCodes"))
 }
 
 func (e subjectEvaluator) SerialNumber() field.ErrorList {
-	return evaluateString(e.sub.SerialNumber, e.allowed.SerialNumber, e.fldPath.Child("serialNumber"))
+	return e.EvalString(e.sub.SerialNumber, e.allowed.SerialNumber, e.fldPath.Child("serialNumber"))
 }
 
-func evaluateString(s string, crp *policyapi.CertificateRequestPolicyAllowedString, fldPath *field.Path) field.ErrorList {
+type Evaluator interface {
+	EvalString(s string, crp *policyapi.CertificateRequestPolicyAllowedString, fldPath *field.Path) field.ErrorList
+	EvalSlice(s []string, crp *policyapi.CertificateRequestPolicyAllowedStringSlice, fldPath *field.Path) field.ErrorList
+	EvalBool(b bool, crp *bool, fldPath *field.Path) field.ErrorList
+}
+
+func (a allowed) EvalString(s string, crp *policyapi.CertificateRequestPolicyAllowedString, fldPath *field.Path) field.ErrorList {
 	var el field.ErrorList
 	if len(s) > 0 {
 		if crp == nil || crp.Value == nil {
@@ -222,7 +232,7 @@ func evaluateString(s string, crp *policyapi.CertificateRequestPolicyAllowedStri
 	return el
 }
 
-func evaluateSlice(s []string, crp *policyapi.CertificateRequestPolicyAllowedStringSlice, fldPath *field.Path) field.ErrorList {
+func (a allowed) EvalSlice(s []string, crp *policyapi.CertificateRequestPolicyAllowedStringSlice, fldPath *field.Path) field.ErrorList {
 	var el field.ErrorList
 	if len(s) > 0 {
 		if crp == nil || crp.Values == nil {
@@ -236,7 +246,7 @@ func evaluateSlice(s []string, crp *policyapi.CertificateRequestPolicyAllowedStr
 	return el
 }
 
-func evaluateBool(b bool, crp *bool, fldPath *field.Path) field.ErrorList {
+func (a allowed) EvalBool(b bool, crp *bool, fldPath *field.Path) field.ErrorList {
 	var el field.ErrorList
 	if b {
 		if crp == nil {

@@ -30,7 +30,7 @@ import (
 
 // Load the constraints approver.
 func init() {
-	registry.Shared.Store(constraints{})
+	registry.Shared.Store(Approver())
 }
 
 // Approver returns an instance on the constraints approver.

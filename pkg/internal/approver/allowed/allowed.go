@@ -30,7 +30,7 @@ import (
 
 // Load the allowed approver.
 func init() {
-	registry.Shared.Store(allowed{})
+	registry.Shared.Store(Approver())
 }
 
 // Approver returns an instance on the allowed approver.
