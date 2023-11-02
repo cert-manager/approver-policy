@@ -79,10 +79,6 @@ type Webhook struct {
 	// Port is the TCP port that the Webhook will be served on.
 	Port int
 
-	// CertDir is the directory where the Webhook's TLS certificate and key are
-	// stored with the names `tls.crt` and `tls.key` respectively.
-	CertDir string
-
 	// ServiceName is the service that exposes the Webhook server.
 	ServiceName string
 
@@ -177,9 +173,12 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 		"webhook-ca-secret-namespace", "cert-manager",
 		"Namespace that the cert-manager-approver-policy-tls Secret is stored.")
 
-	fs.StringVar(&o.Webhook.CertDir,
+	var deprecatedCertDir string
+	fs.StringVar(&deprecatedCertDir,
 		"webhook-certificate-dir", "/tmp",
 		"Directory where the Webhook certificate and private key are located. "+
 			"Certificate and private key must be named 'tls.crt' and 'tls.key' "+
 			"respectively.")
+
+	fs.MarkDeprecated("webhook-certificate-dir", "webhook-certificate-dir is deprecated")
 }
