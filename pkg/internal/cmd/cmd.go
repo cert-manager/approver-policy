@@ -18,11 +18,16 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"time"
 
 	logf "github.com/cert-manager/cert-manager/pkg/logs"
+	"github.com/cert-manager/cert-manager/pkg/webhook/authority"
+	servertls "github.com/cert-manager/cert-manager/pkg/webhook/server/tls"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -57,6 +62,17 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 			ctrl.SetLogger(mlog)
 
+			certificateSource := &servertls.DynamicSource{
+				DNSNames: []string{fmt.Sprintf("%s.%s.svc", opts.Webhook.ServiceName, opts.Webhook.CASecretNamespace)},
+				Authority: &authority.DynamicAuthority{
+					SecretNamespace: opts.Webhook.CASecretNamespace,
+					SecretName:      "cert-manager-approver-policy-tls",
+					RESTConfig:      opts.RestConfig,
+					CADuration:      time.Hour * 24,
+					LeafDuration:    time.Hour,
+				},
+			}
+
 			mgr, err := ctrl.NewManager(opts.RestConfig, ctrl.Options{
 				Scheme:                        policyapi.GlobalScheme,
 				LeaderElection:                true,
@@ -70,9 +86,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 					BindAddress: opts.MetricsAddress,
 				},
 				WebhookServer: ctrlwebhook.NewServer(ctrlwebhook.Options{
-					Port:    opts.Webhook.Port,
-					Host:    opts.Webhook.Host,
-					CertDir: opts.Webhook.CertDir,
+					Port: opts.Webhook.Port,
+					Host: opts.Webhook.Host,
+					TLSOpts: []func(*tls.Config){
+						func(cfg *tls.Config) {
+							cfg.GetCertificate = certificateSource.GetCertificate
+						},
+					},
 				}),
 				Logger: mlog,
 			})
@@ -80,15 +100,18 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("unable to create controller manager: %w", err)
 			}
 
+			if err := mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
+				return certificateSource.Run(ctx)
+			})); err != nil {
+				return err
+			}
+
 			metrics.RegisterMetrics(ctx, opts.Logr.WithName("metrics"), mgr.GetCache())
 
 			if err := webhook.Register(ctx, webhook.Options{
-				Log:                    opts.Logr,
-				Webhooks:               registry.Shared.Webhooks(),
-				WebhookCertificatesDir: opts.Webhook.CertDir,
-				ServiceName:            opts.Webhook.ServiceName,
-				CASecretNamespace:      opts.Webhook.CASecretNamespace,
-				Manager:                mgr,
+				Log:      opts.Logr,
+				Webhooks: registry.Shared.Webhooks(),
+				Manager:  mgr,
 			}); err != nil {
 				return fmt.Errorf("failed to register webhook: %w", err)
 			}
