@@ -142,19 +142,19 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	result, patch, resultErr := c.reconcileStatusPatch(ctx, req)
 	if patch != nil {
-		con, patch, err := ssa_client.GenerateCertificateRequestPolicyStatusPatch(req.Name, req.Namespace, patch)
+		crp, patch, err := ssa_client.GenerateCertificateRequestPolicyStatusPatch(req.Name, req.Namespace, patch)
 		if err != nil {
-			err = fmt.Errorf("failed to generate connection patch: %w", err)
+			err = fmt.Errorf("failed to generate CertificateRequestPolicy.Status patch: %w", err)
 			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
 		}
 
-		if err := c.client.Status().Patch(ctx, con, patch, &client.SubResourcePatchOptions{
+		if err := c.client.Status().Patch(ctx, crp, patch, &client.SubResourcePatchOptions{
 			PatchOptions: client.PatchOptions{
 				FieldManager: "approver-policy",
 				Force:        pointer.Bool(true),
 			},
 		}); err != nil {
-			err = fmt.Errorf("failed to apply connection patch: %w", err)
+			err = fmt.Errorf("failed to apply CertificateRequestPolicy.Status patch: %w", err)
 			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
 		}
 	}
