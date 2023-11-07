@@ -36,7 +36,7 @@ func GenerateCertificateRequestPolicyStatusPatch(
 	status *policyapi.CertificateRequestPolicyStatus,
 ) (*policyapi.CertificateRequestPolicy, client.Patch, error) {
 	// This object is used to deduce the name & namespace + unmarshall the return value in
-	bundle := &policyapi.CertificateRequestPolicy{
+	crp := &policyapi.CertificateRequestPolicy{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
 	}
 
@@ -52,8 +52,8 @@ func GenerateCertificateRequestPolicyStatusPatch(
 
 	encodedPatch, err := json.Marshal(b)
 	if err != nil {
-		return bundle, nil, err
+		return crp, nil, err
 	}
 
-	return bundle, applyPatch{encodedPatch}, nil
+	return crp, applyPatch{encodedPatch}, nil
 }

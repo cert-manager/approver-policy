@@ -486,7 +486,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 		newCondition       policyapi.CertificateRequestPolicyCondition
 		expectedConditions []policyapi.CertificateRequestPolicyCondition
 	}{
-		"no existing conditions should add the condition with time and gen to the bundle": {
+		"no existing conditions should add the condition with time and gen to the policy": {
 			existingConditions: []policyapi.CertificateRequestPolicyCondition{},
 			newCondition: policyapi.CertificateRequestPolicyCondition{
 				Type:    "A",
@@ -503,7 +503,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				ObservedGeneration: policyGeneration,
 			}},
 		},
-		"an existing condition of different type should add a different condition with time and gen to the bundle": {
+		"an existing condition of different type should add a different condition with time and gen to the policy": {
 			existingConditions: []policyapi.CertificateRequestPolicyCondition{{Type: "B"}},
 			newCondition: policyapi.CertificateRequestPolicyCondition{
 				Type:    "A",

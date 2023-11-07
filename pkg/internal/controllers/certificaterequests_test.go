@@ -43,7 +43,7 @@ import (
 
 func Test_certificaterequests_Reconcile(t *testing.T) {
 	const (
-		requestName             = "test-bundle"
+		requestName             = "test-request"
 		requestGeneration int64 = 2
 	)
 

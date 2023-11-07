@@ -147,19 +147,19 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	result, patch, resultErr := c.reconcileStatusPatch(ctx, req)
 	if patch != nil {
-		con, patch, err := ssa_client.GenerateCertificateRequestStatusPatch(req.Name, req.Namespace, patch)
+		cr, patch, err := ssa_client.GenerateCertificateRequestStatusPatch(req.Name, req.Namespace, patch)
 		if err != nil {
-			err = fmt.Errorf("failed to generate connection patch: %w", err)
+			err = fmt.Errorf("failed to generate CertificateRequest.Status patch: %w", err)
 			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
 		}
 
-		if err := c.client.Status().Patch(ctx, con, patch, &client.SubResourcePatchOptions{
+		if err := c.client.Status().Patch(ctx, cr, patch, &client.SubResourcePatchOptions{
 			PatchOptions: client.PatchOptions{
 				FieldManager: "approver-policy",
 				Force:        pointer.Bool(true),
 			},
 		}); err != nil {
-			err = fmt.Errorf("failed to apply connection patch: %w", err)
+			err = fmt.Errorf("failed to apply CertificateRequest.Status patch: %w", err)
 			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
 		}
 	}
