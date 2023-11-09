@@ -195,8 +195,8 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("approving request")
 		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", response.Message)
 
-		c.setCertificateRequestStatusCondition(
-			&crPatch.Conditions,
+		crPatch.Conditions = c.getCertificateRequestStatusConditions(
+			cr.Status.Conditions,
 			cmapi.CertificateRequestConditionApproved,
 			cmmeta.ConditionTrue,
 			"policy.cert-manager.io",
@@ -209,8 +209,8 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("denying request")
 		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", response.Message)
 
-		c.setCertificateRequestStatusCondition(
-			&crPatch.Conditions,
+		crPatch.Conditions = c.getCertificateRequestStatusConditions(
+			cr.Status.Conditions,
 			cmapi.CertificateRequestConditionDenied,
 			cmmeta.ConditionTrue,
 			"policy.cert-manager.io",
@@ -238,22 +238,14 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 // Update the status with the provided condition details & return
 // the added condition.
 // NOTE: this code is just a workaround for apiutil only accepting the certificaterequest object
-func (c *certificaterequests) setCertificateRequestStatusCondition(
-	conditions *[]cmapi.CertificateRequestCondition,
+func (c *certificaterequests) getCertificateRequestStatusConditions(
+	existingConditions []cmapi.CertificateRequestCondition,
 	conditionType cmapi.CertificateRequestConditionType,
 	status cmmeta.ConditionStatus,
 	reason, message string,
-) *cmapi.CertificateRequestCondition {
-	cr := cmapi.CertificateRequest{
-		Status: cmapi.CertificateRequestStatus{
-			Conditions: *conditions,
-		},
-	}
-
-	apiutil.SetCertificateRequestCondition(&cr, conditionType, status, reason, message)
-	condition := apiutil.GetCertificateRequestCondition(&cr, conditionType)
-
-	*conditions = cr.Status.Conditions
-
-	return condition
+) []cmapi.CertificateRequestCondition {
+	cr := &cmapi.CertificateRequest{}
+	cr.Status.Conditions = existingConditions
+	apiutil.SetCertificateRequestCondition(cr, conditionType, status, reason, message)
+	return []cmapi.CertificateRequestCondition{*apiutil.GetCertificateRequestCondition(cr, conditionType)}
 }
