@@ -87,6 +87,14 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			expStatusPatch:  nil,
 			expEvent:        "",
 		},
+		"if request is already approved, do nothing": {
+			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest,
+				gen.SetCertificateRequestStatusCondition(existingApprovedCondition))},
+			expResult:      ctrl.Result{},
+			expError:       false,
+			expStatusPatch: nil,
+			expEvent:       "",
+		},
 		"if manager review returns an error, fire event and return an error": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
 			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
@@ -164,18 +172,6 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 						Message:            "policy is happy :)",
 					},
 				},
-			},
-			expEvent: "Normal Approved policy is happy :)",
-		},
-		"if request already has approved condition, don't modify it": {
-			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest, gen.SetCertificateRequestStatusCondition(existingApprovedCondition))},
-			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
-				return manager.ReviewResponse{Result: manager.ResultApproved, Message: "policy is happy :)"}, nil
-			}),
-			expResult: ctrl.Result{},
-			expError:  false,
-			expStatusPatch: &cmapi.CertificateRequestStatus{
-				Conditions: []cmapi.CertificateRequestCondition{existingApprovedCondition},
 			},
 			expEvent: "Normal Approved policy is happy :)",
 		},

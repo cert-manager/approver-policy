@@ -176,6 +176,11 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		return ctrl.Result{}, nil, client.IgnoreNotFound(err)
 	}
 
+	if apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr) {
+		// Return early if already approved/denied as this is decision is final for requests.
+		return ctrl.Result{}, nil, nil
+	}
+
 	// Query review on the approver manager.
 	response, err := c.manager.Review(ctx, cr)
 	if err != nil {
