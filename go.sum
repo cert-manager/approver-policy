@@ -14,8 +14,6 @@ github.com/cenkalti/backoff/v4 v4.2.1/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyY
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cert-manager/cert-manager v1.13.2 h1:LG8+OLvxtc49CSyfjW7zHSyvlt7JVaHgRGyhfdvPpkk=
 github.com/cert-manager/cert-manager v1.13.2/go.mod h1:AdfSU8muS+bj3C46YaD1VrlpXh672z5MeW/k1k5Sl1w=
-github.com/cert-manager/issuer-lib v0.3.0 h1:tSfQz+ISL+FK7aOzDRQbQb5CM45/LIR+rHEjMPSRv0s=
-github.com/cert-manager/issuer-lib v0.3.0/go.mod h1:6Jp7abJfjj+VmQPQ/pr0g3IhO1UyfvgZZEys0H+qVYw=
 github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj44=
 github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=

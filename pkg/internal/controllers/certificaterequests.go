@@ -26,10 +26,10 @@ import (
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
-	"github.com/cert-manager/issuer-lib/conditions"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
@@ -206,7 +206,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("approving request")
 		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", response.Message)
 
-		conditions.SetCertificateRequestStatusCondition(
+		setCertificateRequestStatusCondition(
 			c.clock,
 			cr.Status.Conditions,
 			&crPatch.Conditions,
@@ -222,7 +222,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("denying request")
 		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", response.Message)
 
-		conditions.SetCertificateRequestStatusCondition(
+		setCertificateRequestStatusCondition(
 			c.clock,
 			cr.Status.Conditions,
 			&crPatch.Conditions,
@@ -248,4 +248,58 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil, nil
 
 	}
+}
+
+// Update the status with the provided condition details & return
+// the added condition.
+// This function is copied from https://github.com/cert-manager/issuer-lib/blob/main/conditions/certificaterequest.go
+func setCertificateRequestStatusCondition(
+	clock clock.PassiveClock,
+	existingConditions []cmapi.CertificateRequestCondition,
+	patchConditions *[]cmapi.CertificateRequestCondition,
+	conditionType cmapi.CertificateRequestConditionType,
+	status cmmeta.ConditionStatus,
+	reason, message string,
+) (*cmapi.CertificateRequestCondition, *metav1.Time) {
+	newCondition := cmapi.CertificateRequestCondition{
+		Type:    conditionType,
+		Status:  status,
+		Reason:  reason,
+		Message: message,
+	}
+
+	nowTime := metav1.NewTime(clock.Now())
+	newCondition.LastTransitionTime = &nowTime
+
+	// Reset the LastTransitionTime if the status hasn't changed
+	for _, cond := range existingConditions {
+		if cond.Type != conditionType {
+			continue
+		}
+
+		// If this update doesn't contain a state transition, we don't update
+		// the conditions LastTransitionTime to Now()
+		if cond.Status == status {
+			newCondition.LastTransitionTime = cond.LastTransitionTime
+		}
+	}
+
+	// Search through existing conditions
+	for idx, cond := range *patchConditions {
+		// Skip unrelated conditions
+		if cond.Type != conditionType {
+			continue
+		}
+
+		// Overwrite the existing condition
+		(*patchConditions)[idx] = newCondition
+
+		return &newCondition, &nowTime
+	}
+
+	// If we've not found an existing condition of this type, we simply insert
+	// the new condition into the slice.
+	*patchConditions = append(*patchConditions, newCondition)
+
+	return &newCondition, &nowTime
 }
