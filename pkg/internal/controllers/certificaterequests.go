@@ -26,12 +26,14 @@ import (
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	"github.com/cert-manager/issuer-lib/conditions"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -52,6 +54,9 @@ import (
 type certificaterequests struct {
 	// log is logger for the certificaterequests controller.
 	log logr.Logger
+
+	// clock returns time which can be overwritten for testing.
+	clock clock.Clock
 
 	// recorder is used for creating Kubernetes events on resources.
 	recorder record.EventRecorder
@@ -76,6 +81,7 @@ type certificaterequests struct {
 func addCertificateRequestController(ctx context.Context, opts Options) error {
 	c := &certificaterequests{
 		log:      opts.Log.WithName("certificaterequests"),
+		clock:    clock.RealClock{},
 		recorder: opts.Manager.GetEventRecorderFor("policy.cert-manager.io"),
 		client:   opts.Manager.GetClient(),
 		lister:   opts.Manager.GetCache(),
@@ -200,8 +206,10 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("approving request")
 		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", response.Message)
 
-		crPatch.Conditions = c.getCertificateRequestStatusConditions(
+		conditions.SetCertificateRequestStatusCondition(
+			c.clock,
 			cr.Status.Conditions,
+			&crPatch.Conditions,
 			cmapi.CertificateRequestConditionApproved,
 			cmmeta.ConditionTrue,
 			"policy.cert-manager.io",
@@ -214,8 +222,10 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("denying request")
 		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", response.Message)
 
-		crPatch.Conditions = c.getCertificateRequestStatusConditions(
+		conditions.SetCertificateRequestStatusCondition(
+			c.clock,
 			cr.Status.Conditions,
+			&crPatch.Conditions,
 			cmapi.CertificateRequestConditionDenied,
 			cmmeta.ConditionTrue,
 			"policy.cert-manager.io",
@@ -238,19 +248,4 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil, nil
 
 	}
-}
-
-// Update the status with the provided condition details & return
-// the added condition.
-// NOTE: this code is just a workaround for apiutil only accepting the certificaterequest object
-func (c *certificaterequests) getCertificateRequestStatusConditions(
-	existingConditions []cmapi.CertificateRequestCondition,
-	conditionType cmapi.CertificateRequestConditionType,
-	status cmmeta.ConditionStatus,
-	reason, message string,
-) []cmapi.CertificateRequestCondition {
-	cr := &cmapi.CertificateRequest{}
-	cr.Status.Conditions = existingConditions
-	apiutil.SetCertificateRequestCondition(cr, conditionType, status, reason, message)
-	return []cmapi.CertificateRequestCondition{*apiutil.GetCertificateRequestCondition(cr, conditionType)}
 }

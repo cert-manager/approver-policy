@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/cert-manager/cert-manager/test/unit/gen"
@@ -179,8 +178,6 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			apiutil.Clock = fixedclock
-
 			fakeclient := fakeclient.NewClientBuilder().
 				WithScheme(policyapi.GlobalScheme).
 				WithRuntimeObjects(test.existingObjects...).
@@ -194,6 +191,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 				recorder: fakerecorder,
 				manager:  test.manager,
 				log:      klogr.New(),
+				clock:    fixedclock,
 			}
 
 			resp, statusPatch, err := c.reconcileStatusPatch(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: gen.DefaultTestNamespace, Name: requestName}})
