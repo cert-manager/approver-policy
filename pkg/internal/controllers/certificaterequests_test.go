@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/cert-manager/cert-manager/test/unit/gen"
@@ -48,9 +47,16 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 	)
 
 	var (
-		fixedTime     = time.Date(2021, 01, 01, 01, 0, 0, 0, time.UTC)
-		fixedmetatime = &metav1.Time{Time: fixedTime}
-		fixedclock    = fakeclock.NewFakeClock(fixedTime)
+		fixedTime                 = time.Date(2021, 01, 01, 01, 0, 0, 0, time.UTC)
+		fixedmetatime             = &metav1.Time{Time: fixedTime}
+		fixedclock                = fakeclock.NewFakeClock(fixedTime)
+		existingApprovedCondition = cmapi.CertificateRequestCondition{
+			Type:               cmapi.CertificateRequestConditionApproved,
+			Status:             cmmeta.ConditionTrue,
+			LastTransitionTime: &metav1.Time{Time: fixedTime.Add(-time.Second)},
+			Reason:             "policy.cert-manager.io",
+			Message:            "policy is happy :)",
+		}
 
 		baseRequest = gen.CertificateRequest(requestName,
 			gen.SetCertificateRequestTypeMeta(metav1.TypeMeta{
@@ -79,6 +85,14 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			expError:        false,
 			expStatusPatch:  nil,
 			expEvent:        "",
+		},
+		"if request is already approved, do nothing": {
+			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest,
+				gen.SetCertificateRequestStatusCondition(existingApprovedCondition))},
+			expResult:      ctrl.Result{},
+			expError:       false,
+			expStatusPatch: nil,
+			expEvent:       "",
 		},
 		"if manager review returns an error, fire event and return an error": {
 			existingObjects: []runtime.Object{gen.CertificateRequestFrom(baseRequest)},
@@ -164,8 +178,6 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			apiutil.Clock = fixedclock
-
 			fakeclient := fakeclient.NewClientBuilder().
 				WithScheme(policyapi.GlobalScheme).
 				WithRuntimeObjects(test.existingObjects...).
@@ -179,6 +191,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 				recorder: fakerecorder,
 				manager:  test.manager,
 				log:      klogr.New(),
+				clock:    fixedclock,
 			}
 
 			resp, statusPatch, err := c.reconcileStatusPatch(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: gen.DefaultTestNamespace, Name: requestName}})

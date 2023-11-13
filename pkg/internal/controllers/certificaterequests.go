@@ -29,9 +29,11 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -52,6 +54,9 @@ import (
 type certificaterequests struct {
 	// log is logger for the certificaterequests controller.
 	log logr.Logger
+
+	// clock returns time which can be overwritten for testing.
+	clock clock.Clock
 
 	// recorder is used for creating Kubernetes events on resources.
 	recorder record.EventRecorder
@@ -76,6 +81,7 @@ type certificaterequests struct {
 func addCertificateRequestController(ctx context.Context, opts Options) error {
 	c := &certificaterequests{
 		log:      opts.Log.WithName("certificaterequests"),
+		clock:    clock.RealClock{},
 		recorder: opts.Manager.GetEventRecorderFor("policy.cert-manager.io"),
 		client:   opts.Manager.GetClient(),
 		lister:   opts.Manager.GetCache(),
@@ -176,6 +182,11 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		return ctrl.Result{}, nil, client.IgnoreNotFound(err)
 	}
 
+	if apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr) {
+		// Return early if already approved/denied as this is decision is final for requests.
+		return ctrl.Result{}, nil, nil
+	}
+
 	// Query review on the approver manager.
 	response, err := c.manager.Review(ctx, cr)
 	if err != nil {
@@ -195,7 +206,9 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("approving request")
 		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", response.Message)
 
-		c.setCertificateRequestStatusCondition(
+		setCertificateRequestStatusCondition(
+			c.clock,
+			cr.Status.Conditions,
 			&crPatch.Conditions,
 			cmapi.CertificateRequestConditionApproved,
 			cmmeta.ConditionTrue,
@@ -209,7 +222,9 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		log.V(2).Info("denying request")
 		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", response.Message)
 
-		c.setCertificateRequestStatusCondition(
+		setCertificateRequestStatusCondition(
+			c.clock,
+			cr.Status.Conditions,
 			&crPatch.Conditions,
 			cmapi.CertificateRequestConditionDenied,
 			cmmeta.ConditionTrue,
@@ -237,23 +252,54 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 
 // Update the status with the provided condition details & return
 // the added condition.
-// NOTE: this code is just a workaround for apiutil only accepting the certificaterequest object
-func (c *certificaterequests) setCertificateRequestStatusCondition(
-	conditions *[]cmapi.CertificateRequestCondition,
+// This function is copied from https://github.com/cert-manager/issuer-lib/blob/main/conditions/certificaterequest.go
+func setCertificateRequestStatusCondition(
+	clock clock.PassiveClock,
+	existingConditions []cmapi.CertificateRequestCondition,
+	patchConditions *[]cmapi.CertificateRequestCondition,
 	conditionType cmapi.CertificateRequestConditionType,
 	status cmmeta.ConditionStatus,
 	reason, message string,
-) *cmapi.CertificateRequestCondition {
-	cr := cmapi.CertificateRequest{
-		Status: cmapi.CertificateRequestStatus{
-			Conditions: *conditions,
-		},
+) (*cmapi.CertificateRequestCondition, *metav1.Time) {
+	newCondition := cmapi.CertificateRequestCondition{
+		Type:    conditionType,
+		Status:  status,
+		Reason:  reason,
+		Message: message,
 	}
 
-	apiutil.SetCertificateRequestCondition(&cr, conditionType, status, reason, message)
-	condition := apiutil.GetCertificateRequestCondition(&cr, conditionType)
+	nowTime := metav1.NewTime(clock.Now())
+	newCondition.LastTransitionTime = &nowTime
 
-	*conditions = cr.Status.Conditions
+	// Reset the LastTransitionTime if the status hasn't changed
+	for _, cond := range existingConditions {
+		if cond.Type != conditionType {
+			continue
+		}
 
-	return condition
+		// If this update doesn't contain a state transition, we don't update
+		// the conditions LastTransitionTime to Now()
+		if cond.Status == status {
+			newCondition.LastTransitionTime = cond.LastTransitionTime
+		}
+	}
+
+	// Search through existing conditions
+	for idx, cond := range *patchConditions {
+		// Skip unrelated conditions
+		if cond.Type != conditionType {
+			continue
+		}
+
+		// Overwrite the existing condition
+		(*patchConditions)[idx] = newCondition
+
+		return &newCondition, &nowTime
+	}
+
+	// If we've not found an existing condition of this type, we simply insert
+	// the new condition into the slice.
+	*patchConditions = append(*patchConditions, newCondition)
+
+	return &newCondition, &nowTime
 }
