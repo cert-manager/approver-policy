@@ -44,7 +44,7 @@ func Test_Validate(t *testing.T) {
 				Errors:  nil,
 			},
 		},
-		"if policy contains validation errors, expect a Allowed=false response": {
+		"if policy contains 'required' validation errors, expect an Allowed=false response": {
 			policy: &policyapi.CertificateRequestPolicy{
 				Spec: policyapi.CertificateRequestPolicySpec{
 					Allowed: &policyapi.CertificateRequestPolicyAllowed{
@@ -69,19 +69,19 @@ func Test_Validate(t *testing.T) {
 			expResponse: approver.WebhookValidationResponse{
 				Allowed: false,
 				Errors: field.ErrorList{
-					field.Required(field.NewPath("spec.allowed.dnsNames.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.ipAddresses.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.uris.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.emailAddresses.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.organizations.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.countries.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.organizationalUnits.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.localities.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.provinces.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.streetAddresses.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.postalCodes.values"), "values must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.commonName.value"), "value must be defined if required field"),
-					field.Required(field.NewPath("spec.allowed.subject.serialNumber.value"), "value must be defined if required field"),
+					field.Required(field.NewPath("spec.allowed.dnsNames.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.ipAddresses.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.uris.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.emailAddresses.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.organizations.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.countries.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.organizationalUnits.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.localities.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.provinces.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.streetAddresses.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.postalCodes.values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.commonName.value"), "at least one of 'value' or 'validations' must be defined if field is 'required'"),
+					field.Required(field.NewPath("spec.allowed.subject.serialNumber.value"), "at least one of 'value' or 'validations' must be defined if field is 'required'"),
 				},
 			},
 		},
@@ -139,11 +139,79 @@ func Test_Validate(t *testing.T) {
 				Errors:  nil,
 			},
 		},
+		"if policy contains invalid CEL validations, expect an Allowed=false response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Validations: []policyapi.ValidationRule{{Rule: "cel"}}},
+						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self > 2"}}},
+						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self && false"}}},
+						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.exists(x, p)"}}},
+						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self"}}},
+						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self == '"}}},
+							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.length < 24"}}},
+							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: ""}}},
+							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "cr.name[1] > 2"}}},
+							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "cel"}}},
+							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "cel"}}},
+							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "cel"}}},
+							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Validations: []policyapi.ValidationRule{{Rule: "cel"}}},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Errors: field.ErrorList{
+					field.Invalid(field.NewPath("spec.allowed.dnsNames.validations[0]"), "self > 2", "ERROR: <input>:1:6: found no matching overload for '_>_' applied to '(string, int)'\n | self > 2\n | .....^"),
+					field.Invalid(field.NewPath("spec.allowed.ipAddresses.validations[0]"), "self && false", "ERROR: <input>:1:6: found no matching overload for '_&&_' applied to '(string, bool)'\n | self && false\n | .....^"),
+					field.Invalid(field.NewPath("spec.allowed.uris.validations[0]"), "self.exists(x, p)", "ERROR: <input>:1:1: expression of type 'string' cannot be range of a comprehension (must be list, map, or dynamic)\n | self.exists(x, p)\n | ^\nERROR: <input>:1:16: undeclared reference to 'p' (in container '')\n | self.exists(x, p)\n | ...............^"),
+					field.Invalid(field.NewPath("spec.allowed.emailAddresses.validations[0]"), "self", "got string, wanted bool result type"),
+					field.Invalid(field.NewPath("spec.allowed.subject.organizations.validations[0]"), "self == '", "ERROR: <input>:1:9: Syntax error: token recognition error at: '''\n | self == '\n | ........^\nERROR: <input>:1:10: Syntax error: mismatched input '<EOF>' expecting {'[', '{', '(', '.', '-', '!', 'true', 'false', 'null', NUM_FLOAT, NUM_INT, NUM_UINT, STRING, BYTES, IDENTIFIER}\n | self == '\n | .........^"),
+					field.Invalid(field.NewPath("spec.allowed.subject.countries.validations[0]"), "self.length < 24", "ERROR: <input>:1:5: type 'primitive:STRING' does not support field selection\n | self.length < 24\n | ....^"),
+					field.Invalid(field.NewPath("spec.allowed.subject.organizationalUnits.validations[0]"), "", "ERROR: <input>:1:1: Syntax error: mismatched input '<EOF>' expecting {'[', '{', '(', '.', '-', '!', 'true', 'false', 'null', NUM_FLOAT, NUM_INT, NUM_UINT, STRING, BYTES, IDENTIFIER}"),
+					field.Invalid(field.NewPath("spec.allowed.subject.localities.validations[0]"), "cr.name[1] > 2", "ERROR: <input>:1:8: found no matching overload for '_[_]' applied to '(string, int)'\n | cr.name[1] > 2\n | .......^"),
+					field.Invalid(field.NewPath("spec.allowed.subject.provinces.validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
+					field.Invalid(field.NewPath("spec.allowed.subject.streetAddresses.validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
+					field.Invalid(field.NewPath("spec.allowed.subject.postalCodes.validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
+					field.Invalid(field.NewPath("spec.allowed.commonName.validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
+					field.Invalid(field.NewPath("spec.allowed.subject.serialNumber.validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
+				},
+			},
+		},
+		"if policy contains valid CEL validations, expect a Allowed=true response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: true,
+				Errors:  nil,
+			},
+		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			response, err := allowed{}.Validate(context.TODO(), test.policy)
+			response, err := Approver().Validate(context.TODO(), test.policy)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expResponse, response)
 		})

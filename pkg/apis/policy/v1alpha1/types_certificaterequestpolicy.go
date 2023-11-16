@@ -180,13 +180,12 @@ type CertificateRequestPolicyAllowedX509Subject struct {
 }
 
 // CertificateRequestPolicyAllowedStringSlice represents allowed string values
-// paired with whether the field is a required value on the request.
+// and/or validations paired with whether the field is a required value on the request.
+// If neither allowed values nor validations are specified, the related field must be empty.
 type CertificateRequestPolicyAllowedStringSlice struct {
-	// Values defines allowed attribute values on the related
-	// CertificateRequest field.
+	// Values defines allowed attribute values on the related CertificateRequest field.
 	// Accepts wildcards "*".
 	// If set, the related field can only include items contained in the allowed values.
-	// If `[]` or unset, the related field must be empty.
 	//
 	// NOTE:`values: []` paired with `required: true` establishes a policy that
 	// will never grant a `CertificateRequest`, but other policies may.
@@ -198,16 +197,25 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
+
+	// Validations applies rules using Common Expression Language (CEL) to
+	// validate attribute values present on request beyond what is possible
+	// to express using values/required.
+	// ALL attribute values on the related CertificateRequest field must pass
+	// ALL validations for the request to be granted by this policy.
+	// +listType=map
+	// +listMapKey=rule
+	// +optional
+	Validations []ValidationRule `json:"validations,omitempty"`
 }
 
 // CertificateRequestPolicyAllowedString represents an allowed string value
-// paired with whether the field is a required value on the request.
+// and/or validations paired with whether the field is a required value on the request.
+// If no allowed value nor validations are specified, the related field must be empty.
 type CertificateRequestPolicyAllowedString struct {
-	// Value defines the allowed attribute value on the related
-	// CertificateRequest field.
+	// Value defines the allowed attribute value on the related CertificateRequest field.
 	// Accepts wildcards "*".
 	// If set, the related field must match the specified pattern.
-	// If `""` or unset, the related field must be empty.
 	//
 	// NOTE:`value: ""` paired with `required: true` establishes a policy that
 	// will never grant a `CertificateRequest`, but other policies may.
@@ -219,6 +227,40 @@ type CertificateRequestPolicyAllowedString struct {
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
+
+	// Validations applies rules using Common Expression Language (CEL) to
+	// validate attribute value present on request beyond what is possible
+	// to express using value/required.
+	// An attribute value on the related CertificateRequest field must pass
+	// ALL validations for the request to be granted by this policy.
+	// +listType=map
+	// +listMapKey=rule
+	// +optional
+	Validations []ValidationRule `json:"validations,omitempty"`
+}
+
+// ValidationRule describes a validation rule expressed in CEL.
+type ValidationRule struct {
+	// Rule represents the expression which will be evaluated by CEL.
+	// ref: https://github.com/google/cel-spec
+	// The Rule is scoped to the location of the validations in the schema.
+	// The `self` variable in the CEL expression is bound to the scoped value.
+	// To enable more advanced validation rules, approver-policy provides the
+	// `cr` (map) variable to the CEL expression containing `namespace` and
+	// `name` of the `CertificateRequest` resource.
+	//
+	// Examples:
+	// - Rule for namespaced DNSNames:
+	//	 {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+	Rule string `json:"rule"`
+
+	// Message is the message to display when validation fails.
+	// Message is required if the Rule contains line breaks. Note that Message
+	// must not contain line breaks.
+	// If unset, a fallback message is used: "failed rule: {Rule}".
+	// e.g. "must be a URL with the host matching spec.host"
+	// +optional
+	Message *string `json:"message,omitempty"`
 }
 
 // CertificateRequestPolicyConstraints define fields that _must_ be satisfied

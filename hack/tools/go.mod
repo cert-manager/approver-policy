@@ -6,6 +6,7 @@ require (
 	github.com/norwoodj/helm-docs v1.11.0
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/princjef/gomarkdoc v0.4.1
+	google.golang.org/protobuf v1.31.0
 	k8s.io/code-generator v0.28.3
 	sigs.k8s.io/controller-tools v0.13.0
 	sigs.k8s.io/kind v0.20.0
@@ -98,7 +99,6 @@ require (
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/evanphx/json-patch.v5 v5.7.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

@@ -79,7 +79,7 @@ clean: ## clean up created files
 ##@ Build
 
 .PHONY: build
-build: $(BINDIR) ## Build manager binary.
+build: ## Build manager binary.
 	CGO_ENABLED=0 go build -o bin/approver-policy ./cmd/
 
 .PHONY: image
@@ -99,6 +99,12 @@ generate-deepcopy: ## Generate code containing DeepCopy, DeepCopyInto, and DeepC
 generate-deepcopy: | $(BINDIR)/controller-gen
 	$(BINDIR)/controller-gen object:headerFile="hack/boilerplate/boilerplate.go.txt" paths="./..."
 
+.PHONY: generate-protos
+generate-protos: ## Generate protocol buffer Go code.
+generate-protos: | $(BINDIR)/protoc-gen-go
+	$(BINDIR)/protoc --plugin=$(BINDIR)/protoc-gen-go --proto_path=. --go_out=. --go_opt=paths=source_relative \
+		pkg/internal/approver/validation/certificaterequest.proto
+
 .PHONY: generate-helm-docs
 generate-helm-docs: ## Generate helm docs
 generate-helm-docs: | $(BINDIR)/helm-docs
@@ -116,6 +122,7 @@ generate: generate-manifests
 generate: generate-deepcopy
 generate: generate-helm-docs
 generate: generate-api-docs
+generate: generate-protos
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -208,6 +215,22 @@ helm-chart: $(helm_chart_archive)
 
 ##@ Tools
 
+-include osvars.mk
+#
+# protocol compiler
+# ------------------
+PROTOC_VERSION := 25.0
+PROTOC_RELEASES_PATH := https://github.com/protocolbuffers/protobuf/releases/download
+PROTOC_ZIP := protoc-$(PROTOC_VERSION)-$(PROTOC_PLATFORM).zip
+PROTOC_DOWNLOAD := $(PROTOC_RELEASES_PATH)/v$(PROTOC_VERSION)/$(PROTOC_ZIP)
+
+$(BINDIR)/protoc: | $(BINDIR)
+	curl --location $(PROTOC_DOWNLOAD) --output $(BINDIR)/$(PROTOC_ZIP)
+	unzip -o -d "$(BINDIR)" $(BINDIR)/$(PROTOC_ZIP) && mv $(BINDIR)/bin/protoc $@
+
+$(BINDIR)/protoc-gen-go: | $(BINDIR)/protoc
+	cd hack/tools && go build -o $@ google.golang.org/protobuf/cmd/protoc-gen-go
+
 $(BINDIR):
 	mkdir -p $@
 
@@ -266,3 +289,4 @@ tools: $(BINDIR)/kubectl
 tools: $(BINDIR)/kubebuilder/bin/kube-apiserver
 tools: $(BINDIR)/gomarkdoc
 tools: $(BINDIR)/helm-docs
+tools: $(BINDIR)/protoc-gen-go
