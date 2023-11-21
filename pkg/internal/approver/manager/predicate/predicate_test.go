@@ -33,7 +33,7 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
-	"github.com/cert-manager/approver-policy/test/env"
+	testenv "github.com/cert-manager/approver-policy/test/env"
 )
 
 func Test_RBACBound(t *testing.T) {
@@ -42,9 +42,9 @@ func Test_RBACBound(t *testing.T) {
 		cancel()
 	})
 
-	env := env.RunControlPlane(t, ctx,
-		env.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
-		env.GetenvOrFail(t, "APPROVER_POLICY_CRDS"),
+	env := testenv.RunControlPlane(t, ctx,
+		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
+		testenv.GetenvOrFail(t, "APPROVER_POLICY_CRDS"),
 	)
 
 	const (
