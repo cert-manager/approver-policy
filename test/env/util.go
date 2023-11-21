@@ -53,14 +53,14 @@ users:
 `
 )
 
-// RootDirOrSkip returns the ROOTDIR environment variable, or skips if the
+// GetenvOrFail returns the specified environment variable, or fails if the
 // variable is undefined or empty.
-func RootDirOrSkip(t *testing.T) string {
-	rootDir := os.Getenv("ROOTDIR")
-	if len(rootDir) == 0 {
-		t.Skip("WARNING: skipping test as 'ROOTDIR' is not defined")
+func GetenvOrFail(t *testing.T, name string) string {
+	value := os.Getenv(name)
+	if len(value) == 0 {
+		t.Errorf("FAIL: failing test as %q is not defined", name)
 	}
-	return rootDir
+	return value
 }
 
 // writeKubeconfig writes a Kubeconfig file using the Kubernetes REST config.

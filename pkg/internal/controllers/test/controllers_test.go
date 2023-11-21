@@ -18,7 +18,6 @@ package test
 
 import (
 	"context"
-	"path/filepath"
 	"testing"
 
 	testenv "github.com/cert-manager/approver-policy/test/env"
@@ -32,11 +31,9 @@ func Test_Controllers(t *testing.T) {
 		cancel()
 	})
 
-	rootDir := testenv.RootDirOrSkip(t)
-
 	env = testenv.RunControlPlane(t, ctx,
-		filepath.Join(rootDir, "_bin/cert-manager"),
-		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
+		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
+		testenv.GetenvOrFail(t, "APPROVER_POLICY_CRDS"),
 	)
 	testenv.RunSuite(t, "approver-policy-controllers", "../../../../_artifacts")
 }

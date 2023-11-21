@@ -19,7 +19,6 @@ package manager
 import (
 	"context"
 	"errors"
-	"path/filepath"
 	"testing"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -41,10 +40,9 @@ func Test_Review(t *testing.T) {
 		cancel()
 	})
 
-	rootDir := env.RootDirOrSkip(t)
 	env := env.RunControlPlane(t, ctx,
-		filepath.Join(rootDir, "_bin/cert-manager"),
-		filepath.Join(rootDir, "deploy/charts/approver-policy/templates/crds"),
+		env.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
+		env.GetenvOrFail(t, "APPROVER_POLICY_CRDS"),
 	)
 
 	expNoEvaluation := func(t *testing.T) approver.Evaluator {
