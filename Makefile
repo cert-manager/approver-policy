@@ -177,7 +177,7 @@ $(BINDIR)/cert-manager/crds.yaml: | $(BINDIR)
 .PHONY: test
 test: cert_manager_crds tools ## Test approver-policy
 	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin \
-	CERT_MANAGER_CRDS=$(CURDIR)/$(BINDIR)/cert-manager/crds.yaml \
+	CERT_MANAGER_CRDS=$(BINDIR)/cert-manager/crds.yaml \
 	APPROVER_POLICY_CRDS=$(CURDIR)/deploy/charts/approver-policy/templates/crds/policy.cert-manager.io_certificaterequestpolicies.yaml \
 		$(BINDIR)/ginkgo -procs=1 -v $(TEST_ARGS) ./cmd/... ./pkg/...
 
