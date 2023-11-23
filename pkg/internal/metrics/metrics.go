@@ -20,10 +20,12 @@ import (
 	"context"
 	"time"
 
+	crpapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
@@ -79,6 +81,22 @@ var (
 		},
 		nil,
 	)
+
+	// crPolicyStatus tells you the status of the CertificateRequestPolicy's
+	// Ready condition. We don't report the `message` field from the condition
+	// because it isn't machine-readable (i.e., it's a free-text string that
+	// changes for each object and isn't meant to be used for filtering and
+	// grouping in Prometheus). We also don't report the `reason` field because
+	// it is paraphrasing the `status` (it says "Ready" or "NotReady").
+	crPolicyStatus = prometheus.NewDesc(
+		"approverpolicy_certificaterequestpolicy_status",
+		"Status of the CertificateRequestPolicy resources.",
+		[]string{
+			"name",
+			"ready_status",
+		},
+		nil,
+	)
 )
 
 // You don't need to wait for the cache to be synced before calling this. This
@@ -88,8 +106,8 @@ func RegisterMetrics(ctx context.Context, log logr.Logger, c cache.Cache) {
 }
 
 // We use a custom collector instead of prometheus.NewGaugeVec because it is
-// much easier to list all of the certificate requests when the `/metrics`
-// endpoint is hit rather than using a controller-runtime reconciler.
+// much easier to list resources when the `/metrics` endpoint is hit rather than
+// using a controller-runtime reconciler.
 type collector struct {
 	ctx   context.Context
 	log   logr.Logger
@@ -112,6 +130,7 @@ func (cc collector) Collect(ch chan<- prometheus.Metric) {
 	collectCRsApproved(cc.ctx, cc.log, cc.cache, ch)
 	collectCRsDenied(cc.ctx, cc.log, cc.cache, ch)
 	collectCRsUnmatched(cc.log, cc.cache, ch)
+	collectCRPolicyStatuses(cc.ctx, cc.log, cc.cache, ch)
 }
 
 // hasSynced returns true if the cache has synced. Otherwise, it returns false.
@@ -249,6 +268,25 @@ func collectCRsUnmatched(logger logr.Logger, c cache.Cache, ch chan<- prometheus
 	}
 }
 
+func collectCRPolicyStatuses(ctx context.Context, log logr.Logger, c cache.Cache, ch chan<- prometheus.Metric) {
+	list := &crpapi.CertificateRequestPolicyList{}
+	err := c.List(ctx, list)
+	if err != nil {
+		log.Error(err, "unable to list CertificateRequestPolicies")
+		return
+	}
+
+	for _, crp := range list.Items {
+		ch <- prometheus.MustNewConstMetric(
+			crPolicyStatus,
+			prometheus.GaugeValue,
+			float64(1),
+			crp.Name,
+			string(getReadyStatusCRP(crp.Status.Conditions)),
+		)
+	}
+}
+
 // Returns "True" or "False", or "Unknown" if the condition with the given type
 // (e.g., "Approved" or "Denied") exists, or "" if the condition is not found.
 func getStatus(condTyp cmapi.CertificateRequestConditionType, conditions []cmapi.CertificateRequestCondition) cmmeta.ConditionStatus {
@@ -259,4 +297,16 @@ func getStatus(condTyp cmapi.CertificateRequestConditionType, conditions []cmapi
 	}
 
 	return cmmeta.ConditionUnknown
+}
+
+// Same but for the CertificateRequestPolicy resource, and only meant for the
+// Ready condition since CertificateRequestPolicy only uses the Ready condition.
+func getReadyStatusCRP(conditions []crpapi.CertificateRequestPolicyCondition) corev1.ConditionStatus {
+	for _, cond := range conditions {
+		if cond.Type == crpapi.CertificateRequestPolicyConditionReady {
+			return cond.Status
+		}
+	}
+
+	return corev1.ConditionUnknown
 }

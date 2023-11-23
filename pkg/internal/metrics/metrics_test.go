@@ -21,11 +21,14 @@ import (
 	"strings"
 	"testing"
 
+	crpapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
+
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,28 +36,28 @@ import (
 
 func Test_Metrics(t *testing.T) {
 	t.Run("approved_count counts the CRs that have the Approved condition", func(t *testing.T) {
-		mock := mockCollector(t, []cmapi.CertificateRequest{
-			{
+		mock := mockCollector(t, []runtime.Object{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo2", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "baz", Namespace: "other"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
@@ -73,28 +76,28 @@ func Test_Metrics(t *testing.T) {
 	})
 
 	t.Run("denied_count counts the CRs that have the Denied condition", func(t *testing.T) {
-		mock := mockCollector(t, []cmapi.CertificateRequest{
-			{
+		mock := mockCollector(t, []runtime.Object{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo2", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Denied", Status: "True"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Denied", Status: "True"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "baz", Namespace: "other"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
@@ -113,21 +116,21 @@ func Test_Metrics(t *testing.T) {
 	})
 
 	t.Run("unmatched_count is only about CRs with no Approved and Denied condition", func(t *testing.T) {
-		mock := mockCollector(t, []cmapi.CertificateRequest{
+		mock := mockCollector(t, []runtime.Object{
 			// Three unmatched CRs.
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo2", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo3", Namespace: "other"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
@@ -135,21 +138,21 @@ func Test_Metrics(t *testing.T) {
 			},
 			// The three following CRs have been happily matched by an approver,
 			// and the last one has been denied.
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo4", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo5", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
-			{
+			&cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo6", Namespace: "other"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
@@ -167,11 +170,36 @@ func Test_Metrics(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("certificaterequestpolicy_status", func(t *testing.T) {
+		mock := mockCollector(t, []runtime.Object{
+			// Three unmatched CRs.
+			&crpapi.CertificateRequestPolicy{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo1"},
+				Status: crpapi.CertificateRequestPolicyStatus{Conditions: []crpapi.CertificateRequestPolicyCondition{
+					{Type: "Ready", Status: "False"},
+				}},
+			},
+			&crpapi.CertificateRequestPolicy{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo2"},
+				Status: crpapi.CertificateRequestPolicyStatus{Conditions: []crpapi.CertificateRequestPolicyCondition{
+					{Type: "Ready", Status: "True"},
+				}},
+			},
+		})
+		const expected = `
+            # HELP approverpolicy_certificaterequestpolicy_status Status of the CertificateRequestPolicy resources.
+            # TYPE approverpolicy_certificaterequestpolicy_status gauge
+            approverpolicy_certificaterequestpolicy_status{name="foo1",ready_status="False"} 1
+            approverpolicy_certificaterequestpolicy_status{name="foo2",ready_status="True"} 1
+        `
+		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "approverpolicy_certificaterequestpolicy_status")
+		require.NoError(t, err)
+	})
 }
 
-func mockCollector(t *testing.T, crs []cmapi.CertificateRequest) *collector {
+func mockCollector(t *testing.T, objs []runtime.Object) *collector {
 	return &collector{
-		cache: &mockCache{t: t, objects: crs},
+		cache: &mockCache{t: t, objects: objs},
 		ctx:   context.Background(),
 		log:   logr.Discard(),
 	}
@@ -179,7 +207,7 @@ func mockCollector(t *testing.T, crs []cmapi.CertificateRequest) *collector {
 
 type mockCache struct {
 	t       *testing.T
-	objects []cmapi.CertificateRequest
+	objects []runtime.Object
 }
 
 // The only two functions we care about are WaitForCacheSync and List.
@@ -187,10 +215,29 @@ func (mock *mockCache) WaitForCacheSync(ctx context.Context) bool {
 	return true
 }
 func (mock *mockCache) List(ctx context.Context, given client.ObjectList, opts ...client.ListOption) error {
-	require.IsType(mock.t, &cmapi.CertificateRequestList{}, given)
-	crList := given.(*cmapi.CertificateRequestList)
-	crList.Items = mock.objects
-	return nil
+	switch given.(type) {
+	case *cmapi.CertificateRequestList:
+		for _, obj := range mock.objects {
+			cr, ok := obj.(*cmapi.CertificateRequest)
+			if !ok {
+				continue
+			}
+			given.(*cmapi.CertificateRequestList).Items = append(given.(*cmapi.CertificateRequestList).Items, *cr)
+		}
+		return nil
+	case *crpapi.CertificateRequestPolicyList:
+		for _, obj := range mock.objects {
+			crp, ok := obj.(*crpapi.CertificateRequestPolicy)
+			if !ok {
+				continue
+			}
+			given.(*crpapi.CertificateRequestPolicyList).Items = append(given.(*crpapi.CertificateRequestPolicyList).Items, *crp)
+		}
+		return nil
+	default:
+		mock.t.FailNow()
+		return nil
+	}
 }
 
 // The rest of the functions are stubbed out.
