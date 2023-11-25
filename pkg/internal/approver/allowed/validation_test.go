@@ -165,11 +165,11 @@ func Test_Validate(t *testing.T) {
 				Allowed: false,
 				Errors: field.ErrorList{
 					field.Invalid(field.NewPath("spec.allowed.dnsNames.validations[0]"), "self > 2", "ERROR: <input>:1:6: found no matching overload for '_>_' applied to '(string, int)'\n | self > 2\n | .....^"),
-					field.Invalid(field.NewPath("spec.allowed.ipAddresses.validations[0]"), "self && false", "ERROR: <input>:1:6: found no matching overload for '_&&_' applied to '(string, bool)'\n | self && false\n | .....^"),
+					field.Invalid(field.NewPath("spec.allowed.ipAddresses.validations[0]"), "self && false", "ERROR: <input>:1:1: expected type 'bool' but found 'string'\n | self && false\n | ^"),
 					field.Invalid(field.NewPath("spec.allowed.uris.validations[0]"), "self.exists(x, p)", "ERROR: <input>:1:1: expression of type 'string' cannot be range of a comprehension (must be list, map, or dynamic)\n | self.exists(x, p)\n | ^\nERROR: <input>:1:16: undeclared reference to 'p' (in container '')\n | self.exists(x, p)\n | ...............^"),
 					field.Invalid(field.NewPath("spec.allowed.emailAddresses.validations[0]"), "self", "got string, wanted bool result type"),
 					field.Invalid(field.NewPath("spec.allowed.subject.organizations.validations[0]"), "self == '", "ERROR: <input>:1:9: Syntax error: token recognition error at: '''\n | self == '\n | ........^\nERROR: <input>:1:10: Syntax error: mismatched input '<EOF>' expecting {'[', '{', '(', '.', '-', '!', 'true', 'false', 'null', NUM_FLOAT, NUM_INT, NUM_UINT, STRING, BYTES, IDENTIFIER}\n | self == '\n | .........^"),
-					field.Invalid(field.NewPath("spec.allowed.subject.countries.validations[0]"), "self.length < 24", "ERROR: <input>:1:5: type 'primitive:STRING' does not support field selection\n | self.length < 24\n | ....^"),
+					field.Invalid(field.NewPath("spec.allowed.subject.countries.validations[0]"), "self.length < 24", "ERROR: <input>:1:5: type 'string' does not support field selection\n | self.length < 24\n | ....^"),
 					field.Invalid(field.NewPath("spec.allowed.subject.organizationalUnits.validations[0]"), "", "ERROR: <input>:1:1: Syntax error: mismatched input '<EOF>' expecting {'[', '{', '(', '.', '-', '!', 'true', 'false', 'null', NUM_FLOAT, NUM_INT, NUM_UINT, STRING, BYTES, IDENTIFIER}"),
 					field.Invalid(field.NewPath("spec.allowed.subject.localities.validations[0]"), "cr.name[1] > 2", "ERROR: <input>:1:8: found no matching overload for '_[_]' applied to '(string, int)'\n | cr.name[1] > 2\n | .......^"),
 					field.Invalid(field.NewPath("spec.allowed.subject.provinces.validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
