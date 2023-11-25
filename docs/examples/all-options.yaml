@@ -1,3 +1,4 @@
+# This is a fabricated policy to show all possible policy options.
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
@@ -7,43 +8,90 @@ spec:
     commonName:
       required: true
       value: "example.com"
+      validations:
+        - rule: self.endsWith('.com')
+          message: CommonName must end with '.com'
     dnsNames:
       required: false
       values:
-      - "example.com"
-      - "*.example.com"
+        - "example.com"
+        - "*.example.com"
+      validations:
+        - rule: self.size() =< 24
+          message: DNSName must be no more than 24 characters
     ipAddresses:
-      values:
-      - "1.2.3.4"
-      - "10.0.1.*"
+      required: false
+      values: ["*"]
+      validations:
+        - rule: self.matches('\d+\.\d+\.\d+\.\d+')
+          message: IPAddress must be a valid IPv4 address
     uris:
+      required: false
       values:
-      - "spiffe://example.org/ns/*/sa/*"
+        - "spiffe://example.org/ns/*/sa/*"
+      validations:
+        - rule: self.startsWith('spiffe://%s/ns/%s/sa/'.format(['example.org',cr.namespace]))
+          message: URI must be a valid SPIFFE ID in trust domain bound to request namespace
     emailAddresses:
+      required: false
       values:
-      - "*@example.com"
+        - "*@example.com"
+      validations:
+        - rule: self.size() =< 24
+          message: EmailAddress must be no more than 24 characters
     isCA: false
     usages:
-    - "server auth"
-    - "client auth"
+      - "server auth"
+      - "client auth"
     subject:
       organizations:
-        values: ["hello-world"]
+        required: false
+        values: ["*"]
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
       countries:
+        required: false
         values: ["*"]
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
       organizationalUnits:
+        required: false
         values: ["*"]
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
       localities:
+        required: false
         values: ["*"]
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
       provinces:
+        required: false
         values: ["*"]
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
       streetAddresses:
+        required: false
         values: ["*"]
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
       postalCodes:
+        required: false
         values: ["*"]
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
       serialNumber:
+        required: false
         value: "*"
-
+        validations:
+          - rule: self.size() > 0
+            message: must not be empty
   constraints:
     minDuration: 1h
     maxDuration: 24h
@@ -51,35 +99,12 @@ spec:
       algorithm: RSA
       minSize: 2048
       maxSize: 4096
-
+  plugins:
+    rego:
+      values:
+        my-ref: "hello-world"
   selector:
     issuerRef:
       name: "my-ca-*"
       kind: "*Issuer"
       group: cert-manager.io
-
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cert-manager-policy:all-options
-  namespace: sandbox
-rules:
-- apiGroups: ["policy.cert-manager.io"]
-  resources: ["certificaterequestpolicies"]
-  verbs: ["use"]
-  resourceNames: ["all-options"]
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cert-manager-policy:all-options
-  namespace: sandbox
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: cert-manager-policy:all-options
-subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: User
-  name: alice

@@ -8,46 +8,19 @@ spec:
       value: "example.com"
     dnsNames:
       values:
-      - "example.com"
-      - "*.example.com"
+        - "example.com"
+        - "*.example.com"
+      validations:
+        - rule: !self.contains('*')
+          message: Wildcard certificates are not allowed
     usages:
-    - "server auth"
-
+      - "server auth"
   constraints:
     privateKey:
       algorithm: RSA
       minSize: 2048
-
   selector:
     issuerRef:
       name: letsencrypt-prod
       kind: Issuer
       group: cert-manager.io
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cert-manager-policy:example-com
-  namespace: sandbox
-rules:
-- apiGroups: ["policy.cert-manager.io"]
-  resources: ["certificaterequestpolicies"]
-  verbs: ["use"]
-  resourceNames: ["example-com"]
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cert-manager-policy:example-com
-  namespace: sandbox
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: cert-manager-policy:example-com
-subjects:
-# Policy intended to be used with a Certificate resource, so cert-manager is
-# the user creating CertificateRequest. Bind to the cert-manager
-# ServiceAccount.
-- kind: ServiceAccount
-  name: cert-manager
-  namespace: cert-manager
