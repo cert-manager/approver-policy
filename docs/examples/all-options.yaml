@@ -47,51 +47,35 @@ spec:
       organizations:
         required: false
         values: ["*"]
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
       countries:
         required: false
         values: ["*"]
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
       organizationalUnits:
         required: false
         values: ["*"]
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
       localities:
         required: false
         values: ["*"]
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
       provinces:
         required: false
         values: ["*"]
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
       streetAddresses:
         required: false
         values: ["*"]
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
       postalCodes:
         required: false
         values: ["*"]
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
       serialNumber:
         required: false
         value: "*"
-        validations:
-          - rule: self.size() > 0
-            message: must not be empty
+        validations: []
   constraints:
     minDuration: 1h
     maxDuration: 24h
