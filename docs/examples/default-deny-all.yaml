@@ -1,0 +1,14 @@
+# Here we match on all requests created by anyone. The policy contains an
+# option that establishes a policy that will never approve a request, but other policies may.
+# This ensures all requests will be denied by default unless another policy permits the request.
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: default-deny-all
+spec:
+  allowed:
+    dnsNames:
+      values: []
+      required: true
+  selector:
+    issuerRef: {}
