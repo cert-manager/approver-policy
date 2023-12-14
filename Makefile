@@ -37,6 +37,7 @@ HELM_VERSION ?= 3.11.3
 KUBEBUILDER_TOOLS_VERSION ?= 1.27.1
 # Check https://github.com/kyverno/kyverno/releases for latest available release
 KYVERNO_VERSION ?= v1.10.0
+YQ_VERSION ?= v4.34.1
 K8S_CLUSTER_NAME ?= approver-policy
 IMAGE_REGISTRY ?= quay.io/jetstack
 IMAGE_NAME := cert-manager-approver-policy
@@ -91,8 +92,18 @@ image: ## build docker image
 .PHONY: generate-manifests
 generate-manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 generate-manifests: | $(BINDIR)/controller-gen
+	$(eval crds_gen_temp := $(BINDIR)/scratch/crds)
+
 	$(BINDIR)/controller-gen rbac:roleName=manager-role crd webhook paths="./..." \
-		output:crd:artifacts:config=$(helm_chart_source_dir)/templates/crds
+		output:crd:artifacts:config=$(crds_gen_temp)
+
+	echo "Updating CRDs with helm templating, writing to $(helm_chart_source_dir)/templates"
+
+	for i in $$(ls $(crds_gen_temp)); do \
+	echo "{{ if .Values.crds.enabled }}" > $(helm_chart_source_dir)/templates/crd-$$i; \
+	cat $(crds_gen_temp)/$$i >> $(helm_chart_source_dir)/templates/crd-$$i; \
+	echo "{{ end }}" >> $(helm_chart_source_dir)/templates/crd-$$i; \
+	done
 
 .PHONY: generate-deepcopy
 generate-deepcopy: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -174,11 +185,18 @@ $(BINDIR)/cert-manager/crds.yaml: | $(BINDIR)
 	mkdir -p $(BINDIR)/cert-manager
 	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
+approver_policy_crds := $(BINDIR)/scratch/approver-policy-crds.yaml
+$(approver_policy_crds): $(helm_chart_archive) | $(BINDIR)/helm $(BINDIR)/yq
+	mkdir -p $(BINDIR)/scratch
+	$(BINDIR)/helm template test "$(helm_chart_archive)" | \
+		$(BINDIR)/yq e '. | select(.kind == "CustomResourceDefinition")' \
+		> $@
+
 .PHONY: test
-test: cert_manager_crds tools ## Test approver-policy
+test: cert_manager_crds tools $(approver_policy_crds) ## Test approver-policy
 	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin \
 	CERT_MANAGER_CRDS=$(BINDIR)/cert-manager/crds.yaml \
-	APPROVER_POLICY_CRDS=$(CURDIR)/deploy/charts/approver-policy/templates/crds/policy.cert-manager.io_certificaterequestpolicies.yaml \
+	APPROVER_POLICY_CRDS=$(approver_policy_crds) \
 		$(BINDIR)/ginkgo -procs=1 -v $(TEST_ARGS) ./cmd/... ./pkg/...
 
 .PHONY: demo
@@ -278,6 +296,10 @@ $(BINDIR)/kyverno: | $(BINDIR)
 	tar xfO $@.tar.gz kyverno > $@
 	chmod +x $@
 	rm -f $@.tar.gz
+
+$(BINDIR)/yq: | $(BINDIR)
+	curl https://github.com/mikefarah/yq/releases/download/$(YQ_VERSION)/yq_$(OS)_$(ARCH) -fsSL -o $@
+	chmod +x $@
 
 .PHONY: tools
 tools: ## Download and setup all tools

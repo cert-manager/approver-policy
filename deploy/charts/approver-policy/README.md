@@ -39,6 +39,7 @@ A Helm chart for cert-manager-approver-policy
 | app.webhook.timeoutSeconds | int | `5` | Timeout of webhook HTTP request. |
 | app.webhook.tolerations | list | `[]` | https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | commonLabels | object | `{}` | Optional allow custom labels to be placed on resources |
+| crds.enabled | bool | `true` | Whether or not to install the crds. |
 | image.digest | string | `nil` | Target image digest. Will override any tag if set. for example: digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20 |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on Deployment. |
 | image.registry | string | `nil` | Target image registry. Will be prepended to the target image repositry if set. |

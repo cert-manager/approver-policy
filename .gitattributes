@@ -1,4 +1,4 @@
-deploy/charts/approver-policy/templates/crds/* linguist-generated=true
+deploy/charts/approver-policy/templates/crd-* linguist-generated=true
 deploy/charts/approver-policy/README.md linguist-generated=true
 docs/api/api.md linguist-generated=true
 

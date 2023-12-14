@@ -109,3 +109,6 @@ commonLabels: {}
 # -- Optional allow custom annotations to be placed on cert-manager-approver pod
 podAnnotations: {}
 
+crds:
+  # -- Whether or not to install the crds.
+  enabled: true
