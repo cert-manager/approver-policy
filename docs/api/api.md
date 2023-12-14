@@ -11,60 +11,62 @@ import "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 ## Index
 
 - [Variables](<#variables>)
-- [type CertificateRequestPolicy](<#type-certificaterequestpolicy>)
-  - [func (in *CertificateRequestPolicy) DeepCopy() *CertificateRequestPolicy](<#func-certificaterequestpolicy-deepcopy>)
-  - [func (in *CertificateRequestPolicy) DeepCopyInto(out *CertificateRequestPolicy)](<#func-certificaterequestpolicy-deepcopyinto>)
-  - [func (in *CertificateRequestPolicy) DeepCopyObject() runtime.Object](<#func-certificaterequestpolicy-deepcopyobject>)
-- [type CertificateRequestPolicyAllowed](<#type-certificaterequestpolicyallowed>)
-  - [func (in *CertificateRequestPolicyAllowed) DeepCopy() *CertificateRequestPolicyAllowed](<#func-certificaterequestpolicyallowed-deepcopy>)
-  - [func (in *CertificateRequestPolicyAllowed) DeepCopyInto(out *CertificateRequestPolicyAllowed)](<#func-certificaterequestpolicyallowed-deepcopyinto>)
-- [type CertificateRequestPolicyAllowedString](<#type-certificaterequestpolicyallowedstring>)
-  - [func (in *CertificateRequestPolicyAllowedString) DeepCopy() *CertificateRequestPolicyAllowedString](<#func-certificaterequestpolicyallowedstring-deepcopy>)
-  - [func (in *CertificateRequestPolicyAllowedString) DeepCopyInto(out *CertificateRequestPolicyAllowedString)](<#func-certificaterequestpolicyallowedstring-deepcopyinto>)
-- [type CertificateRequestPolicyAllowedStringSlice](<#type-certificaterequestpolicyallowedstringslice>)
-  - [func (in *CertificateRequestPolicyAllowedStringSlice) DeepCopy() *CertificateRequestPolicyAllowedStringSlice](<#func-certificaterequestpolicyallowedstringslice-deepcopy>)
-  - [func (in *CertificateRequestPolicyAllowedStringSlice) DeepCopyInto(out *CertificateRequestPolicyAllowedStringSlice)](<#func-certificaterequestpolicyallowedstringslice-deepcopyinto>)
-- [type CertificateRequestPolicyAllowedX509Subject](<#type-certificaterequestpolicyallowedx509subject>)
-  - [func (in *CertificateRequestPolicyAllowedX509Subject) DeepCopy() *CertificateRequestPolicyAllowedX509Subject](<#func-certificaterequestpolicyallowedx509subject-deepcopy>)
-  - [func (in *CertificateRequestPolicyAllowedX509Subject) DeepCopyInto(out *CertificateRequestPolicyAllowedX509Subject)](<#func-certificaterequestpolicyallowedx509subject-deepcopyinto>)
-- [type CertificateRequestPolicyCondition](<#type-certificaterequestpolicycondition>)
-  - [func (in *CertificateRequestPolicyCondition) DeepCopy() *CertificateRequestPolicyCondition](<#func-certificaterequestpolicycondition-deepcopy>)
-  - [func (in *CertificateRequestPolicyCondition) DeepCopyInto(out *CertificateRequestPolicyCondition)](<#func-certificaterequestpolicycondition-deepcopyinto>)
-- [type CertificateRequestPolicyConditionType](<#type-certificaterequestpolicyconditiontype>)
-- [type CertificateRequestPolicyConstraints](<#type-certificaterequestpolicyconstraints>)
-  - [func (in *CertificateRequestPolicyConstraints) DeepCopy() *CertificateRequestPolicyConstraints](<#func-certificaterequestpolicyconstraints-deepcopy>)
-  - [func (in *CertificateRequestPolicyConstraints) DeepCopyInto(out *CertificateRequestPolicyConstraints)](<#func-certificaterequestpolicyconstraints-deepcopyinto>)
-- [type CertificateRequestPolicyConstraintsPrivateKey](<#type-certificaterequestpolicyconstraintsprivatekey>)
-  - [func (in *CertificateRequestPolicyConstraintsPrivateKey) DeepCopy() *CertificateRequestPolicyConstraintsPrivateKey](<#func-certificaterequestpolicyconstraintsprivatekey-deepcopy>)
-  - [func (in *CertificateRequestPolicyConstraintsPrivateKey) DeepCopyInto(out *CertificateRequestPolicyConstraintsPrivateKey)](<#func-certificaterequestpolicyconstraintsprivatekey-deepcopyinto>)
-- [type CertificateRequestPolicyList](<#type-certificaterequestpolicylist>)
-  - [func (in *CertificateRequestPolicyList) DeepCopy() *CertificateRequestPolicyList](<#func-certificaterequestpolicylist-deepcopy>)
-  - [func (in *CertificateRequestPolicyList) DeepCopyInto(out *CertificateRequestPolicyList)](<#func-certificaterequestpolicylist-deepcopyinto>)
-  - [func (in *CertificateRequestPolicyList) DeepCopyObject() runtime.Object](<#func-certificaterequestpolicylist-deepcopyobject>)
-- [type CertificateRequestPolicyPluginData](<#type-certificaterequestpolicyplugindata>)
-  - [func (in *CertificateRequestPolicyPluginData) DeepCopy() *CertificateRequestPolicyPluginData](<#func-certificaterequestpolicyplugindata-deepcopy>)
-  - [func (in *CertificateRequestPolicyPluginData) DeepCopyInto(out *CertificateRequestPolicyPluginData)](<#func-certificaterequestpolicyplugindata-deepcopyinto>)
-- [type CertificateRequestPolicySelector](<#type-certificaterequestpolicyselector>)
-  - [func (in *CertificateRequestPolicySelector) DeepCopy() *CertificateRequestPolicySelector](<#func-certificaterequestpolicyselector-deepcopy>)
-  - [func (in *CertificateRequestPolicySelector) DeepCopyInto(out *CertificateRequestPolicySelector)](<#func-certificaterequestpolicyselector-deepcopyinto>)
-- [type CertificateRequestPolicySelectorIssuerRef](<#type-certificaterequestpolicyselectorissuerref>)
-  - [func (in *CertificateRequestPolicySelectorIssuerRef) DeepCopy() *CertificateRequestPolicySelectorIssuerRef](<#func-certificaterequestpolicyselectorissuerref-deepcopy>)
-  - [func (in *CertificateRequestPolicySelectorIssuerRef) DeepCopyInto(out *CertificateRequestPolicySelectorIssuerRef)](<#func-certificaterequestpolicyselectorissuerref-deepcopyinto>)
-- [type CertificateRequestPolicySelectorNamespace](<#type-certificaterequestpolicyselectornamespace>)
-  - [func (in *CertificateRequestPolicySelectorNamespace) DeepCopy() *CertificateRequestPolicySelectorNamespace](<#func-certificaterequestpolicyselectornamespace-deepcopy>)
-  - [func (in *CertificateRequestPolicySelectorNamespace) DeepCopyInto(out *CertificateRequestPolicySelectorNamespace)](<#func-certificaterequestpolicyselectornamespace-deepcopyinto>)
-- [type CertificateRequestPolicySpec](<#type-certificaterequestpolicyspec>)
-  - [func (in *CertificateRequestPolicySpec) DeepCopy() *CertificateRequestPolicySpec](<#func-certificaterequestpolicyspec-deepcopy>)
-  - [func (in *CertificateRequestPolicySpec) DeepCopyInto(out *CertificateRequestPolicySpec)](<#func-certificaterequestpolicyspec-deepcopyinto>)
-- [type CertificateRequestPolicyStatus](<#type-certificaterequestpolicystatus>)
-  - [func (in *CertificateRequestPolicyStatus) DeepCopy() *CertificateRequestPolicyStatus](<#func-certificaterequestpolicystatus-deepcopy>)
-  - [func (in *CertificateRequestPolicyStatus) DeepCopyInto(out *CertificateRequestPolicyStatus)](<#func-certificaterequestpolicystatus-deepcopyinto>)
-- [type ValidationRule](<#type-validationrule>)
-  - [func (in *ValidationRule) DeepCopy() *ValidationRule](<#func-validationrule-deepcopy>)
-  - [func (in *ValidationRule) DeepCopyInto(out *ValidationRule)](<#func-validationrule-deepcopyinto>)
+- [type CertificateRequestPolicy](<#CertificateRequestPolicy>)
+  - [func \(in \*CertificateRequestPolicy\) DeepCopy\(\) \*CertificateRequestPolicy](<#CertificateRequestPolicy.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicy\) DeepCopyInto\(out \*CertificateRequestPolicy\)](<#CertificateRequestPolicy.DeepCopyInto>)
+  - [func \(in \*CertificateRequestPolicy\) DeepCopyObject\(\) runtime.Object](<#CertificateRequestPolicy.DeepCopyObject>)
+- [type CertificateRequestPolicyAllowed](<#CertificateRequestPolicyAllowed>)
+  - [func \(in \*CertificateRequestPolicyAllowed\) DeepCopy\(\) \*CertificateRequestPolicyAllowed](<#CertificateRequestPolicyAllowed.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyAllowed\) DeepCopyInto\(out \*CertificateRequestPolicyAllowed\)](<#CertificateRequestPolicyAllowed.DeepCopyInto>)
+- [type CertificateRequestPolicyAllowedString](<#CertificateRequestPolicyAllowedString>)
+  - [func \(in \*CertificateRequestPolicyAllowedString\) DeepCopy\(\) \*CertificateRequestPolicyAllowedString](<#CertificateRequestPolicyAllowedString.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyAllowedString\) DeepCopyInto\(out \*CertificateRequestPolicyAllowedString\)](<#CertificateRequestPolicyAllowedString.DeepCopyInto>)
+- [type CertificateRequestPolicyAllowedStringSlice](<#CertificateRequestPolicyAllowedStringSlice>)
+  - [func \(in \*CertificateRequestPolicyAllowedStringSlice\) DeepCopy\(\) \*CertificateRequestPolicyAllowedStringSlice](<#CertificateRequestPolicyAllowedStringSlice.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyAllowedStringSlice\) DeepCopyInto\(out \*CertificateRequestPolicyAllowedStringSlice\)](<#CertificateRequestPolicyAllowedStringSlice.DeepCopyInto>)
+- [type CertificateRequestPolicyAllowedX509Subject](<#CertificateRequestPolicyAllowedX509Subject>)
+  - [func \(in \*CertificateRequestPolicyAllowedX509Subject\) DeepCopy\(\) \*CertificateRequestPolicyAllowedX509Subject](<#CertificateRequestPolicyAllowedX509Subject.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyAllowedX509Subject\) DeepCopyInto\(out \*CertificateRequestPolicyAllowedX509Subject\)](<#CertificateRequestPolicyAllowedX509Subject.DeepCopyInto>)
+- [type CertificateRequestPolicyCondition](<#CertificateRequestPolicyCondition>)
+  - [func \(in \*CertificateRequestPolicyCondition\) DeepCopy\(\) \*CertificateRequestPolicyCondition](<#CertificateRequestPolicyCondition.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyCondition\) DeepCopyInto\(out \*CertificateRequestPolicyCondition\)](<#CertificateRequestPolicyCondition.DeepCopyInto>)
+- [type CertificateRequestPolicyConditionType](<#CertificateRequestPolicyConditionType>)
+- [type CertificateRequestPolicyConstraints](<#CertificateRequestPolicyConstraints>)
+  - [func \(in \*CertificateRequestPolicyConstraints\) DeepCopy\(\) \*CertificateRequestPolicyConstraints](<#CertificateRequestPolicyConstraints.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyConstraints\) DeepCopyInto\(out \*CertificateRequestPolicyConstraints\)](<#CertificateRequestPolicyConstraints.DeepCopyInto>)
+- [type CertificateRequestPolicyConstraintsPrivateKey](<#CertificateRequestPolicyConstraintsPrivateKey>)
+  - [func \(in \*CertificateRequestPolicyConstraintsPrivateKey\) DeepCopy\(\) \*CertificateRequestPolicyConstraintsPrivateKey](<#CertificateRequestPolicyConstraintsPrivateKey.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyConstraintsPrivateKey\) DeepCopyInto\(out \*CertificateRequestPolicyConstraintsPrivateKey\)](<#CertificateRequestPolicyConstraintsPrivateKey.DeepCopyInto>)
+- [type CertificateRequestPolicyList](<#CertificateRequestPolicyList>)
+  - [func \(in \*CertificateRequestPolicyList\) DeepCopy\(\) \*CertificateRequestPolicyList](<#CertificateRequestPolicyList.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyList\) DeepCopyInto\(out \*CertificateRequestPolicyList\)](<#CertificateRequestPolicyList.DeepCopyInto>)
+  - [func \(in \*CertificateRequestPolicyList\) DeepCopyObject\(\) runtime.Object](<#CertificateRequestPolicyList.DeepCopyObject>)
+- [type CertificateRequestPolicyPluginData](<#CertificateRequestPolicyPluginData>)
+  - [func \(in \*CertificateRequestPolicyPluginData\) DeepCopy\(\) \*CertificateRequestPolicyPluginData](<#CertificateRequestPolicyPluginData.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyPluginData\) DeepCopyInto\(out \*CertificateRequestPolicyPluginData\)](<#CertificateRequestPolicyPluginData.DeepCopyInto>)
+- [type CertificateRequestPolicySelector](<#CertificateRequestPolicySelector>)
+  - [func \(in \*CertificateRequestPolicySelector\) DeepCopy\(\) \*CertificateRequestPolicySelector](<#CertificateRequestPolicySelector.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicySelector\) DeepCopyInto\(out \*CertificateRequestPolicySelector\)](<#CertificateRequestPolicySelector.DeepCopyInto>)
+- [type CertificateRequestPolicySelectorIssuerRef](<#CertificateRequestPolicySelectorIssuerRef>)
+  - [func \(in \*CertificateRequestPolicySelectorIssuerRef\) DeepCopy\(\) \*CertificateRequestPolicySelectorIssuerRef](<#CertificateRequestPolicySelectorIssuerRef.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicySelectorIssuerRef\) DeepCopyInto\(out \*CertificateRequestPolicySelectorIssuerRef\)](<#CertificateRequestPolicySelectorIssuerRef.DeepCopyInto>)
+- [type CertificateRequestPolicySelectorNamespace](<#CertificateRequestPolicySelectorNamespace>)
+  - [func \(in \*CertificateRequestPolicySelectorNamespace\) DeepCopy\(\) \*CertificateRequestPolicySelectorNamespace](<#CertificateRequestPolicySelectorNamespace.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicySelectorNamespace\) DeepCopyInto\(out \*CertificateRequestPolicySelectorNamespace\)](<#CertificateRequestPolicySelectorNamespace.DeepCopyInto>)
+- [type CertificateRequestPolicySpec](<#CertificateRequestPolicySpec>)
+  - [func \(in \*CertificateRequestPolicySpec\) DeepCopy\(\) \*CertificateRequestPolicySpec](<#CertificateRequestPolicySpec.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicySpec\) DeepCopyInto\(out \*CertificateRequestPolicySpec\)](<#CertificateRequestPolicySpec.DeepCopyInto>)
+- [type CertificateRequestPolicyStatus](<#CertificateRequestPolicyStatus>)
+  - [func \(in \*CertificateRequestPolicyStatus\) DeepCopy\(\) \*CertificateRequestPolicyStatus](<#CertificateRequestPolicyStatus.DeepCopy>)
+  - [func \(in \*CertificateRequestPolicyStatus\) DeepCopyInto\(out \*CertificateRequestPolicyStatus\)](<#CertificateRequestPolicyStatus.DeepCopyInto>)
+- [type ValidationRule](<#ValidationRule>)
+  - [func \(in \*ValidationRule\) DeepCopy\(\) \*ValidationRule](<#ValidationRule.DeepCopy>)
+  - [func \(in \*ValidationRule\) DeepCopyInto\(out \*ValidationRule\)](<#ValidationRule.DeepCopyInto>)
 
 
 ## Variables
+
+<a name="SchemeBuilder"></a>
 
 ```go
 var (
@@ -79,17 +81,20 @@ var (
 )
 ```
 
+<a name="CertificateRequestPolicyKind"></a>
+
 ```go
 var CertificateRequestPolicyKind = "CertificateRequestPolicy"
 ```
 
-SchemeGroupVersion is group version used to register these objects \+k8s:deepcopy\-gen=false
+<a name="SchemeGroupVersion"></a>SchemeGroupVersion is group version used to register these objects \+k8s:deepcopy\-gen=false
 
 ```go
 var SchemeGroupVersion = schema.GroupVersion{Group: policy.GroupName, Version: "v1alpha1"}
 ```
 
-## type [CertificateRequestPolicy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L37-L43>)
+<a name="CertificateRequestPolicy"></a>
+## type [CertificateRequestPolicy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L37-L43>)
 
 CertificateRequestPolicy is an object for describing a "policy profile" that makes decisions on whether applicable CertificateRequests should be approved or denied.
 
@@ -103,7 +108,8 @@ type CertificateRequestPolicy struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicy\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L39>)
+<a name="CertificateRequestPolicy.DeepCopy"></a>
+### func \(\*CertificateRequestPolicy\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L39>)
 
 ```go
 func (in *CertificateRequestPolicy) DeepCopy() *CertificateRequestPolicy
@@ -111,7 +117,8 @@ func (in *CertificateRequestPolicy) DeepCopy() *CertificateRequestPolicy
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicy.
 
-### func \(\*CertificateRequestPolicy\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L30>)
+<a name="CertificateRequestPolicy.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicy\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L30>)
 
 ```go
 func (in *CertificateRequestPolicy) DeepCopyInto(out *CertificateRequestPolicy)
@@ -119,7 +126,8 @@ func (in *CertificateRequestPolicy) DeepCopyInto(out *CertificateRequestPolicy)
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-### func \(\*CertificateRequestPolicy\) [DeepCopyObject](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L49>)
+<a name="CertificateRequestPolicy.DeepCopyObject"></a>
+### func \(\*CertificateRequestPolicy\) [DeepCopyObject](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L49>)
 
 ```go
 func (in *CertificateRequestPolicy) DeepCopyObject() runtime.Object
@@ -127,7 +135,8 @@ func (in *CertificateRequestPolicy) DeepCopyObject() runtime.Object
 
 DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
 
-## type [CertificateRequestPolicyAllowed](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L94-L138>)
+<a name="CertificateRequestPolicyAllowed"></a>
+## type [CertificateRequestPolicyAllowed](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L94-L138>)
 
 CertificateRequestPolicyAllowed defines the allowed attributes for a CertificateRequest. A CertificateRequest can request \_less\_ than what is allowed, but \_not more\_, i.e. a CertificateRequest can request a subset of what is declared as allowed by the policy. Omitted fields declares that the equivalent CertificateRequest field \_must\_ be omitted or have an empty value for the request to be permitted.
 
@@ -179,7 +188,8 @@ type CertificateRequestPolicyAllowed struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyAllowed\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L106>)
+<a name="CertificateRequestPolicyAllowed.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyAllowed\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L106>)
 
 ```go
 func (in *CertificateRequestPolicyAllowed) DeepCopy() *CertificateRequestPolicyAllowed
@@ -187,7 +197,8 @@ func (in *CertificateRequestPolicyAllowed) DeepCopy() *CertificateRequestPolicyA
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyAllowed.
 
-### func \(\*CertificateRequestPolicyAllowed\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L57>)
+<a name="CertificateRequestPolicyAllowed.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyAllowed\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L57>)
 
 ```go
 func (in *CertificateRequestPolicyAllowed) DeepCopyInto(out *CertificateRequestPolicyAllowed)
@@ -195,7 +206,8 @@ func (in *CertificateRequestPolicyAllowed) DeepCopyInto(out *CertificateRequestP
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyAllowedString](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L215-L240>)
+<a name="CertificateRequestPolicyAllowedString"></a>
+## type [CertificateRequestPolicyAllowedString](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L215-L240>)
 
 CertificateRequestPolicyAllowedString represents an allowed string value and/or validations paired with whether the field is a required value on the request. If no allowed value nor validations are specified, the related field must be empty.
 
@@ -228,7 +240,8 @@ type CertificateRequestPolicyAllowedString struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyAllowedString\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L138>)
+<a name="CertificateRequestPolicyAllowedString.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyAllowedString\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L138>)
 
 ```go
 func (in *CertificateRequestPolicyAllowedString) DeepCopy() *CertificateRequestPolicyAllowedString
@@ -236,7 +249,8 @@ func (in *CertificateRequestPolicyAllowedString) DeepCopy() *CertificateRequestP
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyAllowedString.
 
-### func \(\*CertificateRequestPolicyAllowedString\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L116>)
+<a name="CertificateRequestPolicyAllowedString.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyAllowedString\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L116>)
 
 ```go
 func (in *CertificateRequestPolicyAllowedString) DeepCopyInto(out *CertificateRequestPolicyAllowedString)
@@ -244,7 +258,8 @@ func (in *CertificateRequestPolicyAllowedString) DeepCopyInto(out *CertificateRe
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyAllowedStringSlice](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L185-L210>)
+<a name="CertificateRequestPolicyAllowedStringSlice"></a>
+## type [CertificateRequestPolicyAllowedStringSlice](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L185-L210>)
 
 CertificateRequestPolicyAllowedStringSlice represents allowed string values and/or validations paired with whether the field is a required value on the request. If neither allowed values nor validations are specified, the related field must be empty.
 
@@ -277,7 +292,8 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyAllowedStringSlice\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L174>)
+<a name="CertificateRequestPolicyAllowedStringSlice.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyAllowedStringSlice\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L174>)
 
 ```go
 func (in *CertificateRequestPolicyAllowedStringSlice) DeepCopy() *CertificateRequestPolicyAllowedStringSlice
@@ -285,7 +301,8 @@ func (in *CertificateRequestPolicyAllowedStringSlice) DeepCopy() *CertificateReq
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyAllowedStringSlice.
 
-### func \(\*CertificateRequestPolicyAllowedStringSlice\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L148>)
+<a name="CertificateRequestPolicyAllowedStringSlice.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyAllowedStringSlice\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L148>)
 
 ```go
 func (in *CertificateRequestPolicyAllowedStringSlice) DeepCopyInto(out *CertificateRequestPolicyAllowedStringSlice)
@@ -293,7 +310,8 @@ func (in *CertificateRequestPolicyAllowedStringSlice) DeepCopyInto(out *Certific
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyAllowedX509Subject](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L144-L180>)
+<a name="CertificateRequestPolicyAllowedX509Subject"></a>
+## type [CertificateRequestPolicyAllowedX509Subject](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L144-L180>)
 
 CertificateRequestPolicyAllowedX509Subject declares allowed X.509 Subject attributes for a CertificateRequest. A CertificateRequest can request a subset of the allowed X.509 Subject attributes.
 
@@ -337,7 +355,8 @@ type CertificateRequestPolicyAllowedX509Subject struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyAllowedX509Subject\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L229>)
+<a name="CertificateRequestPolicyAllowedX509Subject.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyAllowedX509Subject\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L229>)
 
 ```go
 func (in *CertificateRequestPolicyAllowedX509Subject) DeepCopy() *CertificateRequestPolicyAllowedX509Subject
@@ -345,7 +364,8 @@ func (in *CertificateRequestPolicyAllowedX509Subject) DeepCopy() *CertificateReq
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyAllowedX509Subject.
 
-### func \(\*CertificateRequestPolicyAllowedX509Subject\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L184>)
+<a name="CertificateRequestPolicyAllowedX509Subject.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyAllowedX509Subject\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L184>)
 
 ```go
 func (in *CertificateRequestPolicyAllowedX509Subject) DeepCopyInto(out *CertificateRequestPolicyAllowedX509Subject)
@@ -353,7 +373,8 @@ func (in *CertificateRequestPolicyAllowedX509Subject) DeepCopyInto(out *Certific
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyCondition](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L414-L443>)
+<a name="CertificateRequestPolicyCondition"></a>
+## type [CertificateRequestPolicyCondition](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L414-L443>)
 
 CertificateRequestPolicyCondition contains condition information for a CertificateRequestPolicyStatus.
 
@@ -390,7 +411,8 @@ type CertificateRequestPolicyCondition struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyCondition\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L248>)
+<a name="CertificateRequestPolicyCondition.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyCondition\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L248>)
 
 ```go
 func (in *CertificateRequestPolicyCondition) DeepCopy() *CertificateRequestPolicyCondition
@@ -398,7 +420,8 @@ func (in *CertificateRequestPolicyCondition) DeepCopy() *CertificateRequestPolic
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyCondition.
 
-### func \(\*CertificateRequestPolicyCondition\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L239>)
+<a name="CertificateRequestPolicyCondition.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyCondition\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L239>)
 
 ```go
 func (in *CertificateRequestPolicyCondition) DeepCopyInto(out *CertificateRequestPolicyCondition)
@@ -406,13 +429,16 @@ func (in *CertificateRequestPolicyCondition) DeepCopyInto(out *CertificateReques
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyConditionType](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L447>)
+<a name="CertificateRequestPolicyConditionType"></a>
+## type [CertificateRequestPolicyConditionType](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L447>)
 
 CertificateRequestPolicyConditionType represents a CertificateRequestPolicy condition value.
 
 ```go
 type CertificateRequestPolicyConditionType string
 ```
+
+<a name="CertificateRequestPolicyConditionReady"></a>
 
 ```go
 const (
@@ -425,7 +451,8 @@ const (
 )
 ```
 
-## type [CertificateRequestPolicyConstraints](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L270-L293>)
+<a name="CertificateRequestPolicyConstraints"></a>
+## type [CertificateRequestPolicyConstraints](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L270-L293>)
 
 CertificateRequestPolicyConstraints define fields that \_must\_ be satisfied by the CertificateRequest for the request to be allowed by this policy. Omitted fields will be satisfied by any value in the corresponding attribute of the request.
 
@@ -456,7 +483,8 @@ type CertificateRequestPolicyConstraints struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyConstraints\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L278>)
+<a name="CertificateRequestPolicyConstraints.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyConstraints\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L278>)
 
 ```go
 func (in *CertificateRequestPolicyConstraints) DeepCopy() *CertificateRequestPolicyConstraints
@@ -464,7 +492,8 @@ func (in *CertificateRequestPolicyConstraints) DeepCopy() *CertificateRequestPol
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyConstraints.
 
-### func \(\*CertificateRequestPolicyConstraints\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L258>)
+<a name="CertificateRequestPolicyConstraints.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyConstraints\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L258>)
 
 ```go
 func (in *CertificateRequestPolicyConstraints) DeepCopyInto(out *CertificateRequestPolicyConstraints)
@@ -472,7 +501,8 @@ func (in *CertificateRequestPolicyConstraints) DeepCopyInto(out *CertificateRequ
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyConstraintsPrivateKey](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L297-L317>)
+<a name="CertificateRequestPolicyConstraintsPrivateKey"></a>
+## type [CertificateRequestPolicyConstraintsPrivateKey](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L297-L317>)
 
 CertificateRequestPolicyConstraintsPrivateKey defines constraints on the shape of private key allowed for a CertificateRequest.
 
@@ -500,7 +530,8 @@ type CertificateRequestPolicyConstraintsPrivateKey struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyConstraintsPrivateKey\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L308>)
+<a name="CertificateRequestPolicyConstraintsPrivateKey.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyConstraintsPrivateKey\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L308>)
 
 ```go
 func (in *CertificateRequestPolicyConstraintsPrivateKey) DeepCopy() *CertificateRequestPolicyConstraintsPrivateKey
@@ -508,7 +539,8 @@ func (in *CertificateRequestPolicyConstraintsPrivateKey) DeepCopy() *Certificate
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyConstraintsPrivateKey.
 
-### func \(\*CertificateRequestPolicyConstraintsPrivateKey\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L288>)
+<a name="CertificateRequestPolicyConstraintsPrivateKey.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyConstraintsPrivateKey\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L288>)
 
 ```go
 func (in *CertificateRequestPolicyConstraintsPrivateKey) DeepCopyInto(out *CertificateRequestPolicyConstraintsPrivateKey)
@@ -516,7 +548,8 @@ func (in *CertificateRequestPolicyConstraintsPrivateKey) DeepCopyInto(out *Certi
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyList](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L47-L51>)
+<a name="CertificateRequestPolicyList"></a>
+## type [CertificateRequestPolicyList](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L47-L51>)
 
 \+k8s:deepcopy\-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object CertificateRequestPolicyList is a list of CertificateRequestPolicies.
 
@@ -528,7 +561,8 @@ type CertificateRequestPolicyList struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyList\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L332>)
+<a name="CertificateRequestPolicyList.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyList\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L332>)
 
 ```go
 func (in *CertificateRequestPolicyList) DeepCopy() *CertificateRequestPolicyList
@@ -536,7 +570,8 @@ func (in *CertificateRequestPolicyList) DeepCopy() *CertificateRequestPolicyList
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyList.
 
-### func \(\*CertificateRequestPolicyList\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L318>)
+<a name="CertificateRequestPolicyList.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyList\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L318>)
 
 ```go
 func (in *CertificateRequestPolicyList) DeepCopyInto(out *CertificateRequestPolicyList)
@@ -544,7 +579,8 @@ func (in *CertificateRequestPolicyList) DeepCopyInto(out *CertificateRequestPoli
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-### func \(\*CertificateRequestPolicyList\) [DeepCopyObject](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L342>)
+<a name="CertificateRequestPolicyList.DeepCopyObject"></a>
+### func \(\*CertificateRequestPolicyList\) [DeepCopyObject](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L342>)
 
 ```go
 func (in *CertificateRequestPolicyList) DeepCopyObject() runtime.Object
@@ -552,7 +588,8 @@ func (in *CertificateRequestPolicyList) DeepCopyObject() runtime.Object
 
 DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
 
-## type [CertificateRequestPolicyPluginData](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L321-L327>)
+<a name="CertificateRequestPolicyPluginData"></a>
+## type [CertificateRequestPolicyPluginData](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L321-L327>)
 
 CertificateRequestPolicyPluginData is configuration needed by the plugin approver to evaluate a CertificateRequest on this policy.
 
@@ -566,7 +603,8 @@ type CertificateRequestPolicyPluginData struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyPluginData\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L362>)
+<a name="CertificateRequestPolicyPluginData.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyPluginData\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L362>)
 
 ```go
 func (in *CertificateRequestPolicyPluginData) DeepCopy() *CertificateRequestPolicyPluginData
@@ -574,7 +612,8 @@ func (in *CertificateRequestPolicyPluginData) DeepCopy() *CertificateRequestPoli
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyPluginData.
 
-### func \(\*CertificateRequestPolicyPluginData\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L350>)
+<a name="CertificateRequestPolicyPluginData.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyPluginData\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L350>)
 
 ```go
 func (in *CertificateRequestPolicyPluginData) DeepCopyInto(out *CertificateRequestPolicyPluginData)
@@ -582,7 +621,8 @@ func (in *CertificateRequestPolicyPluginData) DeepCopyInto(out *CertificateReque
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicySelector](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L335-L355>)
+<a name="CertificateRequestPolicySelector"></a>
+## type [CertificateRequestPolicySelector](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L335-L355>)
 
 CertificateRequestPolicySelector is used for selecting over which CertificateRequests this CertificateRequestPolicy is appropriate for, and if so, will be used to evaluate the request. All selectors that have been configured must match a CertificateRequest in order for the CertificateRequestPolicy to be chosen for evaluation. At least one of IssuerRef or Namespace must be defined.
 
@@ -610,7 +650,8 @@ type CertificateRequestPolicySelector struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicySelector\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L387>)
+<a name="CertificateRequestPolicySelector.DeepCopy"></a>
+### func \(\*CertificateRequestPolicySelector\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L387>)
 
 ```go
 func (in *CertificateRequestPolicySelector) DeepCopy() *CertificateRequestPolicySelector
@@ -618,7 +659,8 @@ func (in *CertificateRequestPolicySelector) DeepCopy() *CertificateRequestPolicy
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicySelector.
 
-### func \(\*CertificateRequestPolicySelector\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L372>)
+<a name="CertificateRequestPolicySelector.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicySelector\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L372>)
 
 ```go
 func (in *CertificateRequestPolicySelector) DeepCopyInto(out *CertificateRequestPolicySelector)
@@ -626,7 +668,8 @@ func (in *CertificateRequestPolicySelector) DeepCopyInto(out *CertificateRequest
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicySelectorIssuerRef](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L359-L380>)
+<a name="CertificateRequestPolicySelectorIssuerRef"></a>
+## type [CertificateRequestPolicySelectorIssuerRef](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L359-L380>)
 
 CertificateRequestPolicySelectorIssuerRef defines the selector for matching the issuer reference of requests.
 
@@ -655,7 +698,8 @@ type CertificateRequestPolicySelectorIssuerRef struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicySelectorIssuerRef\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L417>)
+<a name="CertificateRequestPolicySelectorIssuerRef.DeepCopy"></a>
+### func \(\*CertificateRequestPolicySelectorIssuerRef\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L417>)
 
 ```go
 func (in *CertificateRequestPolicySelectorIssuerRef) DeepCopy() *CertificateRequestPolicySelectorIssuerRef
@@ -663,7 +707,8 @@ func (in *CertificateRequestPolicySelectorIssuerRef) DeepCopy() *CertificateRequ
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicySelectorIssuerRef.
 
-### func \(\*CertificateRequestPolicySelectorIssuerRef\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L397>)
+<a name="CertificateRequestPolicySelectorIssuerRef.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicySelectorIssuerRef\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L397>)
 
 ```go
 func (in *CertificateRequestPolicySelectorIssuerRef) DeepCopyInto(out *CertificateRequestPolicySelectorIssuerRef)
@@ -671,7 +716,8 @@ func (in *CertificateRequestPolicySelectorIssuerRef) DeepCopyInto(out *Certifica
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicySelectorNamespace](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L385-L398>)
+<a name="CertificateRequestPolicySelectorNamespace"></a>
+## type [CertificateRequestPolicySelectorNamespace](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L385-L398>)
 
 CertificateRequestPolicySelectorNamespace defines the selector for matching the namespace of requests. Note that all selectors must match in order for the request to be considered for evaluation by this policy.
 
@@ -692,7 +738,8 @@ type CertificateRequestPolicySelectorNamespace struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicySelectorNamespace\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L444>)
+<a name="CertificateRequestPolicySelectorNamespace.DeepCopy"></a>
+### func \(\*CertificateRequestPolicySelectorNamespace\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L444>)
 
 ```go
 func (in *CertificateRequestPolicySelectorNamespace) DeepCopy() *CertificateRequestPolicySelectorNamespace
@@ -700,7 +747,8 @@ func (in *CertificateRequestPolicySelectorNamespace) DeepCopy() *CertificateRequ
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicySelectorNamespace.
 
-### func \(\*CertificateRequestPolicySelectorNamespace\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L427>)
+<a name="CertificateRequestPolicySelectorNamespace.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicySelectorNamespace\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L427>)
 
 ```go
 func (in *CertificateRequestPolicySelectorNamespace) DeepCopyInto(out *CertificateRequestPolicySelectorNamespace)
@@ -708,7 +756,8 @@ func (in *CertificateRequestPolicySelectorNamespace) DeepCopyInto(out *Certifica
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicySpec](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L55-L85>)
+<a name="CertificateRequestPolicySpec"></a>
+## type [CertificateRequestPolicySpec](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L55-L85>)
 
 CertificateRequestPolicySpec defines the desired state of CertificateRequestPolicy.
 
@@ -746,7 +795,8 @@ type CertificateRequestPolicySpec struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicySpec\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L477>)
+<a name="CertificateRequestPolicySpec.DeepCopy"></a>
+### func \(\*CertificateRequestPolicySpec\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L477>)
 
 ```go
 func (in *CertificateRequestPolicySpec) DeepCopy() *CertificateRequestPolicySpec
@@ -754,7 +804,8 @@ func (in *CertificateRequestPolicySpec) DeepCopy() *CertificateRequestPolicySpec
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicySpec.
 
-### func \(\*CertificateRequestPolicySpec\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L454>)
+<a name="CertificateRequestPolicySpec.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicySpec\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L454>)
 
 ```go
 func (in *CertificateRequestPolicySpec) DeepCopyInto(out *CertificateRequestPolicySpec)
@@ -762,7 +813,8 @@ func (in *CertificateRequestPolicySpec) DeepCopyInto(out *CertificateRequestPoli
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [CertificateRequestPolicyStatus](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L402-L410>)
+<a name="CertificateRequestPolicyStatus"></a>
+## type [CertificateRequestPolicyStatus](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L402-L410>)
 
 CertificateRequestPolicyStatus defines the observed state of the CertificateRequestPolicy.
 
@@ -778,7 +830,8 @@ type CertificateRequestPolicyStatus struct {
 }
 ```
 
-### func \(\*CertificateRequestPolicyStatus\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L499>)
+<a name="CertificateRequestPolicyStatus.DeepCopy"></a>
+### func \(\*CertificateRequestPolicyStatus\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L499>)
 
 ```go
 func (in *CertificateRequestPolicyStatus) DeepCopy() *CertificateRequestPolicyStatus
@@ -786,7 +839,8 @@ func (in *CertificateRequestPolicyStatus) DeepCopy() *CertificateRequestPolicySt
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new CertificateRequestPolicyStatus.
 
-### func \(\*CertificateRequestPolicyStatus\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L487>)
+<a name="CertificateRequestPolicyStatus.DeepCopyInto"></a>
+### func \(\*CertificateRequestPolicyStatus\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L487>)
 
 ```go
 func (in *CertificateRequestPolicyStatus) DeepCopyInto(out *CertificateRequestPolicyStatus)
@@ -794,7 +848,8 @@ func (in *CertificateRequestPolicyStatus) DeepCopyInto(out *CertificateRequestPo
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
 
-## type [ValidationRule](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L243-L264>)
+<a name="ValidationRule"></a>
+## type [ValidationRule](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/types_certificaterequestpolicy.go#L243-L264>)
 
 ValidationRule describes a validation rule expressed in CEL.
 
@@ -823,7 +878,8 @@ type ValidationRule struct {
 }
 ```
 
-### func \(\*ValidationRule\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L519>)
+<a name="ValidationRule.DeepCopy"></a>
+### func \(\*ValidationRule\) [DeepCopy](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L519>)
 
 ```go
 func (in *ValidationRule) DeepCopy() *ValidationRule
@@ -831,14 +887,13 @@ func (in *ValidationRule) DeepCopy() *ValidationRule
 
 DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ValidationRule.
 
-### func \(\*ValidationRule\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/master/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L509>)
+<a name="ValidationRule.DeepCopyInto"></a>
+### func \(\*ValidationRule\) [DeepCopyInto](<https://github.com/cert-manager/approver-policy/blob/main/pkg/apis/policy/v1alpha1/zz_generated.deepcopy.go#L509>)
 
 ```go
 func (in *ValidationRule) DeepCopyInto(out *ValidationRule)
 ```
 
 DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non\-nil.
-
-
 
 Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
