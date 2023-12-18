@@ -108,4 +108,3 @@ commonLabels: {}
 
 # -- Optional allow custom annotations to be placed on cert-manager-approver pod
 podAnnotations: {}
-

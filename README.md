@@ -23,6 +23,10 @@ Please follow the documentation at
 [cert-manager.io](https://cert-manager.io/docs/usage/approver-policy/) for
 installing and using approver-policy.
 
+## Makefile modules
+
+This project uses [Makefile modules](https://github.com/cert-manager/makefile-modules), see the README there for more information.
+A summary of the available make targets can be found by running `make help`.
 
 ## Release Process
 
