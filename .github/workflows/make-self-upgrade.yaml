@@ -67,7 +67,7 @@ jobs:
             const pulls = await github.rest.pulls.list({
               owner: owner,
               repo: repo,
-              head: 'self-upgrade',
+              head: owner + ':self-upgrade',
               base: 'main',
               state: 'open',
             });
