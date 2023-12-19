@@ -29,14 +29,14 @@ jobs:
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ steps.go-version.outputs.result }}
 
       - id: release
         run: make release
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.release.outputs.RELEASE_HELM_CHART_NAME }}-${{ steps.release.outputs.RELEASE_HELM_CHART_VERSION }}.tgz
           path: ${{ steps.release.outputs.RELEASE_HELM_CHART_TAR }}
@@ -66,7 +66,7 @@ jobs:
           echo "HELM_CHART_VERSION: ${{ needs.build_images.outputs.RELEASE_HELM_CHART_VERSION }}" >> .notes-file
 
       - id: chart_download
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build_images.outputs.RELEASE_HELM_CHART_NAME }}-${{ needs.build_images.outputs.RELEASE_HELM_CHART_VERSION }}.tgz
 
