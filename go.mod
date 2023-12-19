@@ -1,11 +1,11 @@
 module github.com/cert-manager/approver-policy
 
-go 1.20
+go 1.21
 
 require (
 	github.com/cert-manager/cert-manager v1.13.3
 	github.com/go-logr/logr v1.3.0
-	github.com/google/cel-go v0.18.2
+	github.com/google/cel-go v0.17.7
 	github.com/google/go-cmp v0.6.0
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
@@ -21,14 +21,14 @@ require (
 	k8s.io/client-go v0.29.0
 	k8s.io/component-base v0.29.0
 	k8s.io/klog/v2 v2.110.1
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
+	k8s.io/utils v0.0.0-20231127182322-b307cd553661
 	sigs.k8s.io/controller-runtime v0.16.3
 )
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
-	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
+	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
