@@ -89,7 +89,7 @@ TOOLS += oras=v1.1.0
 # because otherwise the awk failure renders the whole makefile unusable.
 TOOLS += ginkgo=$(shell [[ -f go.mod ]] && awk '/ginkgo\/v2/ {print $$2}' go.mod || echo "v2.13.2")
 # https://pkg.go.dev/github.com/cert-manager/klone?tab=versions
-TOOLS += klone=v0.0.2
+TOOLS += klone=v0.0.3
 
 # https://pkg.go.dev/k8s.io/code-generator/cmd?tab=versions
 K8S_CODEGEN_VERSION=v0.29.0
