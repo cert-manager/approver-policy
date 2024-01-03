@@ -42,12 +42,3 @@ release: helm-chart | $(NEEDS_CRANE)
 	@echo "RELEASE_HELM_CHART_TAR=$(helm_chart_archive)" >> "$(GITHUB_OUTPUT)"
 
 	@echo "Release complete!"
-
-# TODO: remove these deprecated targets
-.PHONY: smoke
-smoke:
-	$(MAKE) test-smoke
-
-.PHONY: test
-test:
-	$(MAKE) test-unit
