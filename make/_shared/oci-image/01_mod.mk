@@ -16,8 +16,8 @@ oci_platforms := all
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-# To get latest SHA run crane digest gcr.io/distroless/static:nonroot
-base_image_static := gcr.io/distroless/static@sha256:91ca4720011393f4d4cab3a01fa5814ee2714b7d40e6c74f2505f74168398ca9
+# To get latest SHA run crane digest gcr.io/distroless/static-debian12:nonroot
+base_image_static := gcr.io/distroless/static-debian12@sha256:39ae7f0201fee13b777a3e4a5a9326a8889269172c8b4f4289d9f19c831f45f4
 
 ifndef bin_dir
 $(error bin_dir is not set)

@@ -67,7 +67,15 @@ GITEPOCH := $(shell git show -s --format=%ct HEAD)
 
 bin_dir := _bin
 
-$(bin_dir) $(bin_dir)/scratch:
+# The ARTIFACTS environment variable is set by the CI system to a directory
+# where artifacts should be placed. These artifacts are then uploaded to a
+# storage bucket by the CI system (https://docs.prow.k8s.io/docs/components/pod-utilities/).
+# An example of such an artifact is a jUnit XML file containing test results.
+# If the ARTIFACTS environment variable is not set, we default to a local
+# directory in the _bin directory.
+ARTIFACTS ?= $(bin_dir)/artifacts
+
+$(bin_dir) $(ARTIFACTS) $(bin_dir)/scratch:
 	mkdir -p $@
 
 .PHONY: clean
