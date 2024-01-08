@@ -73,7 +73,7 @@ var _ = Context("Review", func() {
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": {
 						Values: map[string]string{"key-1": "val-1", "key-2": "val-2"},
 					},
 				},
@@ -103,7 +103,7 @@ var _ = Context("Review", func() {
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": {
 						Values: map[string]string{"key-1": "val-1", "key-2": "val-2"},
 					},
 				},
@@ -143,7 +143,7 @@ var _ = Context("Review", func() {
 				},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": {
 						Values: map[string]string{"key-1": "val-1", "key-2": "val-2"},
 					},
 				},
@@ -174,7 +174,7 @@ var _ = Context("Review", func() {
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{Values: map[string]string{"key-1": "val-1", "key-2": "val-2"}},
+					"test-plugin": {Values: map[string]string{"key-1": "val-1", "key-2": "val-2"}},
 				},
 			},
 		}
@@ -415,7 +415,7 @@ var _ = Context("Review", func() {
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
-				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": policyapi.CertificateRequestPolicyPluginData{
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": {
 					Values: map[string]string{"key-1": "val-1", "key-2": "val-2"},
 				}},
 			},
@@ -461,7 +461,7 @@ var _ = Context("Review", func() {
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
-				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": policyapi.CertificateRequestPolicyPluginData{}},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": {}},
 			},
 		}
 
@@ -505,7 +505,7 @@ var _ = Context("Review", func() {
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
-				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": policyapi.CertificateRequestPolicyPluginData{}},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": {}},
 			},
 		}
 		policyDeny := policyapi.CertificateRequestPolicy{
@@ -548,7 +548,7 @@ var _ = Context("Review", func() {
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
-				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": policyapi.CertificateRequestPolicyPluginData{}},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": {}},
 			},
 		}
 		policyDeny2 := policyapi.CertificateRequestPolicy{
@@ -558,7 +558,7 @@ var _ = Context("Review", func() {
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
-				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": policyapi.CertificateRequestPolicyPluginData{}},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": {}},
 			},
 		}
 		policyDeny3 := policyapi.CertificateRequestPolicy{
@@ -568,7 +568,7 @@ var _ = Context("Review", func() {
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
-				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": policyapi.CertificateRequestPolicyPluginData{}},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{"test-plugin": {}},
 			},
 		}
 

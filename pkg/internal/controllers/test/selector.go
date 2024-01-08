@@ -76,7 +76,7 @@ var _ = Context("Selector", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -112,7 +112,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -148,7 +148,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -183,7 +183,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -214,7 +214,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -245,7 +245,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -275,7 +275,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -305,7 +305,7 @@ var _ = Context("Selector", func() {
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -341,7 +341,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -377,7 +377,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -413,7 +413,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -449,7 +449,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -488,7 +488,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -524,7 +524,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -560,7 +560,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -592,7 +592,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -623,7 +623,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -657,7 +657,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -692,7 +692,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -727,7 +727,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
@@ -759,7 +759,7 @@ var _ = Context("Selector", func() {
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin": {},
 				},
 			},
 		}
