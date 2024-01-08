@@ -52,7 +52,7 @@ var _ = Context("RBAC", func() {
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin": policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": {
 						Values: map[string]string{"key-1": "val-1", "key-2": "val-2"},
 					},
 				},

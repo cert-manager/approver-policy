@@ -78,9 +78,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -106,9 +106,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -134,9 +134,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -162,9 +162,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -193,8 +193,8 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -227,9 +227,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -261,9 +261,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -298,9 +298,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
@@ -335,9 +335,9 @@ var _ = Context("Ready", func() {
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
-					"test-plugin-1": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-2": policyapi.CertificateRequestPolicyPluginData{},
-					"test-plugin-3": policyapi.CertificateRequestPolicyPluginData{},
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
 				},
 			},
 		}
