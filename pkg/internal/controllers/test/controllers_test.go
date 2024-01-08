@@ -21,11 +21,15 @@ import (
 	"testing"
 
 	testenv "github.com/cert-manager/approver-policy/test/env"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 )
 
 // Test_Controllers runs the full suite of tests for the approver-policy
 // controllers.
 func Test_Controllers(t *testing.T) {
+	gomega.RegisterFailHandler(ginkgo.Fail)
+
 	ctx, cancel := context.WithCancel(context.TODO())
 	t.Cleanup(func() {
 		cancel()
@@ -35,5 +39,6 @@ func Test_Controllers(t *testing.T) {
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
 		testenv.GetenvOrFail(t, "APPROVER_POLICY_CRDS"),
 	)
-	testenv.RunSuite(t, "approver-policy-controllers", "../../../../_artifacts")
+
+	ginkgo.RunSpecs(t, "approver-policy-controllers")
 }

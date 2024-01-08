@@ -21,12 +21,16 @@ $(approver_policy_crds): $(helm_chart_archive) | $(NEEDS_HELM) $(NEEDS_YQ) $(bin
 .PHONY: test-unit
 ## Unit tests
 ## @category Testing
-test-unit: | $(cert_manager_crds) $(approver_policy_crds) $(NEEDS_GINKGO) $(NEEDS_ETCD) $(NEEDS_KUBE-APISERVER) $(NEEDS_KUBECTL)
+test-unit: | $(cert_manager_crds) $(approver_policy_crds) $(NEEDS_GO) $(NEEDS_GINKGO) $(NEEDS_ETCD) $(NEEDS_KUBE-APISERVER) $(NEEDS_KUBECTL) $(ARTIFACTS)
 	CERT_MANAGER_CRDS=$(CURDIR)/$(cert_manager_crds) \
 	APPROVER_POLICY_CRDS=$(CURDIR)/$(approver_policy_crds) \
 	KUBEBUILDER_ASSETS=$(CURDIR)/$(bin_dir)/tools \
 	$(GINKGO) \
+		--output-dir=$(ARTIFACTS) \
+		--junit-report=junit-go-e2e.xml \
+		--cover \
+		--coverprofile=filtered.cov \
 		./cmd/... ./pkg/... \
-		-procs=1 \
-		-v \
 		-ldflags $(go_manager_ldflags)
+
+	$(GO) tool cover -html=$(ARTIFACTS)/filtered.cov -o=$(ARTIFACTS)/filtered.html
