@@ -19,10 +19,13 @@ package smoke
 import (
 	"testing"
 
-	"github.com/cert-manager/approver-policy/test/env"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 )
 
 // Test_Smoke runs the full suite of smoke tests against approver-policy
 func Test_Smoke(t *testing.T) {
-	env.RunSuite(t, "approver-policy-smoke", "../../_artifacts")
+	gomega.RegisterFailHandler(ginkgo.Fail)
+
+	ginkgo.RunSpecs(t, "approver-policy-smoke")
 }

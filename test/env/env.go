@@ -18,13 +18,10 @@ package env
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
 	webhooktesting "github.com/cert-manager/cert-manager/test/webhook"
-	"github.com/onsi/ginkgo/v2"
-	"github.com/onsi/gomega"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -60,19 +57,6 @@ type Environment struct {
 	// UserClient is a client that is authenticated as the user "me@example.com",
 	// groups ["group-1", "group-2"].
 	UserClient client.Client
-}
-
-// RunSuite runs a Ginkgo test suite, and writes the results to the artefacts
-// directory. The artifacts directory may be overridden with `ARTIFACTS`
-// environment variable.
-func RunSuite(t *testing.T, suiteName, artifactsDir string) {
-	gomega.RegisterFailHandler(ginkgo.Fail)
-
-	if path := os.Getenv("ARTIFACTS"); len(path) > 0 {
-		artifactsDir = path
-	}
-
-	ginkgo.RunSpecs(t, suiteName)
 }
 
 // RunControlPlane runs a local API server and makes it ready for running tests

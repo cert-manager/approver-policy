@@ -55,6 +55,8 @@ test-smoke-deps: install
 ## @category Testing
 test-smoke: test-smoke-deps | kind-cluster $(NEEDS_GINKGO)
 	$(GINKGO) \
+		--output-dir=$(ARTIFACTS) \
+		--junit-report=junit-go-e2e.xml \
 		./test/smoke/ \
 		-ldflags $(go_manager_ldflags) \
 		-- \
