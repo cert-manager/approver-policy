@@ -1,0 +1,48 @@
+# This policy configures all options to allow all possible values.
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: allow-all
+spec:
+  allowed:
+    commonName: {value: "*"}
+    dnsNames: {values: ["*"]}
+    ipAddresses: {values: ["*"]}
+    uris: {values: ["*"]}
+    emailAddresses: {values: ["*"]}
+    isCA: true
+    usages:
+      - "signing"
+      - "digital signature"
+      - "content commitment"
+      - "key encipherment"
+      - "key agreement"
+      - "data encipherment"
+      - "cert sign"
+      - "crl sign"
+      - "encipher only"
+      - "decipher only"
+      - "any"
+      - "server auth"
+      - "client auth"
+      - "code signing"
+      - "email protection"
+      - "s/mime"
+      - "ipsec end system"
+      - "ipsec tunnel"
+      - "ipsec user"
+      - "timestamping"
+      - "ocsp signing"
+      - "microsoft sgc"
+      - "netscape sgc"
+    subject:
+      organizations: {values: ["*"]}
+      countries: {values: ["*"]}
+      organizationalUnits: {values: ["*"]}
+      localities: {values: ["*"]}
+      provinces: {values: ["*"]}
+      streetAddresses: {values: ["*"]}
+      postalCodes: {values: ["*"]}
+      serialNumber: {value: "*"}
+  selector:
+    issuerRef: {}
