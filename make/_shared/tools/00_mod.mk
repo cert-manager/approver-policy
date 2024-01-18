@@ -94,6 +94,8 @@ TOOLS += klone=v0.0.3
 TOOLS += goreleaser=v1.23.0
 # https://pkg.go.dev/github.com/anchore/syft/cmd/syft?tab=versions
 TOOLS += syft=v0.100.0
+# https://github.com/cert-manager/helm-tool
+TOOLS += helm-tool=v0.2.2
 
 # https://pkg.go.dev/k8s.io/code-generator/cmd?tab=versions
 K8S_CODEGEN_VERSION=v0.29.0
@@ -276,6 +278,7 @@ GO_DEPENDENCIES += applyconfiguration-gen=k8s.io/code-generator/cmd/applyconfigu
 GO_DEPENDENCIES += openapi-gen=k8s.io/code-generator/cmd/openapi-gen
 GO_DEPENDENCIES += defaulter-gen=k8s.io/code-generator/cmd/defaulter-gen
 GO_DEPENDENCIES += conversion-gen=k8s.io/code-generator/cmd/conversion-gen
+GO_DEPENDENCIES += helm-tool=github.com/cert-manager/helm-tool
 
 define go_dependency
 $$(bin_dir)/downloaded/tools/$1@$($(call UC,$1)_VERSION)_%: | $$(NEEDS_GO) $$(bin_dir)/downloaded/tools
