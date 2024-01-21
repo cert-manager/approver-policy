@@ -84,6 +84,7 @@ $(oci_build_targets): oci-build-%: | $(NEEDS_KO) $(NEEDS_GO) $(NEEDS_YQ) $(bin_d
 		$(YQ) '.builds[0].ldflags[2] = "{{.Env.LDFLAGS}}"' \
 		> $(CURDIR)/$(oci_layout_path).ko_config.yaml
 
+	KO_DOCKER_REPO=$(oci_$*_image_name_development) \
 	KOCACHE=$(bin_dir)/scratch/image/ko_cache \
 	KO_CONFIG_PATH=$(CURDIR)/$(oci_layout_path).ko_config.yaml \
 	SOURCE_DATE_EPOCH=$(GITEPOCH) \
@@ -93,11 +94,11 @@ $(oci_build_targets): oci-build-%: | $(NEEDS_KO) $(NEEDS_GO) $(NEEDS_YQ) $(bin_d
 	GOEXPERIMENT=$(GOEXPERIMENT) \
 	$(KO) build $(go_$*_source_path) \
 		--platform=$(oci_platforms) \
-		--oci-layout-path=$(CURDIR)/$(oci_layout_path) \
+		--oci-layout-path=$(oci_layout_path) \
 		--sbom-dir=$(CURDIR)/$(oci_layout_path).sbom \
 		--sbom=spdx \
 		--push=false \
-		--base-import-paths
+		--bare
 
 	cd $(image_tool_dir) && $(GO) run . list-digests \
 		$(CURDIR)/$(oci_layout_path) \
