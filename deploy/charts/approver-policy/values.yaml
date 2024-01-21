@@ -1,110 +1,156 @@
-# -- Number of replicas of approver-policy to run.
+# Number of replicas of approver-policy to run.
 replicaCount: 1
 
 image:
-  # -- Target image repository.
+  # Target image repository.
   repository: quay.io/jetstack/cert-manager-approver-policy
-  # -- Target image registry. Will be prepended to the target image repositry if set.
+  # Target image registry. Will be prepended to the target image repository if set.
   registry:
 
-  # -- Target image version tag. Defaults to the chart's appVersion.
+  # Target image version tag. Defaults to the chart's appVersion.
   tag:
 
-  # -- Target image digest. Will override any tag if set.
-  # for example:
+  # Target image digest. Will override any tag if set.
+  # For example:
   # digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
   digest:
 
-  # -- Kubernetes imagePullPolicy on Deployment.
+  # Kubernetes imagePullPolicy on Deployment.
   pullPolicy: IfNotPresent
 
-# -- Optional secrets used for pulling the approver-policy container image.
+# Optional secrets used for pulling the approver-policy container image.
 imagePullSecrets: []
 
 app:
-  # -- Verbosity of approver-policy logging.
-  logLevel: 1 # 1-5
+  # Verbosity of approver-policy logging. This is a value from 1 to 5.
+  logLevel: 1
 
-  # -- Extra CLI arguments that will be passed to the approver-policy process.
+  # Extra CLI arguments that will be passed to the approver-policy process.
   extraArgs: []
 
-  # -- List if signer names that approver-policy will be given permission to
+  # List if signer names that approver-policy will be given permission to
   # approve and deny. CertificateRequests referencing these signer names can be
-  # processed by approver-policy. See:
-  # https://cert-manager.io/docs/concepts/certificaterequest/#approval
+  # processed by approver-policy. 
+  #
+  # ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
+  # +docs:property
   approveSignerNames:
   - "issuers.cert-manager.io/*"
   - "clusterissuers.cert-manager.io/*"
 
   metrics:
-    # -- Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
+    # Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
     port: 9402
-    # -- Service to expose metrics endpoint.
+    # Service to expose metrics endpoint.
     service:
-      # -- Create a Service resource to expose metrics endpoint.
+      # Create a Service resource to expose metrics endpoint.
       enabled: true
-      # -- Service type to expose metrics.
+      # Service type to expose metrics.
       type: ClusterIP
-      # -- ServiceMonitor resource for this Service.
+      # ServiceMonitor resource for this Service.
       servicemonitor:
+        # Create Prometheus ServiceMonitor resource for approver-policy
         enabled: false
+        # Value for the "prometheus" label on the ServiceMonitor, this allows
+        # for multiple Prometheus instances selecting difference ServiceMonitors 
+        # using label selectors
         prometheusInstance: default
+        # Interval that the Prometheus will scrape for metrics
         interval: 10s
+        # Timeout on each metric probe request
         scrapeTimeout: 5s
+        # Additional labels to give the ServiceMonitor resource
         labels: {}
 
   readinessProbe:
-    # -- Container port to expose approver-policy HTTP readiness probe on
+    # Container port to expose approver-policy HTTP readiness probe on
     # default network interface.
     port: 6060
 
   webhook:
-    # -- Host that the webhook listens on.
+    # Host that the webhook listens on.
     host: 0.0.0.0
-    # -- Port that the webhook listens on.
+
+    # Port that the webhook listens on.
     port: 10250
-    # -- Timeout of webhook HTTP request.
+
+    # Timeout of webhook HTTP request.
     timeoutSeconds: 5
-    # -- Type of Kubernetes Service used by the Webhook
+
     service:
+      # Type of Kubernetes Service used by the Webhook
       type: ClusterIP
-    # -- Boolean value, expose pod on hostNetwork
+
+    # Boolean value, expose pod on hostNetwork
     # Required when running a custom CNI in managed providers such as AWS EKS
-    # See: https://cert-manager.io/docs/installation/compatibility/#aws-eks
+    #
+    # ref: https://cert-manager.io/docs/installation/compatibility/#aws-eks
     hostNetwork: false
-    # -- May need to be changed if hostNetwork: true
+
+    # May need to be changed if hostNetwork: true
     dnsPolicy: ClusterFirst
-    # -- https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+
+    # A Kubernetes Affinity, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core
+    #
+    # For example:
+    #   affinity:
+    #     nodeAffinity:
+    #      requiredDuringSchedulingIgnoredDuringExecution:
+    #        nodeSelectorTerms:
+    #        - matchExpressions:
+    #          - key: foo.bar.com/role
+    #            operator: In
+    #            values:
+    #            - master
     affinity: {}
-    # -- https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+
+    # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
+    # matching labels.
+    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
     nodeSelector: {}
-    # -- https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+
+    # A list of Kubernetes Tolerations, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core
+    #
+    # For example:
+    #   tolerations:
+    #   - key: foo.bar.com/role
+    #     operator: Equal
+    #     value: master
+    #     effect: NoSchedule
     tolerations: []
 
-# -- Optional extra volume mounts. Useful for mounting custom root CAs
+# Optional extra volume mounts. Useful for mounting custom root CAs
+#
+# For example:
+#  volumeMounts:
+#  - name: my-volume-mount
+#    mountPath: /etc/approver-policy/secrets
 volumeMounts: []
-#- name: my-volume-mount
-#  mountPath: /etc/approver-policy/secrets
 
-# -- Optional extra volumes.
+# Optional extra volumes.
+#
+# For example:
+#  volumes:
+#  - name: my-volume
+#    secret:
+#      secretName: my-secret
 volumes: []
-#- name: my-volume
-#  secret:
-#    secretName: my-secret
 
-
+# Kubernetes pod resources
+# ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+#
+# For example:
+#  resources:
+#    limits:
+#      cpu: 100m
+#      memory: 128Mi
+#    requests:
+#      cpu: 100m
+#      memory: 128Mi
 resources: {}
-  # -- Kubernetes pod resource limits for approver-policy.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # -- Kubernetes pod memory resource requests for approver-policy.
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
 
-# -- Optional allow custom labels to be placed on resources
+# Optional allow custom labels to be placed on resources
 commonLabels: {}
 
-# -- Optional allow custom annotations to be placed on cert-manager-approver pod
+# Optional allow custom annotations to be placed on cert-manager-approver pod
 podAnnotations: {}
