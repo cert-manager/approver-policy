@@ -142,7 +142,7 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	result, patch, resultErr := c.reconcileStatusPatch(ctx, req)
 	if patch != nil {
-		crp, patch, err := ssa_client.GenerateCertificateRequestPolicyStatusPatch(req.Name, req.Namespace, patch)
+		crp, patch, err := ssa_client.GenerateCertificateRequestPolicyStatusPatch(req.Name, patch)
 		if err != nil {
 			err = fmt.Errorf("failed to generate CertificateRequestPolicy.Status patch: %w", err)
 			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
@@ -214,6 +214,7 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 		c.recorder.Event(policy, corev1.EventTypeWarning, "NotReady", message)
 
 		c.setCertificateRequestPolicyCondition(
+			policy.Status.Conditions,
 			&policyPatch.Conditions,
 			policy.Generation,
 			policyapi.CertificateRequestPolicyCondition{
@@ -233,6 +234,7 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 	c.recorder.Event(policy, corev1.EventTypeNormal, "Ready", message)
 
 	c.setCertificateRequestPolicyCondition(
+		policy.Status.Conditions,
 		&policyPatch.Conditions,
 		policy.Generation,
 		policyapi.CertificateRequestPolicyCondition{
@@ -256,30 +258,47 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 // Returns true if the condition has been updated or an existing condition has
 // been updated. Returns false otherwise.
 func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(
-	conditions *[]policyapi.CertificateRequestPolicyCondition,
+	existingConditions []policyapi.CertificateRequestPolicyCondition,
+	patchConditions *[]policyapi.CertificateRequestPolicyCondition,
 	generation int64,
-	condition policyapi.CertificateRequestPolicyCondition,
+	newCondition policyapi.CertificateRequestPolicyCondition,
 ) {
-	condition.LastTransitionTime = &metav1.Time{Time: c.clock.Now()}
-	condition.ObservedGeneration = generation
+	newCondition.LastTransitionTime = &metav1.Time{Time: c.clock.Now()}
+	newCondition.ObservedGeneration = generation
 
-	for idx, existingCondition := range *conditions {
+	for _, existingCondition := range existingConditions {
 		// Skip unrelated conditions
-		if existingCondition.Type != condition.Type {
+		if existingCondition.Type != newCondition.Type {
 			continue
 		}
 
 		// If this update doesn't contain a state transition, we don't update
 		// the conditions LastTransitionTime to Now()
-		if existingCondition.Status == condition.Status {
-			condition.LastTransitionTime = existingCondition.LastTransitionTime
+		if existingCondition.Status == newCondition.Status {
+			newCondition.LastTransitionTime = existingCondition.LastTransitionTime
+		}
+	}
+
+	// Search through existing conditions
+	for idx, patchCondition := range *patchConditions {
+		// Skip unrelated conditions
+		if patchCondition.Type != newCondition.Type {
+			continue
 		}
 
-		(*conditions)[idx] = condition
+		// If this update doesn't contain a state transition, we don't update
+		// the conditions LastTransitionTime to Now()
+		if patchCondition.Status == newCondition.Status {
+			newCondition.LastTransitionTime = patchCondition.LastTransitionTime
+		}
+
+		// Overwrite the existing condition
+		(*patchConditions)[idx] = newCondition
+
 		return
 	}
 
 	// If we've not found an existing condition of this type, we simply insert
 	// the new condition into the slice.
-	*conditions = append(*conditions, condition)
+	*patchConditions = append(*patchConditions, newCondition)
 }

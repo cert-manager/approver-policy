@@ -483,6 +483,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 
 	tests := map[string]struct {
 		existingConditions []policyapi.CertificateRequestPolicyCondition
+		patchConditions    []policyapi.CertificateRequestPolicyCondition
 		newCondition       policyapi.CertificateRequestPolicyCondition
 		expectedConditions []policyapi.CertificateRequestPolicyCondition
 	}{
@@ -503,8 +504,8 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				ObservedGeneration: policyGeneration,
 			}},
 		},
-		"an existing condition of different type should add a different condition with time and gen to the policy": {
-			existingConditions: []policyapi.CertificateRequestPolicyCondition{{Type: "B"}},
+		"an existing patch condition of different type should add a different condition with time and gen to the policy": {
+			patchConditions: []policyapi.CertificateRequestPolicyCondition{{Type: "B"}},
 			newCondition: policyapi.CertificateRequestPolicyCondition{
 				Type:    "A",
 				Status:  corev1.ConditionTrue,
@@ -523,8 +524,8 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				},
 			},
 		},
-		"an existing condition of the same type but different status should be replaced with new time if it has a different status": {
-			existingConditions: []policyapi.CertificateRequestPolicyCondition{
+		"an existing patch condition of the same type but different status should be replaced with new time if it has a different status": {
+			patchConditions: []policyapi.CertificateRequestPolicyCondition{
 				{Type: "B"},
 				{
 					Type:               "A",
@@ -553,8 +554,8 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				},
 			},
 		},
-		"an existing condition of the same type and status should be replaced with same time": {
-			existingConditions: []policyapi.CertificateRequestPolicyCondition{
+		"an existing patch condition of the same type and status should be replaced with same time": {
+			patchConditions: []policyapi.CertificateRequestPolicyCondition{
 				{Type: "B"},
 				{
 					Type:               "A",
@@ -589,13 +590,14 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 		t.Run(name, func(t *testing.T) {
 			c := &certificaterequestpolicies{clock: fixedclock}
 			c.setCertificateRequestPolicyCondition(
-				&test.existingConditions,
+				test.existingConditions,
+				&test.patchConditions,
 				policyGeneration,
 				test.newCondition,
 			)
 
-			if !apiequality.Semantic.DeepEqual(test.existingConditions, test.expectedConditions) {
-				t.Errorf("unexpected resulting conditions, exp=%v got=%v", test.expectedConditions, test.existingConditions)
+			if !apiequality.Semantic.DeepEqual(test.patchConditions, test.expectedConditions) {
+				t.Errorf("unexpected resulting conditions, exp=%v got=%v", test.expectedConditions, test.patchConditions)
 			}
 		})
 	}
