@@ -32,12 +32,12 @@ type certificateRequestPolicyStatusStatusApplyConfiguration struct {
 }
 
 func GenerateCertificateRequestPolicyStatusPatch(
-	name, namespace string,
+	name string,
 	status *policyapi.CertificateRequestPolicyStatus,
 ) (*policyapi.CertificateRequestPolicy, client.Patch, error) {
-	// This object is used to deduce the name & namespace + unmarshall the return value in
+	// This object is used to deduce the name + unmarshall the return value in
 	crp := &policyapi.CertificateRequestPolicy{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}
 
 	// This object is used to render the patch
@@ -45,7 +45,6 @@ func GenerateCertificateRequestPolicyStatusPatch(
 		ObjectMetaApplyConfiguration: &v1.ObjectMetaApplyConfiguration{},
 	}
 	b.WithName(name)
-	b.WithNamespace(namespace)
 	b.WithKind(policyapi.CertificateRequestPolicyKind)
 	b.WithAPIVersion(policyapi.SchemeGroupVersion.Identifier())
 	b.Status = status

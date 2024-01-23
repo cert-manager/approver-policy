@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/envtest/komega"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -588,5 +589,37 @@ var _ = Context("Review", func() {
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
 		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
+	Context("Reconcile consistency", func() {
+		It("If the policy is not ready, should have stable resource version", func() {
+			plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+				return approver.ReconcilerReadyResponse{Ready: false}, nil
+			})
+
+			policyNotReady := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "not-ready-"}}
+			var policy policyapi.CertificateRequestPolicy
+
+			komega.SetClient(env.AdminClient)
+			Expect(env.AdminClient.Create(ctx, &policyNotReady)).ToNot(HaveOccurred())
+			waitForNotReady(ctx, env.AdminClient, policyNotReady.Name)
+			Expect(env.AdminClient.Get(ctx, client.ObjectKey{Name: policyNotReady.Name}, &policy)).To(Succeed())
+
+			resourceVersion := policy.ResourceVersion
+			Consistently(komega.Object(&policy)).Should(HaveField("ObjectMeta.ResourceVersion", Equal(resourceVersion)))
+		})
+
+		It("If the policy is ready, should have stable resource version", func() {
+			policyReady := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "ready-"}}
+			var policy policyapi.CertificateRequestPolicy
+
+			komega.SetClient(env.AdminClient)
+			Expect(env.AdminClient.Create(ctx, &policyReady)).ToNot(HaveOccurred())
+			waitForReady(ctx, env.AdminClient, policyReady.Name)
+			Expect(env.AdminClient.Get(ctx, client.ObjectKey{Name: policyReady.Name}, &policy)).To(Succeed())
+
+			resourceVersion := policy.ResourceVersion
+			Consistently(komega.Object(&policy)).Should(HaveField("ObjectMeta.ResourceVersion", Equal(resourceVersion)))
+		})
 	})
 })
