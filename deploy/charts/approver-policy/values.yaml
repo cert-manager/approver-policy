@@ -63,7 +63,7 @@ app:
         labels: {}
 
   readinessProbe:
-    # The ontainer port to expose approver-policy HTTP readiness probe on
+    # The container port to expose approver-policy HTTP readiness probe on
     # default network interface.
     port: 6060
 
@@ -84,7 +84,7 @@ app:
     # Boolean value, expose pod on hostNetwork.
     # Required when running a custom CNI in managed providers such as AWS EKS.
     #
-    # ref: https://cert-manager.io/docs/installation/compatibility/#aws-eks
+    # For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
     hostNetwork: false
 
     # This value may need to be changed if `hostNetwork: true`
@@ -109,7 +109,7 @@ app:
     # For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
     nodeSelector: {}
 
-    # A list of Kubernetes Tolerations, if required. For more information. see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
+    # A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
     #
     # For example:
     #   tolerations:
@@ -137,7 +137,7 @@ volumeMounts: []
 volumes: []
 
 # Kubernetes pod resources.
-# For more information. see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
+# For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
 #
 # For example:
 #  resources:
