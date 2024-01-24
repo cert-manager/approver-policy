@@ -198,6 +198,10 @@ func (mock *mockCache) GetInformer(ctx context.Context, obj client.Object, opts 
 	mock.t.FailNow()
 	return nil, nil
 }
+func (mock *mockCache) RemoveInformer(ctx context.Context, obj client.Object) error {
+	mock.t.FailNow()
+	return nil
+}
 func (mock *mockCache) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind, opts ...cache.InformerGetOption) (cache.Informer, error) {
 	mock.t.FailNow()
 	return nil, nil
