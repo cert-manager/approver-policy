@@ -4,13 +4,13 @@ replicaCount: 1
 image:
   # Target image repository.
   repository: quay.io/jetstack/cert-manager-approver-policy
-  # Target image registry. Will be prepended to the target image repository if set.
+  # Target image registry. This value is prepended to the target image repository, if set.
   registry:
 
   # Target image version tag. Defaults to the chart's appVersion.
   tag:
 
-  # Target image digest. Will override any tag if set.
+  # Target image digest. Override any tag, if set.
   # For example:
   # digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
   digest:
@@ -41,56 +41,56 @@ app:
   metrics:
     # Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
     port: 9402
-    # Service to expose metrics endpoint.
+    # The service to expose metrics endpoint.
     service:
       # Create a Service resource to expose metrics endpoint.
       enabled: true
-      # Service type to expose metrics.
+      # The service type to expose metrics.
       type: ClusterIP
-      # ServiceMonitor resource for this Service.
+      # The ServiceMonitor resource for this Service.
       servicemonitor:
-        # Create Prometheus ServiceMonitor resource for approver-policy
+        # Create Prometheus ServiceMonitor resource for approver-policy.
         enabled: false
-        # Value for the "prometheus" label on the ServiceMonitor, this allows
+        # The value for the "prometheus" label on the ServiceMonitor. This allows
         # for multiple Prometheus instances selecting difference ServiceMonitors 
-        # using label selectors
+        # using label selectors.
         prometheusInstance: default
-        # Interval that the Prometheus will scrape for metrics
+        # The interval that the Prometheus will scrape for metrics.
         interval: 10s
-        # Timeout on each metric probe request
+        # The timeout on each metric probe request.
         scrapeTimeout: 5s
-        # Additional labels to give the ServiceMonitor resource
+        # Additional labels to give the ServiceMonitor resource.
         labels: {}
 
   readinessProbe:
-    # Container port to expose approver-policy HTTP readiness probe on
+    # The ontainer port to expose approver-policy HTTP readiness probe on
     # default network interface.
     port: 6060
 
   webhook:
-    # Host that the webhook listens on.
+    # The host that the webhook listens on.
     host: 0.0.0.0
 
-    # Port that the webhook listens on.
+    # The port that the webhook listens on.
     port: 10250
 
-    # Timeout of webhook HTTP request.
+    # The timeout of webhook HTTP request.
     timeoutSeconds: 5
 
     service:
-      # Type of Kubernetes Service used by the Webhook
+      # The type of Kubernetes Service used by the webhook.
       type: ClusterIP
 
-    # Boolean value, expose pod on hostNetwork
-    # Required when running a custom CNI in managed providers such as AWS EKS
+    # Boolean value, expose pod on hostNetwork.
+    # Required when running a custom CNI in managed providers such as AWS EKS.
     #
     # ref: https://cert-manager.io/docs/installation/compatibility/#aws-eks
     hostNetwork: false
 
-    # May need to be changed if hostNetwork: true
+    # This value may need to be changed if `hostNetwork: true`
     dnsPolicy: ClusterFirst
 
-    # A Kubernetes Affinity, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core
+    # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
     #
     # For example:
     #   affinity:
@@ -106,10 +106,10 @@ app:
 
     # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
     # matching labels.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+    # For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
     nodeSelector: {}
 
-    # A list of Kubernetes Tolerations, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core
+    # A list of Kubernetes Tolerations, if required. For more information. see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
     #
     # For example:
     #   tolerations:
@@ -119,7 +119,7 @@ app:
     #     effect: NoSchedule
     tolerations: []
 
-# Optional extra volume mounts. Useful for mounting custom root CAs
+# Optional extra volume mounts. Useful for mounting custom root CAs.
 #
 # For example:
 #  volumeMounts:
@@ -136,8 +136,8 @@ volumeMounts: []
 #      secretName: my-secret
 volumes: []
 
-# Kubernetes pod resources
-# ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+# Kubernetes pod resources.
+# For more information. see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
 #
 # For example:
 #  resources:
@@ -149,8 +149,8 @@ volumes: []
 #      memory: 128Mi
 resources: {}
 
-# Optional allow custom labels to be placed on resources
+# Allow custom labels to be placed on resources - optional.
 commonLabels: {}
 
-# Optional allow custom annotations to be placed on cert-manager-approver pod
+# Allow custom annotations to be placed on cert-manager-approver pod - optional.
 podAnnotations: {}
