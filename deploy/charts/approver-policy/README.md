@@ -224,7 +224,7 @@ Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
 </tr>
 <tr>
 
-<td>app.metrics.service.servicemonitor</td>
+<td>app.metrics.service.enabled</td>
 <td>
 
 Create a Service resource to expose metrics endpoint.
@@ -241,7 +241,7 @@ true
 </tr>
 <tr>
 
-<td>app.metrics.service.servicemonitor</td>
+<td>app.metrics.service.type</td>
 <td>
 
 The service type to expose metrics.
