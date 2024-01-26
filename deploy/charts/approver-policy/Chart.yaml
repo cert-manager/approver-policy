@@ -2,9 +2,9 @@ apiVersion: v2
 
 name: cert-manager-approver-policy
 type: application
-description: A Helm chart for cert-manager-approver-policy
+description: approver-policy is a CertificateRequest approver for cert-manager
 
-home: https://github.com/cert-manager/approver-policy
+home: https://cert-manager.io/docs/policy/approval/approver-policy/
 maintainers:
 - name: cert-manager-dev
   email: cert-manager-dev@googlegroups.com
