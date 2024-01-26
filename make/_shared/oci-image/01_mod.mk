@@ -117,7 +117,7 @@ $(oci_build_targets): oci-build-%: | $(NEEDS_KO) $(NEEDS_GO) $(NEEDS_YQ) $(bin_d
 
 	GOWORK=off \
 	KO_DOCKER_REPO=$(oci_$*_image_name_development) \
-	KOCACHE=$(bin_dir)/scratch/image/ko_cache \
+	KOCACHE=$(CURDIR)/$(bin_dir)/scratch/image/ko_cache \
 	KO_CONFIG_PATH=$(CURDIR)/$(oci_layout_path).ko_config.yaml \
 	SOURCE_DATE_EPOCH=$(GITEPOCH) \
 	KO_GO_PATH=$(GO) \
