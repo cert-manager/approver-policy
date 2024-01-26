@@ -67,7 +67,7 @@ quay.io/jetstack/cert-manager-approver-policy
 <td>image.registry</td>
 <td>
 
-Target image registry. Will be prepended to the target image repository if set.
+Target image registry. This value is prepended to the target image repository, if set.
 
 </td>
 <td>unknown</td>
@@ -101,7 +101,7 @@ null
 <td>image.digest</td>
 <td>
 
-Target image digest. Will override any tag if set.  
+Target image digest. Override any tag, if set.  
 For example:
 
 ```yaml
@@ -246,7 +246,7 @@ true
 <td>app.metrics.service.servicemonitor</td>
 <td>
 
-Service type to expose metrics.
+The service type to expose metrics.
 
 </td>
 <td>string</td>
@@ -263,7 +263,7 @@ ClusterIP
 <td>app.metrics.service.servicemonitor.enabled</td>
 <td>
 
-Create Prometheus ServiceMonitor resource for approver-policy
+Create Prometheus ServiceMonitor resource for approver-policy.
 
 </td>
 <td>bool</td>
@@ -280,7 +280,7 @@ false
 <td>app.metrics.service.servicemonitor.prometheusInstance</td>
 <td>
 
-Value for the "prometheus" label on the ServiceMonitor, this allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors
+The value for the "prometheus" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.
 
 </td>
 <td>string</td>
@@ -297,7 +297,7 @@ default
 <td>app.metrics.service.servicemonitor.interval</td>
 <td>
 
-Interval that the Prometheus will scrape for metrics
+The interval that the Prometheus will scrape for metrics.
 
 </td>
 <td>string</td>
@@ -314,7 +314,7 @@ Interval that the Prometheus will scrape for metrics
 <td>app.metrics.service.servicemonitor.scrapeTimeout</td>
 <td>
 
-Timeout on each metric probe request
+The timeout on each metric probe request.
 
 </td>
 <td>string</td>
@@ -331,7 +331,7 @@ Timeout on each metric probe request
 <td>app.metrics.service.servicemonitor.labels</td>
 <td>
 
-Additional labels to give the ServiceMonitor resource
+Additional labels to give the ServiceMonitor resource.
 
 </td>
 <td>object</td>
@@ -348,7 +348,7 @@ Additional labels to give the ServiceMonitor resource
 <td>app.readinessProbe.port</td>
 <td>
 
-Container port to expose approver-policy HTTP readiness probe on default network interface.
+The container port to expose approver-policy HTTP readiness probe on default network interface.
 
 </td>
 <td>number</td>
@@ -365,7 +365,7 @@ Container port to expose approver-policy HTTP readiness probe on default network
 <td>app.webhook.host</td>
 <td>
 
-Host that the webhook listens on.
+The host that the webhook listens on.
 
 </td>
 <td>string</td>
@@ -382,7 +382,7 @@ Host that the webhook listens on.
 <td>app.webhook.port</td>
 <td>
 
-Port that the webhook listens on.
+The port that the webhook listens on.
 
 </td>
 <td>number</td>
@@ -399,7 +399,7 @@ Port that the webhook listens on.
 <td>app.webhook.timeoutSeconds</td>
 <td>
 
-Timeout of webhook HTTP request.
+The timeout of webhook HTTP request.
 
 </td>
 <td>number</td>
@@ -416,7 +416,7 @@ Timeout of webhook HTTP request.
 <td>app.webhook.service.type</td>
 <td>
 
-Type of Kubernetes Service used by the Webhook
+The type of Kubernetes Service used by the webhook.
 
 </td>
 <td>string</td>
@@ -433,10 +433,10 @@ ClusterIP
 <td>app.webhook.hostNetwork</td>
 <td>
 
-Boolean value, expose pod on hostNetwork  
-Required when running a custom CNI in managed providers such as AWS EKS  
+Boolean value, expose pod on hostNetwork.  
+Required when running a custom CNI in managed providers such as AWS EKS.  
   
-ref: https://cert-manager.io/docs/installation/compatibility/#aws-eks
+For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
 
 </td>
 <td>bool</td>
@@ -453,7 +453,7 @@ false
 <td>app.webhook.dnsPolicy</td>
 <td>
 
-May need to be changed if hostNetwork: true
+This value may need to be changed if `hostNetwork: true`
 
 </td>
 <td>string</td>
@@ -470,7 +470,7 @@ ClusterFirst
 <td>app.webhook.affinity</td>
 <td>
 
-A Kubernetes Affinity, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core  
+A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).  
   
 For example:
 
@@ -501,7 +501,7 @@ affinity:
 <td>app.webhook.nodeSelector</td>
 <td>
 
-The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
 
 </td>
 <td>object</td>
@@ -518,7 +518,7 @@ The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with mat
 <td>app.webhook.tolerations</td>
 <td>
 
-A list of Kubernetes Tolerations, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core  
+A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).  
   
 For example:
 
@@ -545,7 +545,7 @@ tolerations:
 <td>volumeMounts</td>
 <td>
 
-Optional extra volume mounts. Useful for mounting custom root CAs  
+Optional extra volume mounts. Useful for mounting custom root CAs.  
   
 For example:
 
@@ -596,8 +596,8 @@ volumes:
 <td>resources</td>
 <td>
 
-Kubernetes pod resources  
-ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/  
+Kubernetes pod resources.  
+For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).  
   
 For example:
 
@@ -626,7 +626,7 @@ resources:
 <td>commonLabels</td>
 <td>
 
-Optional allow custom labels to be placed on resources
+Allow custom labels to be placed on resources - optional.
 
 </td>
 <td>object</td>
@@ -643,7 +643,7 @@ Optional allow custom labels to be placed on resources
 <td>podAnnotations</td>
 <td>
 
-Optional allow custom annotations to be placed on cert-manager-approver pod
+Allow custom annotations to be placed on cert-manager-approver pod - optional.
 
 </td>
 <td>object</td>
