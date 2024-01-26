@@ -1,10 +1,8 @@
 # cert-manager-approver-policy
 
-![Version: v0.0.0](https://img.shields.io/badge/Version-v0.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.0.0](https://img.shields.io/badge/AppVersion-v0.0.0-informational?style=flat-square)
+approver-policy is a CertificateRequest approver for cert-manager
 
-A Helm chart for cert-manager-approver-policy
-
-**Homepage:** <https://github.com/cert-manager/approver-policy>
+**Homepage:** <https://cert-manager.io/docs/policy/approval/approver-policy/>
 
 ## Maintainers
 
