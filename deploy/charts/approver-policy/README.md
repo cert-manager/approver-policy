@@ -18,86 +18,39 @@ approver-policy is a CertificateRequest approver for cert-manager
 
 <!-- AUTO-GENERATED -->
 
-
-<table>
-<tr>
-<th>Property</th>
-<th>Description</th>
-<th>Type</th>
-<th>Default</th>
-</tr>
-<tr>
-
-<td>replicaCount</td>
-<td>
+#### **replicaCount** ~ `number`
+> Default value:
+> ```yaml
+> 1
+> ```
 
 Number of replicas of approver-policy to run.
-
-</td>
-<td>number</td>
-<td>
-
-```yaml
-1
-```
-
-</td>
-</tr>
-<tr>
-
-<td>image.repository</td>
-<td>
+#### **image.repository** ~ `string`
+> Default value:
+> ```yaml
+> quay.io/jetstack/cert-manager-approver-policy
+> ```
 
 Target image repository.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-quay.io/jetstack/cert-manager-approver-policy
-```
-
-</td>
-</tr>
-<tr>
-
-<td>image.registry</td>
-<td>
+#### **image.registry** ~ `unknown`
+> Default value:
+> ```yaml
+> null
+> ```
 
 Target image registry. This value is prepended to the target image repository, if set.
-
-</td>
-<td>unknown</td>
-<td>
-
-```yaml
-null
-```
-
-</td>
-</tr>
-<tr>
-
-<td>image.tag</td>
-<td>
+#### **image.tag** ~ `unknown`
+> Default value:
+> ```yaml
+> null
+> ```
 
 Target image version tag. Defaults to the chart's appVersion.
-
-</td>
-<td>unknown</td>
-<td>
-
-```yaml
-null
-```
-
-</td>
-</tr>
-<tr>
-
-<td>image.digest</td>
-<td>
+#### **image.digest** ~ `unknown`
+> Default value:
+> ```yaml
+> null
+> ```
 
 Target image digest. Override any tag, if set.  
 For example:
@@ -105,368 +58,158 @@ For example:
 ```yaml
 digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
 ```
-
-</td>
-<td>unknown</td>
-<td>
-
-```yaml
-null
-```
-
-</td>
-</tr>
-<tr>
-
-<td>image.pullPolicy</td>
-<td>
+#### **image.pullPolicy** ~ `string`
+> Default value:
+> ```yaml
+> IfNotPresent
+> ```
 
 Kubernetes imagePullPolicy on Deployment.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-IfNotPresent
-```
-
-</td>
-</tr>
-<tr>
-
-<td>imagePullSecrets</td>
-<td>
+#### **imagePullSecrets** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
 
 Optional secrets used for pulling the approver-policy container image.
-
-</td>
-<td>array</td>
-<td>
-
-```yaml
-[]
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.logLevel</td>
-<td>
+#### **app.logLevel** ~ `number`
+> Default value:
+> ```yaml
+> 1
+> ```
 
 Verbosity of approver-policy logging. This is a value from 1 to 5.
-
-</td>
-<td>number</td>
-<td>
-
-```yaml
-1
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.extraArgs</td>
-<td>
+#### **app.extraArgs** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
 
 Extra CLI arguments that will be passed to the approver-policy process.
-
-</td>
-<td>array</td>
-<td>
-
-```yaml
-[]
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.approveSignerNames</td>
-<td>
+#### **app.approveSignerNames** ~ `array`
+> Default value:
+> ```yaml
+> - issuers.cert-manager.io/*
+> - clusterissuers.cert-manager.io/*
+> ```
 
 List if signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy.  
   
 ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
 
-
-</td>
-<td>array</td>
-<td>
-
-```yaml
-- issuers.cert-manager.io/*
-- clusterissuers.cert-manager.io/*
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.port</td>
-<td>
+#### **app.metrics.port** ~ `number`
+> Default value:
+> ```yaml
+> 9402
+> ```
 
 Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
-
-</td>
-<td>number</td>
-<td>
-
-```yaml
-9402
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.service.enabled</td>
-<td>
+#### **app.metrics.service.enabled** ~ `bool`
+> Default value:
+> ```yaml
+> true
+> ```
 
 Create a Service resource to expose metrics endpoint.
-
-</td>
-<td>bool</td>
-<td>
-
-```yaml
-true
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.service.type</td>
-<td>
+#### **app.metrics.service.type** ~ `string`
+> Default value:
+> ```yaml
+> ClusterIP
+> ```
 
 The service type to expose metrics.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-ClusterIP
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.service.servicemonitor.enabled</td>
-<td>
+#### **app.metrics.service.servicemonitor.enabled** ~ `bool`
+> Default value:
+> ```yaml
+> false
+> ```
 
 Create Prometheus ServiceMonitor resource for approver-policy.
-
-</td>
-<td>bool</td>
-<td>
-
-```yaml
-false
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.service.servicemonitor.prometheusInstance</td>
-<td>
+#### **app.metrics.service.servicemonitor.prometheusInstance** ~ `string`
+> Default value:
+> ```yaml
+> default
+> ```
 
 The value for the "prometheus" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-default
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.service.servicemonitor.interval</td>
-<td>
+#### **app.metrics.service.servicemonitor.interval** ~ `string`
+> Default value:
+> ```yaml
+> 10s
+> ```
 
 The interval that the Prometheus will scrape for metrics.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-10s
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.service.servicemonitor.scrapeTimeout</td>
-<td>
+#### **app.metrics.service.servicemonitor.scrapeTimeout** ~ `string`
+> Default value:
+> ```yaml
+> 5s
+> ```
 
 The timeout on each metric probe request.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-5s
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.metrics.service.servicemonitor.labels</td>
-<td>
+#### **app.metrics.service.servicemonitor.labels** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
 
 Additional labels to give the ServiceMonitor resource.
-
-</td>
-<td>object</td>
-<td>
-
-```yaml
-{}
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.readinessProbe.port</td>
-<td>
+#### **app.readinessProbe.port** ~ `number`
+> Default value:
+> ```yaml
+> 6060
+> ```
 
 The container port to expose approver-policy HTTP readiness probe on default network interface.
-
-</td>
-<td>number</td>
-<td>
-
-```yaml
-6060
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.host</td>
-<td>
+#### **app.webhook.host** ~ `string`
+> Default value:
+> ```yaml
+> 0.0.0.0
+> ```
 
 The host that the webhook listens on.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-0.0.0.0
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.port</td>
-<td>
+#### **app.webhook.port** ~ `number`
+> Default value:
+> ```yaml
+> 10250
+> ```
 
 The port that the webhook listens on.
-
-</td>
-<td>number</td>
-<td>
-
-```yaml
-10250
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.timeoutSeconds</td>
-<td>
+#### **app.webhook.timeoutSeconds** ~ `number`
+> Default value:
+> ```yaml
+> 5
+> ```
 
 The timeout of webhook HTTP request.
-
-</td>
-<td>number</td>
-<td>
-
-```yaml
-5
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.service.type</td>
-<td>
+#### **app.webhook.service.type** ~ `string`
+> Default value:
+> ```yaml
+> ClusterIP
+> ```
 
 The type of Kubernetes Service used by the webhook.
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-ClusterIP
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.hostNetwork</td>
-<td>
+#### **app.webhook.hostNetwork** ~ `bool`
+> Default value:
+> ```yaml
+> false
+> ```
 
 Boolean value, expose pod on hostNetwork.  
 Required when running a custom CNI in managed providers such as AWS EKS.  
   
 For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
-
-</td>
-<td>bool</td>
-<td>
-
-```yaml
-false
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.dnsPolicy</td>
-<td>
+#### **app.webhook.dnsPolicy** ~ `string`
+> Default value:
+> ```yaml
+> ClusterFirst
+> ```
 
 This value may need to be changed if `hostNetwork: true`
-
-</td>
-<td>string</td>
-<td>
-
-```yaml
-ClusterFirst
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.affinity</td>
-<td>
+#### **app.webhook.affinity** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
 
 A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).  
   
@@ -483,38 +226,18 @@ affinity:
          values:
          - master
 ```
-
-</td>
-<td>object</td>
-<td>
-
-```yaml
-{}
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.nodeSelector</td>
-<td>
+#### **app.webhook.nodeSelector** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
 
 The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
-
-</td>
-<td>object</td>
-<td>
-
-```yaml
-{}
-```
-
-</td>
-</tr>
-<tr>
-
-<td>app.webhook.tolerations</td>
-<td>
+#### **app.webhook.tolerations** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
 
 A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).  
   
@@ -527,21 +250,11 @@ tolerations:
   value: master
   effect: NoSchedule
 ```
-
-</td>
-<td>array</td>
-<td>
-
-```yaml
-[]
-```
-
-</td>
-</tr>
-<tr>
-
-<td>volumeMounts</td>
-<td>
+#### **volumeMounts** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
 
 Optional extra volume mounts. Useful for mounting custom root CAs.  
   
@@ -552,21 +265,11 @@ volumeMounts:
 - name: my-volume-mount
   mountPath: /etc/approver-policy/secrets
 ```
-
-</td>
-<td>array</td>
-<td>
-
-```yaml
-[]
-```
-
-</td>
-</tr>
-<tr>
-
-<td>volumes</td>
-<td>
+#### **volumes** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
 
 Optional extra volumes.  
   
@@ -578,21 +281,11 @@ volumes:
   secret:
     secretName: my-secret
 ```
-
-</td>
-<td>array</td>
-<td>
-
-```yaml
-[]
-```
-
-</td>
-</tr>
-<tr>
-
-<td>resources</td>
-<td>
+#### **resources** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
 
 Kubernetes pod resources.  
 For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).  
@@ -608,51 +301,19 @@ resources:
     cpu: 100m
     memory: 128Mi
 ```
-
-</td>
-<td>object</td>
-<td>
-
-```yaml
-{}
-```
-
-</td>
-</tr>
-<tr>
-
-<td>commonLabels</td>
-<td>
+#### **commonLabels** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
 
 Allow custom labels to be placed on resources - optional.
-
-</td>
-<td>object</td>
-<td>
-
-```yaml
-{}
-```
-
-</td>
-</tr>
-<tr>
-
-<td>podAnnotations</td>
-<td>
+#### **podAnnotations** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
 
 Allow custom annotations to be placed on cert-manager-approver pod - optional.
-
-</td>
-<td>object</td>
-<td>
-
-```yaml
-{}
-```
-
-</td>
-</tr>
-</table>
 
 <!-- /AUTO-GENERATED -->
