@@ -2,13 +2,13 @@
 
 approver-policy is a CertificateRequest approver for cert-manager
 
-**Homepage:** <https://cert-manager.io/docs/policy/approval/approver-policy/>
+**Homepage:** <https://cert-manager.io/docs/policy/approval/approver-policy>
 
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| cert-manager-dev | <cert-manager-dev@googlegroups.com> | <https://cert-manager.io> |
+| cert-manager-maintainers | <cert-manager-maintainers@googlegroups.com> | <https://cert-manager.io> |
 
 ## Source Code
 
