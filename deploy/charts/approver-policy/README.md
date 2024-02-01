@@ -1,20 +1,8 @@
-# cert-manager-approver-policy
+# approver-policy
 
-approver-policy is a CertificateRequest approver for cert-manager
+<!-- see https://artifacthub.io/packages/helm/cert-manager/cert-manager-approver-policy for the rendered version -->
 
-**Homepage:** <https://cert-manager.io/docs/policy/approval/approver-policy>
-
-## Maintainers
-
-| Name | Email | Url |
-| ---- | ------ | --- |
-| cert-manager-maintainers | <cert-manager-maintainers@googlegroups.com> | <https://cert-manager.io> |
-
-## Source Code
-
-* <https://github.com/cert-manager/approver-policy>
-
-## Values
+## Helm Values
 
 <!-- AUTO-GENERATED -->
 
