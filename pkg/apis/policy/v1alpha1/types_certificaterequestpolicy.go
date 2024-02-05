@@ -251,7 +251,7 @@ type ValidationRule struct {
 	//
 	// Examples:
 	// - Rule for namespaced DNSNames:
-	//	 {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+	//   {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
 	Rule string `json:"rule"`
 
 	// Message is the message to display when validation fails.
