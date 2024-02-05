@@ -95,7 +95,19 @@ spec:
                                   e.g. "must be a URL with the host matching spec.host"
                                 type: string
                               rule:
-                                description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                description: |-
+                                  Rule represents the expression which will be evaluated by CEL.
+                                  ref: https://github.com/google/cel-spec
+                                  The Rule is scoped to the location of the validations in the schema.
+                                  The `self` variable in the CEL expression is bound to the scoped value.
+                                  To enable more advanced validation rules, approver-policy provides the
+                                  `cr` (map) variable to the CEL expression containing `namespace` and
+                                  `name` of the `CertificateRequest` resource.
+
+
+                                  Examples:
+                                  - Rule for namespaced DNSNames:
+                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                 type: string
                             required:
                               - rule
@@ -142,7 +154,19 @@ spec:
                                   e.g. "must be a URL with the host matching spec.host"
                                 type: string
                               rule:
-                                description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                description: |-
+                                  Rule represents the expression which will be evaluated by CEL.
+                                  ref: https://github.com/google/cel-spec
+                                  The Rule is scoped to the location of the validations in the schema.
+                                  The `self` variable in the CEL expression is bound to the scoped value.
+                                  To enable more advanced validation rules, approver-policy provides the
+                                  `cr` (map) variable to the CEL expression containing `namespace` and
+                                  `name` of the `CertificateRequest` resource.
+
+
+                                  Examples:
+                                  - Rule for namespaced DNSNames:
+                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                 type: string
                             required:
                               - rule
@@ -192,7 +216,19 @@ spec:
                                   e.g. "must be a URL with the host matching spec.host"
                                 type: string
                               rule:
-                                description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                description: |-
+                                  Rule represents the expression which will be evaluated by CEL.
+                                  ref: https://github.com/google/cel-spec
+                                  The Rule is scoped to the location of the validations in the schema.
+                                  The `self` variable in the CEL expression is bound to the scoped value.
+                                  To enable more advanced validation rules, approver-policy provides the
+                                  `cr` (map) variable to the CEL expression containing `namespace` and
+                                  `name` of the `CertificateRequest` resource.
+
+
+                                  Examples:
+                                  - Rule for namespaced DNSNames:
+                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                 type: string
                             required:
                               - rule
@@ -242,7 +278,19 @@ spec:
                                   e.g. "must be a URL with the host matching spec.host"
                                 type: string
                               rule:
-                                description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                description: |-
+                                  Rule represents the expression which will be evaluated by CEL.
+                                  ref: https://github.com/google/cel-spec
+                                  The Rule is scoped to the location of the validations in the schema.
+                                  The `self` variable in the CEL expression is bound to the scoped value.
+                                  To enable more advanced validation rules, approver-policy provides the
+                                  `cr` (map) variable to the CEL expression containing `namespace` and
+                                  `name` of the `CertificateRequest` resource.
+
+
+                                  Examples:
+                                  - Rule for namespaced DNSNames:
+                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                 type: string
                             required:
                               - rule
@@ -307,7 +355,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -357,7 +417,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -409,7 +481,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -461,7 +545,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -511,7 +607,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -561,7 +669,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -614,7 +734,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -663,7 +795,19 @@ spec:
                                       e.g. "must be a URL with the host matching spec.host"
                                     type: string
                                   rule:
-                                    description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+
+                                      Examples:
+                                      - Rule for namespaced DNSNames:
+                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                     type: string
                                 required:
                                   - rule
@@ -714,7 +858,19 @@ spec:
                                   e.g. "must be a URL with the host matching spec.host"
                                 type: string
                               rule:
-                                description: "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the validations in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nTo enable more advanced validation rules, approver-policy provides the\n`cr` (map) variable to the CEL expression containing `namespace` and\n`name` of the `CertificateRequest` resource.\n\n\nExamples:\n- Rule for namespaced DNSNames:\n\t {\"rule\": \"self.endsWith(cr.namespace + '.svc.cluster.local'\"}"
+                                description: |-
+                                  Rule represents the expression which will be evaluated by CEL.
+                                  ref: https://github.com/google/cel-spec
+                                  The Rule is scoped to the location of the validations in the schema.
+                                  The `self` variable in the CEL expression is bound to the scoped value.
+                                  To enable more advanced validation rules, approver-policy provides the
+                                  `cr` (map) variable to the CEL expression containing `namespace` and
+                                  `name` of the `CertificateRequest` resource.
+
+
+                                  Examples:
+                                  - Rule for namespaced DNSNames:
+                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
                                 type: string
                             required:
                               - rule
