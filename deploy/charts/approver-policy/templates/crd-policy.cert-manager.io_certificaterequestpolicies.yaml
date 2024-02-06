@@ -105,9 +105,10 @@ spec:
                                   `name` of the `CertificateRequest` resource.
 
 
-                                  Examples:
-                                  - Rule for namespaced DNSNames:
-                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                  Example (rule for namespaced DNSNames):
+                                  ```
+                                  rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                  ```
                                 type: string
                             required:
                               - rule
@@ -164,9 +165,10 @@ spec:
                                   `name` of the `CertificateRequest` resource.
 
 
-                                  Examples:
-                                  - Rule for namespaced DNSNames:
-                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                  Example (rule for namespaced DNSNames):
+                                  ```
+                                  rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                  ```
                                 type: string
                             required:
                               - rule
@@ -226,9 +228,10 @@ spec:
                                   `name` of the `CertificateRequest` resource.
 
 
-                                  Examples:
-                                  - Rule for namespaced DNSNames:
-                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                  Example (rule for namespaced DNSNames):
+                                  ```
+                                  rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                  ```
                                 type: string
                             required:
                               - rule
@@ -288,9 +291,10 @@ spec:
                                   `name` of the `CertificateRequest` resource.
 
 
-                                  Examples:
-                                  - Rule for namespaced DNSNames:
-                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                  Example (rule for namespaced DNSNames):
+                                  ```
+                                  rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                  ```
                                 type: string
                             required:
                               - rule
@@ -365,9 +369,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -427,9 +432,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -491,9 +497,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -555,9 +562,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -617,9 +625,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -679,9 +688,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -744,9 +754,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -805,9 +816,10 @@ spec:
                                       `name` of the `CertificateRequest` resource.
 
 
-                                      Examples:
-                                      - Rule for namespaced DNSNames:
-                                        {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
                                     type: string
                                 required:
                                   - rule
@@ -868,9 +880,10 @@ spec:
                                   `name` of the `CertificateRequest` resource.
 
 
-                                  Examples:
-                                  - Rule for namespaced DNSNames:
-                                    {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+                                  Example (rule for namespaced DNSNames):
+                                  ```
+                                  rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                  ```
                                 type: string
                             required:
                               - rule
