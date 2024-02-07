@@ -249,9 +249,10 @@ type ValidationRule struct {
 	// `cr` (map) variable to the CEL expression containing `namespace` and
 	// `name` of the `CertificateRequest` resource.
 	//
-	// Examples:
-	// - Rule for namespaced DNSNames:
-	//   {"rule": "self.endsWith(cr.namespace + '.svc.cluster.local'"}
+	// Example (rule for namespaced DNSNames):
+	// ```
+	// rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+	// ```
 	Rule string `json:"rule"`
 
 	// Message is the message to display when validation fails.
