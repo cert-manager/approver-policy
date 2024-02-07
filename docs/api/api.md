@@ -872,7 +872,7 @@ type ValidationRule struct {
     // Message is the message to display when validation fails.
     // Message is required if the Rule contains line breaks. Note that Message
     // must not contain line breaks.
-    // If unset, a fallback message is used: "failed rule: {Rule}".
+    // If unset, a fallback message is used: "failed rule: `<rule>`".
     // e.g. "must be a URL with the host matching spec.host"
     // +optional
     Message *string `json:"message,omitempty"`
