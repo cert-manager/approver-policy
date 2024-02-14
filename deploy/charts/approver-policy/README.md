@@ -188,7 +188,7 @@ The timeout of webhook HTTP request.
 > ```
 
 The type of Kubernetes Service used by the webhook.
-#### **app.webhook.service.nodePort** ~ `unknown`
+#### **app.webhook.service.nodePort** ~ `number`
 
 The nodePort set on the Service used by the webhook.
 

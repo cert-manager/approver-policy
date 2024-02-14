@@ -103,7 +103,7 @@ app:
 
       # The nodePort set on the Service used by the webhook.
       # +docs:property
-      # nodePort: 
+      # nodePort: 8080
 
     # Boolean value, expose pod on hostNetwork.
     # Required when running a custom CNI in managed providers such as AWS EKS.

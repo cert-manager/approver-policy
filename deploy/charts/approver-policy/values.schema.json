@@ -258,7 +258,8 @@
       "type": "object"
     },
     "helm-values.app.webhook.service.nodePort": {
-      "description": "The nodePort set on the Service used by the webhook."
+      "description": "The nodePort set on the Service used by the webhook.",
+      "type": "number"
     },
     "helm-values.app.webhook.service.type": {
       "default": "ClusterIP",
