@@ -93,6 +93,10 @@ app:
       # The type of Kubernetes Service used by the webhook.
       type: ClusterIP
 
+      # The nodePort set on the Service used by the webhook.
+      # +docs:property
+      # nodePort: 
+
     # Boolean value, expose pod on hostNetwork.
     # Required when running a custom CNI in managed providers such as AWS EKS.
     #

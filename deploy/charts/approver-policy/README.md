@@ -191,6 +191,10 @@ The timeout of webhook HTTP request.
 > ```
 
 The type of Kubernetes Service used by the webhook.
+#### **app.webhook.service.nodePort** ~ `unknown`
+
+The nodePort set on the Service used by the webhook.
+
 #### **app.webhook.hostNetwork** ~ `bool`
 > Default value:
 > ```yaml

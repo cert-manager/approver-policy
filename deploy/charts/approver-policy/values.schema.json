@@ -1,0 +1,382 @@
+{
+  "$defs": {
+    "helm-values": {
+      "additionalProperties": false,
+      "properties": {
+        "app": {
+          "$ref": "#/$defs/helm-values.app"
+        },
+        "commonLabels": {
+          "$ref": "#/$defs/helm-values.commonLabels"
+        },
+        "crds": {
+          "$ref": "#/$defs/helm-values.crds"
+        },
+        "image": {
+          "$ref": "#/$defs/helm-values.image"
+        },
+        "imagePullSecrets": {
+          "$ref": "#/$defs/helm-values.imagePullSecrets"
+        },
+        "podAnnotations": {
+          "$ref": "#/$defs/helm-values.podAnnotations"
+        },
+        "replicaCount": {
+          "$ref": "#/$defs/helm-values.replicaCount"
+        },
+        "resources": {
+          "$ref": "#/$defs/helm-values.resources"
+        },
+        "volumeMounts": {
+          "$ref": "#/$defs/helm-values.volumeMounts"
+        },
+        "volumes": {
+          "$ref": "#/$defs/helm-values.volumes"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app": {
+      "additionalProperties": false,
+      "properties": {
+        "approveSignerNames": {
+          "$ref": "#/$defs/helm-values.app.approveSignerNames"
+        },
+        "extraArgs": {
+          "$ref": "#/$defs/helm-values.app.extraArgs"
+        },
+        "logLevel": {
+          "$ref": "#/$defs/helm-values.app.logLevel"
+        },
+        "metrics": {
+          "$ref": "#/$defs/helm-values.app.metrics"
+        },
+        "readinessProbe": {
+          "$ref": "#/$defs/helm-values.app.readinessProbe"
+        },
+        "webhook": {
+          "$ref": "#/$defs/helm-values.app.webhook"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.approveSignerNames": {
+      "default": [
+        "issuers.cert-manager.io/*",
+        "clusterissuers.cert-manager.io/*"
+      ],
+      "description": "List if signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy.\n\nref: https://cert-manager.io/docs/concepts/certificaterequest/#approval",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.app.extraArgs": {
+      "default": [],
+      "description": "Extra CLI arguments that will be passed to the approver-policy process.",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.app.logLevel": {
+      "default": 1,
+      "description": "Verbosity of approver-policy logging. This is a value from 1 to 5.",
+      "type": "number"
+    },
+    "helm-values.app.metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "$ref": "#/$defs/helm-values.app.metrics.port"
+        },
+        "service": {
+          "$ref": "#/$defs/helm-values.app.metrics.service"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.metrics.port": {
+      "default": 9402,
+      "description": "Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.",
+      "type": "number"
+    },
+    "helm-values.app.metrics.service": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.enabled"
+        },
+        "servicemonitor": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.servicemonitor"
+        },
+        "type": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.type"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.metrics.service.enabled": {
+      "default": true,
+      "description": "Create a Service resource to expose metrics endpoint.",
+      "type": "boolean"
+    },
+    "helm-values.app.metrics.service.servicemonitor": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.servicemonitor.enabled"
+        },
+        "interval": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.servicemonitor.interval"
+        },
+        "labels": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.servicemonitor.labels"
+        },
+        "prometheusInstance": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.servicemonitor.prometheusInstance"
+        },
+        "scrapeTimeout": {
+          "$ref": "#/$defs/helm-values.app.metrics.service.servicemonitor.scrapeTimeout"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.metrics.service.servicemonitor.enabled": {
+      "default": false,
+      "description": "Create Prometheus ServiceMonitor resource for approver-policy.",
+      "type": "boolean"
+    },
+    "helm-values.app.metrics.service.servicemonitor.interval": {
+      "default": "10s",
+      "description": "The interval that the Prometheus will scrape for metrics.",
+      "type": "string"
+    },
+    "helm-values.app.metrics.service.servicemonitor.labels": {
+      "default": {},
+      "description": "Additional labels to give the ServiceMonitor resource.",
+      "type": "object"
+    },
+    "helm-values.app.metrics.service.servicemonitor.prometheusInstance": {
+      "default": "default",
+      "description": "The value for the \"prometheus\" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.",
+      "type": "string"
+    },
+    "helm-values.app.metrics.service.servicemonitor.scrapeTimeout": {
+      "default": "5s",
+      "description": "The timeout on each metric probe request.",
+      "type": "string"
+    },
+    "helm-values.app.metrics.service.type": {
+      "default": "ClusterIP",
+      "description": "The service type to expose metrics.",
+      "type": "string"
+    },
+    "helm-values.app.readinessProbe": {
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "$ref": "#/$defs/helm-values.app.readinessProbe.port"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.readinessProbe.port": {
+      "default": 6060,
+      "description": "The container port to expose approver-policy HTTP readiness probe on default network interface.",
+      "type": "number"
+    },
+    "helm-values.app.webhook": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "$ref": "#/$defs/helm-values.app.webhook.affinity"
+        },
+        "dnsPolicy": {
+          "$ref": "#/$defs/helm-values.app.webhook.dnsPolicy"
+        },
+        "host": {
+          "$ref": "#/$defs/helm-values.app.webhook.host"
+        },
+        "hostNetwork": {
+          "$ref": "#/$defs/helm-values.app.webhook.hostNetwork"
+        },
+        "nodeSelector": {
+          "$ref": "#/$defs/helm-values.app.webhook.nodeSelector"
+        },
+        "port": {
+          "$ref": "#/$defs/helm-values.app.webhook.port"
+        },
+        "service": {
+          "$ref": "#/$defs/helm-values.app.webhook.service"
+        },
+        "timeoutSeconds": {
+          "$ref": "#/$defs/helm-values.app.webhook.timeoutSeconds"
+        },
+        "tolerations": {
+          "$ref": "#/$defs/helm-values.app.webhook.tolerations"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.webhook.affinity": {
+      "default": {},
+      "description": "A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).\n\nFor example:\naffinity:\n  nodeAffinity:\n   requiredDuringSchedulingIgnoredDuringExecution:\n     nodeSelectorTerms:\n     - matchExpressions:\n       - key: foo.bar.com/role\n         operator: In\n         values:\n         - master",
+      "type": "object"
+    },
+    "helm-values.app.webhook.dnsPolicy": {
+      "default": "ClusterFirst",
+      "description": "This value may need to be changed if `hostNetwork: true`",
+      "type": "string"
+    },
+    "helm-values.app.webhook.host": {
+      "default": "0.0.0.0",
+      "description": "The host that the webhook listens on.",
+      "type": "string"
+    },
+    "helm-values.app.webhook.hostNetwork": {
+      "default": false,
+      "description": "Boolean value, expose pod on hostNetwork.\nRequired when running a custom CNI in managed providers such as AWS EKS.\n\nFor more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).",
+      "type": "boolean"
+    },
+    "helm-values.app.webhook.nodeSelector": {
+      "default": {},
+      "description": "The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
+      "type": "object"
+    },
+    "helm-values.app.webhook.port": {
+      "default": 10250,
+      "description": "The port that the webhook listens on.",
+      "type": "number"
+    },
+    "helm-values.app.webhook.service": {
+      "additionalProperties": false,
+      "properties": {
+        "nodePort": {
+          "$ref": "#/$defs/helm-values.app.webhook.service.nodePort"
+        },
+        "type": {
+          "$ref": "#/$defs/helm-values.app.webhook.service.type"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.webhook.service.nodePort": {
+      "description": "The nodePort set on the Service used by the webhook."
+    },
+    "helm-values.app.webhook.service.type": {
+      "default": "ClusterIP",
+      "description": "The type of Kubernetes Service used by the webhook.",
+      "type": "string"
+    },
+    "helm-values.app.webhook.timeoutSeconds": {
+      "default": 5,
+      "description": "The timeout of webhook HTTP request.",
+      "type": "number"
+    },
+    "helm-values.app.webhook.tolerations": {
+      "default": [],
+      "description": "A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).\n\nFor example:\ntolerations:\n- key: foo.bar.com/role\n  operator: Equal\n  value: master\n  effect: NoSchedule",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.commonLabels": {
+      "default": {},
+      "description": "Allow custom labels to be placed on resources - optional.",
+      "type": "object"
+    },
+    "helm-values.crds": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "$ref": "#/$defs/helm-values.crds.enabled"
+        },
+        "keep": {
+          "$ref": "#/$defs/helm-values.crds.keep"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.crds.enabled": {
+      "default": true,
+      "description": "This option decides if the CRDs should be installed as part of the Helm installation.",
+      "type": "boolean"
+    },
+    "helm-values.crds.keep": {
+      "default": true,
+      "description": "This option makes it so that the \"helm.sh/resource-policy\": keep annotation is added to the CRD. This will prevent Helm from uninstalling the CRD when the Helm release is uninstalled. WARNING: when the CRDs are removed, all cert-manager custom resources\n(Certificates, Issuers, ...) will be removed too by the garbage collector.",
+      "type": "boolean"
+    },
+    "helm-values.image": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "$ref": "#/$defs/helm-values.image.digest"
+        },
+        "pullPolicy": {
+          "$ref": "#/$defs/helm-values.image.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.image.registry"
+        },
+        "repository": {
+          "$ref": "#/$defs/helm-values.image.repository"
+        },
+        "tag": {
+          "$ref": "#/$defs/helm-values.image.tag"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.image.digest": {
+      "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20"
+    },
+    "helm-values.image.pullPolicy": {
+      "default": "IfNotPresent",
+      "description": "Kubernetes imagePullPolicy on Deployment.",
+      "type": "string"
+    },
+    "helm-values.image.registry": {
+      "description": "Target image registry. This value is prepended to the target image repository, if set."
+    },
+    "helm-values.image.repository": {
+      "default": "quay.io/jetstack/cert-manager-approver-policy",
+      "description": "Target image repository.",
+      "type": "string"
+    },
+    "helm-values.image.tag": {
+      "description": "Target image version tag. Defaults to the chart's appVersion."
+    },
+    "helm-values.imagePullSecrets": {
+      "default": [],
+      "description": "Optional secrets used for pulling the approver-policy container image.",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.podAnnotations": {
+      "default": {},
+      "description": "Allow custom annotations to be placed on cert-manager-approver pod - optional.",
+      "type": "object"
+    },
+    "helm-values.replicaCount": {
+      "default": 1,
+      "description": "Number of replicas of approver-policy to run.",
+      "type": "number"
+    },
+    "helm-values.resources": {
+      "default": {},
+      "description": "Kubernetes pod resources.\nFor more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).\n\nFor example:\nresources:\n  limits:\n    cpu: 100m\n    memory: 128Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi",
+      "type": "object"
+    },
+    "helm-values.volumeMounts": {
+      "default": [],
+      "description": "Optional extra volume mounts. Useful for mounting custom root CAs.\n\nFor example:\nvolumeMounts:\n- name: my-volume-mount\n  mountPath: /etc/approver-policy/secrets",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.volumes": {
+      "default": [],
+      "description": "Optional extra volumes.\n\nFor example:\nvolumes:\n- name: my-volume\n  secret:\n    secretName: my-secret",
+      "items": {},
+      "type": "array"
+    }
+  },
+  "$ref": "#/$defs/helm-values",
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
