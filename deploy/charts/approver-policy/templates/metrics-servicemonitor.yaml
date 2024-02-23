@@ -15,7 +15,7 @@ spec:
   jobLabel: {{ include "cert-manager-approver-policy.name" . }}
   selector:
     matchLabels:
-      app: {{ include "cert-manager-approver-policy.name" . }}
+      app: {{ include "cert-manager-approver-policy.name" . }}-metrics
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}
