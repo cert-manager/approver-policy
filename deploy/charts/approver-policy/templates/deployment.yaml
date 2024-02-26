@@ -4,7 +4,7 @@ metadata:
   name: {{ include "cert-manager-approver-policy.name" . }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
-{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
