@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-approver-policy.name" . }}
-{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.app.webhook.service.type }}
   ports:
@@ -25,7 +25,7 @@ metadata:
   name: {{ include "cert-manager-approver-policy.name" . }}
   labels:
     app: {{ include "cert-manager-approver-policy.name" . }}
-{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
   annotations:
     cert-manager.io/inject-ca-from-secret: "{{ .Release.Namespace }}/{{ include "cert-manager-approver-policy.name" . }}-tls"
 
@@ -60,4 +60,4 @@ metadata:
     cert-manager.io/allow-direct-injection: "true"
   labels:
     app: {{ include "cert-manager-approver-policy.name" . }}
-{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}

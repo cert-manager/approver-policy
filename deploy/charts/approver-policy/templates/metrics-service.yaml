@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-approver-policy.name" . }}
-{{ include "cert-manager-approver-policy.labels" . | indent 4 }}
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.app.metrics.service.type }}
   ports:
