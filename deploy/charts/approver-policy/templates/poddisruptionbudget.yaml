@@ -1,0 +1,14 @@
+{{- if .Values.podDisruptionBudget.enabled -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "cert-manager-approver-policy.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
+spec:
+  {{- include "cert-manager-approver-policy.pdb.spec" .Values.podDisruptionBudget | nindent 2 }}
+  selector:
+    matchLabels:
+      app: {{ include "cert-manager-approver-policy.name" . }}
+{{- end -}}

@@ -21,6 +21,9 @@
         "podAnnotations": {
           "$ref": "#/$defs/helm-values.podAnnotations"
         },
+        "podDisruptionBudget": {
+          "$ref": "#/$defs/helm-values.podDisruptionBudget"
+        },
         "replicaCount": {
           "$ref": "#/$defs/helm-values.replicaCount"
         },
@@ -357,6 +360,34 @@
       "default": {},
       "description": "Allow custom annotations to be placed on cert-manager-approver pod - optional.",
       "type": "object"
+    },
+    "helm-values.podDisruptionBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "$ref": "#/$defs/helm-values.podDisruptionBudget.enabled"
+        },
+        "maxUnavailable": {
+          "$ref": "#/$defs/helm-values.podDisruptionBudget.maxUnavailable"
+        },
+        "minAvailable": {
+          "$ref": "#/$defs/helm-values.podDisruptionBudget.minAvailable"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.podDisruptionBudget.enabled": {
+      "default": false,
+      "description": "Enable or disable the PodDisruptionBudget resource.\n\nThis prevents downtime during voluntary disruptions such as during a Node upgrade. For example, the PodDisruptionBudget blocks `kubectl drain` if it is used on the Node where the only remaining approver-policy\nPod is currently running.",
+      "type": "boolean"
+    },
+    "helm-values.podDisruptionBudget.maxUnavailable": {
+      "description": "Configures the maximum unavailable pods for disruptions.\nCannot be used if `minAvailable` is set.",
+      "type": "number"
+    },
+    "helm-values.podDisruptionBudget.minAvailable": {
+      "description": "Configures the minimum available pods for disruptions.\nCannot be used if `maxUnavailable` is set.",
+      "type": "number"
     },
     "helm-values.replicaCount": {
       "default": 1,

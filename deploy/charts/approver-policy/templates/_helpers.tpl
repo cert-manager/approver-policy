@@ -41,3 +41,19 @@ See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linke
 {{- if .digest -}}{{ printf "@%s" .digest }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
 {{- end }}
 {{- end }}
+
+{{/*
+Copied from
+https://github.com/kyverno/kyverno/blob/df5e39c005a78f1ffe6a2eeda3f4497cc9c24384/charts/kyverno/templates/_helpers/_pdb.tpl
+*/}}
+{{- define "cert-manager-approver-policy.pdb.spec" -}}
+{{- if and .minAvailable .maxUnavailable -}}
+  {{- fail "Cannot set both .minAvailable and .maxUnavailable" -}}
+{{- end -}}
+{{- if not .maxUnavailable -}}
+minAvailable: {{ default 1 .minAvailable }}
+{{- end -}}
+{{- if .maxUnavailable -}}
+maxUnavailable: {{ .maxUnavailable }}
+{{- end -}}
+{{- end -}}

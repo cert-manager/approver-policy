@@ -254,6 +254,26 @@ tolerations:
   value: master
   effect: NoSchedule
 ```
+#### **podDisruptionBudget.enabled** ~ `bool`
+> Default value:
+> ```yaml
+> false
+> ```
+
+Enable or disable the PodDisruptionBudget resource.  
+  
+This prevents downtime during voluntary disruptions such as during a Node upgrade. For example, the PodDisruptionBudget blocks `kubectl drain` if it is used on the Node where the only remaining approver-policy  
+Pod is currently running.
+#### **podDisruptionBudget.minAvailable** ~ `number`
+
+Configures the minimum available pods for disruptions.  
+Cannot be used if `maxUnavailable` is set.
+
+#### **podDisruptionBudget.maxUnavailable** ~ `number`
+
+Configures the maximum unavailable pods for disruptions.  
+Cannot be used if `minAvailable` is set.
+
 #### **volumeMounts** ~ `array`
 > Default value:
 > ```yaml

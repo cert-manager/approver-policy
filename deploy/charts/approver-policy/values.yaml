@@ -50,7 +50,7 @@ app:
 
   # List if signer names that approver-policy will be given permission to
   # approve and deny. CertificateRequests referencing these signer names can be
-  # processed by approver-policy. 
+  # processed by approver-policy.
   #
   # ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
   # +docs:property
@@ -72,7 +72,7 @@ app:
         # Create Prometheus ServiceMonitor resource for approver-policy.
         enabled: false
         # The value for the "prometheus" label on the ServiceMonitor. This allows
-        # for multiple Prometheus instances selecting difference ServiceMonitors 
+        # for multiple Prometheus instances selecting difference ServiceMonitors
         # using label selectors.
         prometheusInstance: default
         # The interval that the Prometheus will scrape for metrics.
@@ -142,6 +142,26 @@ app:
     #     value: master
     #     effect: NoSchedule
     tolerations: []
+
+podDisruptionBudget:
+  # Enable or disable the PodDisruptionBudget resource.
+  #
+  # This prevents downtime during voluntary disruptions such as during a Node upgrade.
+  # For example, the PodDisruptionBudget blocks `kubectl drain`
+  # if it is used on the Node where the only remaining approver-policy
+  # Pod is currently running.
+  enabled: false
+
+  # Configures the minimum available pods for disruptions.
+  # Cannot be used if `maxUnavailable` is set.
+  # +docs:property
+  # minAvailable: 1
+
+  # Configures the maximum unavailable pods for disruptions.
+  # Cannot be used if `minAvailable` is set.
+  # +docs:property
+  # maxUnavailable: 1
+
 
 # Optional extra volume mounts. Useful for mounting custom root CAs.
 #
