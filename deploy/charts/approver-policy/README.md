@@ -181,34 +181,14 @@ The port that the webhook listens on.
 > ```
 
 The timeout of webhook HTTP request.
-#### **app.webhook.service.type** ~ `string`
-> Default value:
-> ```yaml
-> ClusterIP
-> ```
-
-The type of Kubernetes Service used by the webhook.
-#### **app.webhook.service.nodePort** ~ `number`
-
-The nodePort set on the Service used by the webhook.
-
 #### **app.webhook.hostNetwork** ~ `bool`
-> Default value:
-> ```yaml
-> false
-> ```
 
-Boolean value, expose pod on hostNetwork.  
-Required when running a custom CNI in managed providers such as AWS EKS.  
-  
-For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
+Deprecated. Use .hostNetwork instead.
+
 #### **app.webhook.dnsPolicy** ~ `string`
-> Default value:
-> ```yaml
-> ClusterFirst
-> ```
 
-This value may need to be changed if `hostNetwork: true`
+Deprecated. Use .dnsPolicy instead.
+
 #### **app.webhook.affinity** ~ `object`
 
 Deprecated. Use .affinity instead.
@@ -221,6 +201,34 @@ Deprecated. Use .nodeSelector instead.
 
 Deprecated. Use .tolerations instead.
 
+#### **app.webhook.service.type** ~ `string`
+> Default value:
+> ```yaml
+> ClusterIP
+> ```
+
+The type of Kubernetes Service used by the webhook.
+#### **app.webhook.service.nodePort** ~ `number`
+
+The nodePort set on the Service used by the webhook.
+
+#### **hostNetwork** ~ `bool`
+> Default value:
+> ```yaml
+> false
+> ```
+
+Boolean value, expose pod on hostNetwork.  
+Required when running a custom CNI in managed providers such as AWS EKS.  
+  
+For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
+#### **dnsPolicy** ~ `string`
+> Default value:
+> ```yaml
+> ClusterFirst
+> ```
+
+This value may need to be changed if `hostNetwork: true`
 #### **affinity** ~ `object`
 > Default value:
 > ```yaml
