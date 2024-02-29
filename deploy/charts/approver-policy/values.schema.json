@@ -30,6 +30,9 @@
         "resources": {
           "$ref": "#/$defs/helm-values.resources"
         },
+        "topologySpreadConstraints": {
+          "$ref": "#/$defs/helm-values.topologySpreadConstraints"
+        },
         "volumeMounts": {
           "$ref": "#/$defs/helm-values.volumeMounts"
         },
@@ -398,6 +401,12 @@
       "default": {},
       "description": "Kubernetes pod resources.\nFor more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).\n\nFor example:\nresources:\n  limits:\n    cpu: 100m\n    memory: 128Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi",
       "type": "object"
+    },
+    "helm-values.topologySpreadConstraints": {
+      "default": [],
+      "description": "List of Kubernetes TopologySpreadConstraints. For more information, see:\n[Pod Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).\n\nFor example:\ntopologySpreadConstraints:\n- maxSkew: 2\n  topologyKey: topology.kubernetes.io/zone\n  whenUnsatisfiable: ScheduleAnyway\n  labelSelector:\n    matchLabels:\n      app.kubernetes.io/name: cert-manager-approver-policy\n      app.kubernetes.io/instance: cert-manager-approver-policy",
+      "items": {},
+      "type": "array"
     },
     "helm-values.volumeMounts": {
       "default": [],

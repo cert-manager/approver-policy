@@ -254,6 +254,27 @@ tolerations:
   value: master
   effect: NoSchedule
 ```
+#### **topologySpreadConstraints** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
+
+List of Kubernetes TopologySpreadConstraints. For more information, see:  
+[Pod Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).  
+  
+For example:
+
+```yaml
+topologySpreadConstraints:
+- maxSkew: 2
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+  labelSelector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager-approver-policy
+      app.kubernetes.io/instance: cert-manager-approver-policy
+```
 #### **podDisruptionBudget.enabled** ~ `bool`
 > Default value:
 > ```yaml

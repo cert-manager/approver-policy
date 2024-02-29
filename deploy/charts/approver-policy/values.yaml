@@ -143,6 +143,20 @@ app:
     #     effect: NoSchedule
     tolerations: []
 
+# List of Kubernetes TopologySpreadConstraints. For more information, see:
+# [Pod Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).
+#
+# For example:
+#   topologySpreadConstraints:
+#   - maxSkew: 2
+#     topologyKey: topology.kubernetes.io/zone
+#     whenUnsatisfiable: ScheduleAnyway
+#     labelSelector:
+#       matchLabels:
+#         app.kubernetes.io/name: cert-manager-approver-policy
+#         app.kubernetes.io/instance: cert-manager-approver-policy
+topologySpreadConstraints: []
+
 podDisruptionBudget:
   # Enable or disable the PodDisruptionBudget resource.
   #
