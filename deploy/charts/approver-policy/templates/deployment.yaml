@@ -77,15 +77,15 @@ spec:
 
       hostNetwork: {{ .Values.app.webhook.hostNetwork }}
       dnsPolicy: {{ .Values.app.webhook.dnsPolicy }}
-      {{- with .Values.app.webhook.nodeSelector }}
+      {{- with (or .Values.nodeSelector .Values.app.webhook.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.app.webhook.tolerations }}
+      {{- with (or .Values.tolerations .Values.app.webhook.tolerations) }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.app.webhook.affinity }}
+      {{- with (or .Values.affinity .Values.app.webhook.affinity) }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
