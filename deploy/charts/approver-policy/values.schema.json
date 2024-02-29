@@ -15,6 +15,12 @@
         "crds": {
           "$ref": "#/$defs/helm-values.crds"
         },
+        "dnsPolicy": {
+          "$ref": "#/$defs/helm-values.dnsPolicy"
+        },
+        "hostNetwork": {
+          "$ref": "#/$defs/helm-values.hostNetwork"
+        },
         "image": {
           "$ref": "#/$defs/helm-values.image"
         },
@@ -240,8 +246,7 @@
       "type": "object"
     },
     "helm-values.app.webhook.dnsPolicy": {
-      "default": "ClusterFirst",
-      "description": "This value may need to be changed if `hostNetwork: true`",
+      "description": "Deprecated. Use .dnsPolicy instead.",
       "type": "string"
     },
     "helm-values.app.webhook.host": {
@@ -250,8 +255,7 @@
       "type": "string"
     },
     "helm-values.app.webhook.hostNetwork": {
-      "default": false,
-      "description": "Boolean value, expose pod on hostNetwork.\nRequired when running a custom CNI in managed providers such as AWS EKS.\n\nFor more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).",
+      "description": "Deprecated. Use .hostNetwork instead.",
       "type": "boolean"
     },
     "helm-values.app.webhook.nodeSelector": {
@@ -319,6 +323,16 @@
     "helm-values.crds.keep": {
       "default": true,
       "description": "This option makes it so that the \"helm.sh/resource-policy\": keep annotation is added to the CRD. This will prevent Helm from uninstalling the CRD when the Helm release is uninstalled. WARNING: when the CRDs are removed, all cert-manager custom resources\n(Certificates, Issuers, ...) will be removed too by the garbage collector.",
+      "type": "boolean"
+    },
+    "helm-values.dnsPolicy": {
+      "default": "ClusterFirst",
+      "description": "This value may need to be changed if `hostNetwork: true`",
+      "type": "string"
+    },
+    "helm-values.hostNetwork": {
+      "default": false,
+      "description": "Boolean value, expose pod on hostNetwork.\nRequired when running a custom CNI in managed providers such as AWS EKS.\n\nFor more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).",
       "type": "boolean"
     },
     "helm-values.image": {
