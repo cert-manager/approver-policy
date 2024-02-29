@@ -57,12 +57,10 @@ spec:
           - --webhook-service-name={{ include "cert-manager-approver-policy.name" . }}
           - --webhook-ca-secret-namespace={{.Release.Namespace}}
 
-        volumeMounts:
         {{- with .Values.volumeMounts }}
+        volumeMounts:
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        - mountPath: /tmp
-          name: temp-dir
 
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
@@ -72,13 +70,10 @@ spec:
           capabilities: { drop: ["ALL"] }
           readOnlyRootFilesystem: true
 
-      volumes:
       {{- with .Values.volumes }}
+      volumes:
       {{- toYaml . | nindent 6 }}
       {{- end }}
-      - name: temp-dir
-        emptyDir:
-          sizeLimit: 50M
 
       hostNetwork: {{ .Values.app.webhook.hostNetwork }}
       dnsPolicy: {{ .Values.app.webhook.dnsPolicy }}
