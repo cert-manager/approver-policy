@@ -6,6 +6,18 @@
 ⚠️  WARNING: Consider setting the Helm value `podDisruptionBudget.enabled` to true if you require high availability.
 {{- end }}
 
+{{- if .Values.app.webhook.affinity }}
+⚠️  WARNING: The Helm value `.app.webhook.affinity` is deprecated. Use `.affinity` instead.
+{{- end }}
+
+{{- if .Values.app.webhook.nodeSelector }}
+⚠️  WARNING: The Helm value `.app.webhook.nodeSelector` is deprecated. Use `.nodeSelector` instead.
+{{- end }}
+
+{{- if .Values.app.webhook.tolerations }}
+⚠️  WARNING: The Helm value `.app.webhook.tolerations` is deprecated. Use `.tolerations` instead.
+{{- end }}
+
 CHART NAME: {{ .Chart.Name }}
 CHART VERSION: {{ .Chart.Version }}
 APP VERSION: {{ .Chart.AppVersion }}
