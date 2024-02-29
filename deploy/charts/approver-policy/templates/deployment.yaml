@@ -77,7 +77,8 @@ spec:
       {{- toYaml . | nindent 6 }}
       {{- end }}
       - name: temp-dir
-        emptyDir: {}
+        emptyDir:
+          sizeLimit: 50M
 
       hostNetwork: {{ .Values.app.webhook.hostNetwork }}
       dnsPolicy: {{ .Values.app.webhook.dnsPolicy }}
