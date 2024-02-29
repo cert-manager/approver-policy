@@ -18,6 +18,14 @@
 ⚠️  WARNING: The Helm value `.app.webhook.tolerations` is deprecated. Use `.tolerations` instead.
 {{- end }}
 
+{{- if .Values.app.webhook.hostNetwork }}
+⚠️  WARNING: The Helm value `.app.webhook.hostNetwork` is deprecated. Use `.hostNetwork` instead.
+{{- end }}
+
+{{- if .Values.app.webhook.dnsPolicy }}
+⚠️  WARNING: The Helm value `.app.webhook.dnsPolicy` is deprecated. Use `.dnsPolicy` instead.
+{{- end }}
+
 CHART NAME: {{ .Chart.Name }}
 CHART VERSION: {{ .Chart.Version }}
 APP VERSION: {{ .Chart.AppVersion }}

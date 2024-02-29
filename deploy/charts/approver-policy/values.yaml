@@ -105,14 +105,14 @@ app:
       # +docs:property
       # nodePort: 8080
 
-    # Boolean value, expose pod on hostNetwork.
-    # Required when running a custom CNI in managed providers such as AWS EKS.
-    #
-    # For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
-    hostNetwork: false
 
-    # This value may need to be changed if `hostNetwork: true`
-    dnsPolicy: ClusterFirst
+    # Deprecated. Use .hostNetwork instead.
+    # +docs:property
+    # hostNetwork: false
+
+    # Deprecated. Use .dnsPolicy instead.
+    # +docs:property
+    # dnsPolicy: ClusterFirst
 
     # Deprecated. Use .affinity instead.
     # +docs:property
@@ -125,6 +125,15 @@ app:
     # Deprecated. Use .tolerations instead.
     # +docs:property
     # tolerations: []
+
+# Boolean value, expose pod on hostNetwork.
+# Required when running a custom CNI in managed providers such as AWS EKS.
+#
+# For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
+hostNetwork: false
+
+# This value may need to be changed if `hostNetwork: true`
+dnsPolicy: ClusterFirst
 
 # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
 #
