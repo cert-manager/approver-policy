@@ -105,43 +105,64 @@ app:
       # +docs:property
       # nodePort: 8080
 
-    # Boolean value, expose pod on hostNetwork.
-    # Required when running a custom CNI in managed providers such as AWS EKS.
-    #
-    # For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
-    hostNetwork: false
 
-    # This value may need to be changed if `hostNetwork: true`
-    dnsPolicy: ClusterFirst
+    # Deprecated. Use .hostNetwork instead.
+    # +docs:property
+    # hostNetwork: false
 
-    # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
-    #
-    # For example:
-    #   affinity:
-    #     nodeAffinity:
-    #      requiredDuringSchedulingIgnoredDuringExecution:
-    #        nodeSelectorTerms:
-    #        - matchExpressions:
-    #          - key: foo.bar.com/role
-    #            operator: In
-    #            values:
-    #            - master
-    affinity: {}
+    # Deprecated. Use .dnsPolicy instead.
+    # +docs:property
+    # dnsPolicy: ClusterFirst
 
-    # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
-    # matching labels.
-    # For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
-    nodeSelector: {}
+    # Deprecated. Use .affinity instead.
+    # +docs:property
+    # affinity: {}
 
-    # A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
-    #
-    # For example:
-    #   tolerations:
-    #   - key: foo.bar.com/role
-    #     operator: Equal
-    #     value: master
-    #     effect: NoSchedule
-    tolerations: []
+    # Deprecated. Use .nodeSelector instead.
+    # +docs:property
+    # nodeSelector: {}
+
+    # Deprecated. Use .tolerations instead.
+    # +docs:property
+    # tolerations: []
+
+# Boolean value, expose pod on hostNetwork.
+# Required when running a custom CNI in managed providers such as AWS EKS.
+#
+# For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
+hostNetwork: false
+
+# This value may need to be changed if `hostNetwork: true`
+dnsPolicy: ClusterFirst
+
+# A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
+#
+# For example:
+#   affinity:
+#     nodeAffinity:
+#      requiredDuringSchedulingIgnoredDuringExecution:
+#        nodeSelectorTerms:
+#        - matchExpressions:
+#          - key: foo.bar.com/role
+#            operator: In
+#            values:
+#            - master
+affinity: {}
+
+# The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
+# matching labels.
+# For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
+nodeSelector: {}
+
+# A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
+#
+# For example:
+#   tolerations:
+#   - key: foo.bar.com/role
+#     operator: Equal
+#     value: master
+#     effect: NoSchedule
+tolerations: []
 
 # List of Kubernetes TopologySpreadConstraints. For more information, see:
 # [Pod Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).

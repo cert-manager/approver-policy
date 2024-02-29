@@ -3,6 +3,9 @@
     "helm-values": {
       "additionalProperties": false,
       "properties": {
+        "affinity": {
+          "$ref": "#/$defs/helm-values.affinity"
+        },
         "app": {
           "$ref": "#/$defs/helm-values.app"
         },
@@ -12,11 +15,20 @@
         "crds": {
           "$ref": "#/$defs/helm-values.crds"
         },
+        "dnsPolicy": {
+          "$ref": "#/$defs/helm-values.dnsPolicy"
+        },
+        "hostNetwork": {
+          "$ref": "#/$defs/helm-values.hostNetwork"
+        },
         "image": {
           "$ref": "#/$defs/helm-values.image"
         },
         "imagePullSecrets": {
           "$ref": "#/$defs/helm-values.imagePullSecrets"
+        },
+        "nodeSelector": {
+          "$ref": "#/$defs/helm-values.nodeSelector"
         },
         "podAnnotations": {
           "$ref": "#/$defs/helm-values.podAnnotations"
@@ -30,6 +42,9 @@
         "resources": {
           "$ref": "#/$defs/helm-values.resources"
         },
+        "tolerations": {
+          "$ref": "#/$defs/helm-values.tolerations"
+        },
         "topologySpreadConstraints": {
           "$ref": "#/$defs/helm-values.topologySpreadConstraints"
         },
@@ -40,6 +55,11 @@
           "$ref": "#/$defs/helm-values.volumes"
         }
       },
+      "type": "object"
+    },
+    "helm-values.affinity": {
+      "default": {},
+      "description": "A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).\n\nFor example:\naffinity:\n  nodeAffinity:\n   requiredDuringSchedulingIgnoredDuringExecution:\n     nodeSelectorTerms:\n     - matchExpressions:\n       - key: foo.bar.com/role\n         operator: In\n         values:\n         - master",
       "type": "object"
     },
     "helm-values.app": {
@@ -222,13 +242,11 @@
       "type": "object"
     },
     "helm-values.app.webhook.affinity": {
-      "default": {},
-      "description": "A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).\n\nFor example:\naffinity:\n  nodeAffinity:\n   requiredDuringSchedulingIgnoredDuringExecution:\n     nodeSelectorTerms:\n     - matchExpressions:\n       - key: foo.bar.com/role\n         operator: In\n         values:\n         - master",
+      "description": "Deprecated. Use .affinity instead.",
       "type": "object"
     },
     "helm-values.app.webhook.dnsPolicy": {
-      "default": "ClusterFirst",
-      "description": "This value may need to be changed if `hostNetwork: true`",
+      "description": "Deprecated. Use .dnsPolicy instead.",
       "type": "string"
     },
     "helm-values.app.webhook.host": {
@@ -237,13 +255,11 @@
       "type": "string"
     },
     "helm-values.app.webhook.hostNetwork": {
-      "default": false,
-      "description": "Boolean value, expose pod on hostNetwork.\nRequired when running a custom CNI in managed providers such as AWS EKS.\n\nFor more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).",
+      "description": "Deprecated. Use .hostNetwork instead.",
       "type": "boolean"
     },
     "helm-values.app.webhook.nodeSelector": {
-      "default": {},
-      "description": "The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
+      "description": "Deprecated. Use .nodeSelector instead.",
       "type": "object"
     },
     "helm-values.app.webhook.port": {
@@ -278,8 +294,7 @@
       "type": "number"
     },
     "helm-values.app.webhook.tolerations": {
-      "default": [],
-      "description": "A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).\n\nFor example:\ntolerations:\n- key: foo.bar.com/role\n  operator: Equal\n  value: master\n  effect: NoSchedule",
+      "description": "Deprecated. Use .tolerations instead.",
       "items": {},
       "type": "array"
     },
@@ -308,6 +323,16 @@
     "helm-values.crds.keep": {
       "default": true,
       "description": "This option makes it so that the \"helm.sh/resource-policy\": keep annotation is added to the CRD. This will prevent Helm from uninstalling the CRD when the Helm release is uninstalled. WARNING: when the CRDs are removed, all cert-manager custom resources\n(Certificates, Issuers, ...) will be removed too by the garbage collector.",
+      "type": "boolean"
+    },
+    "helm-values.dnsPolicy": {
+      "default": "ClusterFirst",
+      "description": "This value may need to be changed if `hostNetwork: true`",
+      "type": "string"
+    },
+    "helm-values.hostNetwork": {
+      "default": false,
+      "description": "Boolean value, expose pod on hostNetwork.\nRequired when running a custom CNI in managed providers such as AWS EKS.\n\nFor more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).",
       "type": "boolean"
     },
     "helm-values.image": {
@@ -359,6 +384,11 @@
       "items": {},
       "type": "array"
     },
+    "helm-values.nodeSelector": {
+      "default": {},
+      "description": "The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
+      "type": "object"
+    },
     "helm-values.podAnnotations": {
       "default": {},
       "description": "Allow custom annotations to be placed on cert-manager-approver pod - optional.",
@@ -401,6 +431,12 @@
       "default": {},
       "description": "Kubernetes pod resources.\nFor more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).\n\nFor example:\nresources:\n  limits:\n    cpu: 100m\n    memory: 128Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi",
       "type": "object"
+    },
+    "helm-values.tolerations": {
+      "default": [],
+      "description": "A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).\n\nFor example:\ntolerations:\n- key: foo.bar.com/role\n  operator: Equal\n  value: master\n  effect: NoSchedule",
+      "items": {},
+      "type": "array"
     },
     "helm-values.topologySpreadConstraints": {
       "default": [],

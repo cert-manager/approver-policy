@@ -181,6 +181,26 @@ The port that the webhook listens on.
 > ```
 
 The timeout of webhook HTTP request.
+#### **app.webhook.hostNetwork** ~ `bool`
+
+Deprecated. Use .hostNetwork instead.
+
+#### **app.webhook.dnsPolicy** ~ `string`
+
+Deprecated. Use .dnsPolicy instead.
+
+#### **app.webhook.affinity** ~ `object`
+
+Deprecated. Use .affinity instead.
+
+#### **app.webhook.nodeSelector** ~ `object`
+
+Deprecated. Use .nodeSelector instead.
+
+#### **app.webhook.tolerations** ~ `array`
+
+Deprecated. Use .tolerations instead.
+
 #### **app.webhook.service.type** ~ `string`
 > Default value:
 > ```yaml
@@ -192,7 +212,7 @@ The type of Kubernetes Service used by the webhook.
 
 The nodePort set on the Service used by the webhook.
 
-#### **app.webhook.hostNetwork** ~ `bool`
+#### **hostNetwork** ~ `bool`
 > Default value:
 > ```yaml
 > false
@@ -202,14 +222,14 @@ Boolean value, expose pod on hostNetwork.
 Required when running a custom CNI in managed providers such as AWS EKS.  
   
 For more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).
-#### **app.webhook.dnsPolicy** ~ `string`
+#### **dnsPolicy** ~ `string`
 > Default value:
 > ```yaml
 > ClusterFirst
 > ```
 
 This value may need to be changed if `hostNetwork: true`
-#### **app.webhook.affinity** ~ `object`
+#### **affinity** ~ `object`
 > Default value:
 > ```yaml
 > {}
@@ -230,14 +250,14 @@ affinity:
          values:
          - master
 ```
-#### **app.webhook.nodeSelector** ~ `object`
+#### **nodeSelector** ~ `object`
 > Default value:
 > ```yaml
 > {}
 > ```
 
 The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
-#### **app.webhook.tolerations** ~ `array`
+#### **tolerations** ~ `array`
 > Default value:
 > ```yaml
 > []
