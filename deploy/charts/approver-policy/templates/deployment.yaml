@@ -75,8 +75,8 @@ spec:
       {{- toYaml . | nindent 6 }}
       {{- end }}
 
-      hostNetwork: {{ .Values.app.webhook.hostNetwork }}
-      dnsPolicy: {{ .Values.app.webhook.dnsPolicy }}
+      hostNetwork: {{ (or .Values.app.webhook.hostNetwork .Values.hostNetwork) }}
+      dnsPolicy: {{ (or .Values.app.webhook.dnsPolicy .Values.dnsPolicy) }}
       {{- with (or .Values.nodeSelector .Values.app.webhook.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
