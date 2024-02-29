@@ -210,6 +210,18 @@ For more information, see [AWS EKS](https://cert-manager.io/docs/installation/co
 
 This value may need to be changed if `hostNetwork: true`
 #### **app.webhook.affinity** ~ `object`
+
+Deprecated. Use .affinity instead.
+
+#### **app.webhook.nodeSelector** ~ `object`
+
+Deprecated. Use .nodeSelector instead.
+
+#### **app.webhook.tolerations** ~ `array`
+
+Deprecated. Use .tolerations instead.
+
+#### **affinity** ~ `object`
 > Default value:
 > ```yaml
 > {}
@@ -230,14 +242,14 @@ affinity:
          values:
          - master
 ```
-#### **app.webhook.nodeSelector** ~ `object`
+#### **nodeSelector** ~ `object`
 > Default value:
 > ```yaml
 > {}
 > ```
 
 The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
-#### **app.webhook.tolerations** ~ `array`
+#### **tolerations** ~ `array`
 > Default value:
 > ```yaml
 > []
