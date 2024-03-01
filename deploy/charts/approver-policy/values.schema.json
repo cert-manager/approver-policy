@@ -322,7 +322,7 @@
     },
     "helm-values.crds.keep": {
       "default": true,
-      "description": "This option makes it so that the \"helm.sh/resource-policy\": keep annotation is added to the CRD. This will prevent Helm from uninstalling the CRD when the Helm release is uninstalled. WARNING: when the CRDs are removed, all cert-manager custom resources\n(Certificates, Issuers, ...) will be removed too by the garbage collector.",
+      "description": "This option makes it so that the \"helm.sh/resource-policy\": keep annotation is added to the CRD. This will prevent Helm from uninstalling the CRD when the Helm release is uninstalled. WARNING: when the CRDs are removed, all cert-manager-approver-policy custom resources\n(CertificateRequestPolicy) will be removed too by the garbage collector.",
       "type": "boolean"
     },
     "helm-values.dnsPolicy": {
