@@ -6,11 +6,23 @@ crds:
   # This option makes it so that the "helm.sh/resource-policy": keep
   # annotation is added to the CRD. This will prevent Helm from uninstalling
   # the CRD when the Helm release is uninstalled.
-  # WARNING: when the CRDs are removed, all cert-manager custom resources
-  # (Certificates, Issuers, ...) will be removed too by the garbage collector.
+  # WARNING: when the CRDs are removed, all cert-manager-approver-policy custom resources
+  # (CertificateRequestPolicy) will be removed too by the garbage collector.
   keep: true
 
 # Number of replicas of approver-policy to run.
+#
+# For example:
+#  Use integer to set a fixed number of replicas
+#   replicaCount: 2
+#
+#  Use null, if you want to omit the replicas field and use the Kubernetes default value.
+#   replicaCount: null
+#
+#  Use a string if you want to insert a variable for post-processing of the rendered template.
+#   replicaCount: ${REPLICAS_OVERRIDE:=3}
+#
+# +docs:type=number,string,null
 replicaCount: 1
 
 image:

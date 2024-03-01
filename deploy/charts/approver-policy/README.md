@@ -19,15 +19,37 @@ This option decides if the CRDs should be installed as part of the Helm installa
 > true
 > ```
 
-This option makes it so that the "helm.sh/resource-policy": keep annotation is added to the CRD. This will prevent Helm from uninstalling the CRD when the Helm release is uninstalled. WARNING: when the CRDs are removed, all cert-manager custom resources  
-(Certificates, Issuers, ...) will be removed too by the garbage collector.
-#### **replicaCount** ~ `number`
+This option makes it so that the "helm.sh/resource-policy": keep annotation is added to the CRD. This will prevent Helm from uninstalling the CRD when the Helm release is uninstalled. WARNING: when the CRDs are removed, all cert-manager-approver-policy custom resources  
+(CertificateRequestPolicy) will be removed too by the garbage collector.
+#### **replicaCount** ~ `number,string,null`
 > Default value:
 > ```yaml
 > 1
 > ```
 
-Number of replicas of approver-policy to run.
+Number of replicas of approver-policy to run.  
+  
+For example:  
+ Use integer to set a fixed number of replicas
+
+```yaml
+replicaCount: 2
+```
+
+Use null, if you want to omit the replicas field and use the Kubernetes default value.
+
+```yaml
+replicaCount: null
+```
+
+Use a string if you want to insert a variable for post-processing of the rendered template.
+
+```yaml
+replicaCount: ${REPLICAS_OVERRIDE:=3}
+```
+
+
+
 #### **image.registry** ~ `string`
 
 Target image registry. This value is prepended to the target image repository, if set.  
