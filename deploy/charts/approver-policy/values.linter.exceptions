@@ -1,5 +1,0 @@
-# Some false postives
-# See https://github.com/cert-manager/helm-tool/issues/27
-value missing from templates: tolerations
-value missing from templates: affinity
-value missing from templates: nodeSelector
