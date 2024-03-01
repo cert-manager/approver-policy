@@ -1,3 +1,8 @@
+# nameOverride replaces the name of the chart in the Chart.yaml file, when this
+# is used to construct Kubernetes object names.
+# +docs:property
+# nameOverride: approver-policy
+
 crds:
   # This option decides if the CRDs should be installed
   # as part of the Helm installation.
