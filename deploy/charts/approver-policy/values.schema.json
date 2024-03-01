@@ -18,6 +18,9 @@
         "dnsPolicy": {
           "$ref": "#/$defs/helm-values.dnsPolicy"
         },
+        "global": {
+          "$ref": "#/$defs/helm-values.global"
+        },
         "hostNetwork": {
           "$ref": "#/$defs/helm-values.hostNetwork"
         },
@@ -332,6 +335,9 @@
       "default": "ClusterFirst",
       "description": "This value may need to be changed if `hostNetwork: true`",
       "type": "string"
+    },
+    "helm-values.global": {
+      "description": "Global values shared across all (sub)charts"
     },
     "helm-values.hostNetwork": {
       "default": false,
