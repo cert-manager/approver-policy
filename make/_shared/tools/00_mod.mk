@@ -329,7 +329,7 @@ $(call for_each_kv,go_tags_defs,$(GO_TAGS))
 
 define go_dependency
 $$(bin_dir)/downloaded/tools/$1@$($(call UC,$1)_VERSION)_%: | $$(NEEDS_GO) $$(bin_dir)/downloaded/tools
-	GOWORK=off GOBIN=$$(CURDIR)/$$(dir $$@) $$(GO) install --tags "$(trim $(go_tags_$1))" $2@$($(call UC,$1)_VERSION)
+	GOWORK=off GOBIN=$$(CURDIR)/$$(dir $$@) $$(GO) install --tags "$(strip $(go_tags_$1))" $2@$($(call UC,$1)_VERSION)
 	@mv $$(CURDIR)/$$(dir $$@)/$1 $$@
 endef
 $(call for_each_kv,go_dependency,$(GO_DEPENDENCIES))
