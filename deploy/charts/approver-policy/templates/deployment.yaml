@@ -10,6 +10,10 @@ spec:
   selector:
     matchLabels:
       app: {{ include "cert-manager-approver-policy.name" . }}
+  {{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       labels:

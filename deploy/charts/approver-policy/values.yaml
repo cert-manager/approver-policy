@@ -250,3 +250,23 @@ commonLabels: {}
 
 # Allow custom annotations to be placed on cert-manager-approver pod - optional.
 podAnnotations: {}
+
+# Deployment update strategy for the approver-policy Deployment.
+#
+# This could be needed when deploying approver-policy on each control-plane node
+# and setting anti-affinities to forbid two pods on the same node. In this
+# situation, default values of maxSurge (25% round up to next integer = 1) and
+# maxUnavailable (25% round down to next integer = 0) block the rolling update
+# as the new surge pod can't be scheduled on a control-plane node due to
+# anti-affinities. Setting maxSurge to 0 and maxUnavailable to 1 would solve the
+# problem.
+#
+# For example:
+#  strategy:
+#    type: RollingUpdate
+#    rollingUpdate:
+#      maxSurge: 0
+#      maxUnavailable: 1
+#
+# For more information, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy).
+strategy: {}
