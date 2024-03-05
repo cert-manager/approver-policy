@@ -48,6 +48,9 @@
         "resources": {
           "$ref": "#/$defs/helm-values.resources"
         },
+        "strategy": {
+          "$ref": "#/$defs/helm-values.strategy"
+        },
         "tolerations": {
           "$ref": "#/$defs/helm-values.tolerations"
         },
@@ -442,6 +445,11 @@
     "helm-values.resources": {
       "default": {},
       "description": "Kubernetes pod resources.\nFor more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).\n\nFor example:\nresources:\n  limits:\n    cpu: 100m\n    memory: 128Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi",
+      "type": "object"
+    },
+    "helm-values.strategy": {
+      "default": {},
+      "description": "Deployment update strategy for the approver-policy Deployment.\n\nThis could be needed when deploying approver-policy on each control-plane node and setting anti-affinities to forbid two pods on the same node. In this situation, default values of maxSurge (25% round up to next integer = 1) and maxUnavailable (25% round down to next integer = 0) block the rolling update as the new surge pod can't be scheduled on a control-plane node due to anti-affinities. Setting maxSurge to 0 and maxUnavailable to 1 would solve the problem.\n\nFor example:\nstrategy:\n  type: RollingUpdate\n  rollingUpdate:\n    maxSurge: 0\n    maxUnavailable: 1\nFor more information, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy).",
       "type": "object"
     },
     "helm-values.tolerations": {
