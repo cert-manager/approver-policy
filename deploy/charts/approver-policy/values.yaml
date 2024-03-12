@@ -152,6 +152,17 @@ hostNetwork: false
 # This value may need to be changed if `hostNetwork: true`
 dnsPolicy: ClusterFirst
 
+# Configure the priority class of the Pod.
+#
+# For more information, see:
+# * [Guaranteed Scheduling For Critical Add-On Pods](https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/)
+# * [Protect Your Mission-Critical Pods From Eviction With PriorityClass](https://kubernetes.io/blog/2023/01/12/protect-mission-critical-pods-priorityclass/)
+#
+# For example:
+#   priorityClassName: system-cluster-critical
+#
+priorityClassName: ""
+
 # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
 #
 # For example:
@@ -213,7 +224,6 @@ podDisruptionBudget:
   # Cannot be used if `minAvailable` is set.
   # +docs:property
   # maxUnavailable: 1
-
 
 # Optional extra volume mounts. Useful for mounting custom root CAs.
 #

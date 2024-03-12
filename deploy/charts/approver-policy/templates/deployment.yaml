@@ -81,6 +81,9 @@ spec:
 
       hostNetwork: {{ (or .Values.app.webhook.hostNetwork .Values.hostNetwork) }}
       dnsPolicy: {{ (or .Values.app.webhook.dnsPolicy .Values.dnsPolicy) }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
       {{- with (or .Values.app.webhook.nodeSelector .Values.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

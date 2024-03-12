@@ -6,6 +6,10 @@
 ⚠️  WARNING: Consider setting the Helm value `podDisruptionBudget.enabled` to true if you require high availability.
 {{- end }}
 
+{{- if (not .Values.priorityClassName) }}
+⚠️  WARNING: Consider setting the Helm value `priorityClassName` if you require high availability.
+{{- end }}
+
 {{- if .Values.app.webhook.affinity }}
 ⚠️  WARNING: The Helm value `.app.webhook.affinity` is deprecated. Use `.affinity` instead.
 {{- end }}
