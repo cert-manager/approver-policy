@@ -42,6 +42,9 @@
         "podDisruptionBudget": {
           "$ref": "#/$defs/helm-values.podDisruptionBudget"
         },
+        "priorityClassName": {
+          "$ref": "#/$defs/helm-values.priorityClassName"
+        },
         "replicaCount": {
           "$ref": "#/$defs/helm-values.replicaCount"
         },
@@ -437,6 +440,11 @@
     "helm-values.podDisruptionBudget.minAvailable": {
       "description": "Configures the minimum available pods for disruptions.\nCannot be used if `maxUnavailable` is set.",
       "type": "number"
+    },
+    "helm-values.priorityClassName": {
+      "default": "",
+      "description": "Configure the priority class of the Pod.\n\nFor more information, see:\n* [Guaranteed Scheduling For Critical Add-On Pods](https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/)\n* [Protect Your Mission-Critical Pods From Eviction With PriorityClass](https://kubernetes.io/blog/2023/01/12/protect-mission-critical-pods-priorityclass/)\n\nFor example:\npriorityClassName: system-cluster-critical",
+      "type": "string"
     },
     "helm-values.replicaCount": {
       "default": 1,
