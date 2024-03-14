@@ -255,6 +255,25 @@ For more information, see [AWS EKS](https://cert-manager.io/docs/installation/co
 > ```
 
 This value may need to be changed if `hostNetwork: true`
+#### **priorityClassName** ~ `string`
+> Default value:
+> ```yaml
+> ""
+> ```
+
+Configure the priority class of the Pod.  
+  
+For more information, see:  
+* [Guaranteed Scheduling For Critical Add-On Pods](https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/)  
+* [Protect Your Mission-Critical Pods From Eviction With PriorityClass](https://kubernetes.io/blog/2023/01/12/protect-mission-critical-pods-priorityclass/)  
+  
+For example:
+
+```yaml
+priorityClassName: system-cluster-critical
+```
+
+
 #### **affinity** ~ `object`
 > Default value:
 > ```yaml
