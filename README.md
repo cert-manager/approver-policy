@@ -5,6 +5,7 @@
   <a href="https://godoc.org/github.com/cert-manager/approver-policy"><img src="https://godoc.org/github.com/cert-manager/approver-policy?status.svg" alt="approver-policy godoc"></a>
   <a href="https://goreportcard.com/report/github.com/cert-manager/approver-policy"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/cert-manager/approver-policy" /></a>
   <a href="https://artifacthub.io/packages/search?repo=cert-manager"><img alt="Artifact Hub" src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/cert-manager" /></a>
+  <a href="https://github.com/cert-manager/approver-policy/actions/workflows/govulncheck.yaml"><img alt="govulncheck" src="https://github.com/cert-manager/approver-policy/actions/workflows/govulncheck.yaml/badge.svg" /></a>
 </p>
 
 # approver-policy
