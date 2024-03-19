@@ -568,7 +568,7 @@ $(bin_dir)/downloaded/tools/rclone@$(RCLONE_VERSION)_%: | $(bin_dir)/downloaded/
 # That means we need to pass vendor-go at the top level if go is not installed (i.e. "make vendor-go abc")
 
 MISSING=$(shell (command -v curl >/dev/null || echo curl) \
-             && (command -v sha256sum >/dev/null || echo sha256sum) \
+             && (command -v sha256sum >/dev/null || command -v shasum >/dev/null || echo sha256sum) \
              && (command -v git >/dev/null || echo git) \
              && ([ -n "$(findstring vendor-go,$(MAKECMDGOALS),)" ] \
                 || command -v $(GO) >/dev/null || echo "$(GO) (or run 'make vendor-go')") \
