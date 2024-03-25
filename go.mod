@@ -7,8 +7,8 @@ require (
 	github.com/go-logr/logr v1.4.1
 	github.com/google/cel-go v0.17.7
 	github.com/google/go-cmp v0.6.0
-	github.com/onsi/ginkgo/v2 v2.16.0
-	github.com/onsi/gomega v1.31.1
+	github.com/onsi/ginkgo/v2 v2.17.1
+	github.com/onsi/gomega v1.32.0
 	github.com/prometheus/client_golang v1.19.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
