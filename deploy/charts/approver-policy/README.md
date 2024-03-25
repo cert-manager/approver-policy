@@ -10,6 +10,18 @@
 
 nameOverride replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names.
 
+#### **http_proxy** ~ `string`
+
+Configures the HTTP_PROXY environment variable where a HTTP proxy is required.
+
+#### **https_proxy** ~ `string`
+
+Configures the HTTPS_PROXY environment variable where a HTTP proxy is required.
+
+#### **no_proxy** ~ `string`
+
+Configures the NO_PROXY environment variable where a HTTP proxy is required, but certain domains should be excluded.
+
 #### **crds.enabled** ~ `bool`
 > Default value:
 > ```yaml
