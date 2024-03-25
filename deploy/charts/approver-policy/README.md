@@ -119,7 +119,7 @@ Extra CLI arguments that will be passed to the approver-policy process.
 > - clusterissuers.cert-manager.io/*
 > ```
 
-List if signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy.  
+List of signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy.  
   
 ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
 
