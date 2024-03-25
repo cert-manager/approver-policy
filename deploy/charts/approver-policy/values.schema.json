@@ -24,6 +24,12 @@
         "hostNetwork": {
           "$ref": "#/$defs/helm-values.hostNetwork"
         },
+        "http_proxy": {
+          "$ref": "#/$defs/helm-values.http_proxy"
+        },
+        "https_proxy": {
+          "$ref": "#/$defs/helm-values.https_proxy"
+        },
         "image": {
           "$ref": "#/$defs/helm-values.image"
         },
@@ -32,6 +38,9 @@
         },
         "nameOverride": {
           "$ref": "#/$defs/helm-values.nameOverride"
+        },
+        "no_proxy": {
+          "$ref": "#/$defs/helm-values.no_proxy"
         },
         "nodeSelector": {
           "$ref": "#/$defs/helm-values.nodeSelector"
@@ -350,6 +359,14 @@
       "description": "Boolean value, expose pod on hostNetwork.\nRequired when running a custom CNI in managed providers such as AWS EKS.\n\nFor more information, see [AWS EKS](https://cert-manager.io/docs/installation/compatibility/#aws-eks).",
       "type": "boolean"
     },
+    "helm-values.http_proxy": {
+      "description": "Configures the HTTP_PROXY environment variable where a HTTP proxy is required.",
+      "type": "string"
+    },
+    "helm-values.https_proxy": {
+      "description": "Configures the HTTPS_PROXY environment variable where a HTTP proxy is required.",
+      "type": "string"
+    },
     "helm-values.image": {
       "additionalProperties": false,
       "properties": {
@@ -401,6 +418,10 @@
     },
     "helm-values.nameOverride": {
       "description": "nameOverride replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names.",
+      "type": "string"
+    },
+    "helm-values.no_proxy": {
+      "description": "Configures the NO_PROXY environment variable where a HTTP proxy is required, but certain domains should be excluded.",
       "type": "string"
     },
     "helm-values.nodeSelector": {

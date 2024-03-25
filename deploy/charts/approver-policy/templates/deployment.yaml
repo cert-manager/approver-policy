@@ -74,6 +74,22 @@ spec:
           capabilities: { drop: ["ALL"] }
           readOnlyRootFilesystem: true
 
+        {{- if or .Values.http_proxy .Values.https_proxy .Values.no_proxy }}
+        env:
+        {{- with .Values.http_proxy }}
+        - name: HTTP_PROXY
+          value: {{ . }}
+        {{- end }}
+        {{- with .Values.https_proxy }}
+        - name: HTTPS_PROXY
+          value: {{ . }}
+        {{- end }}
+        {{- with .Values.no_proxy }}
+        - name: NO_PROXY
+          value: {{ . }}
+        {{- end }}
+        {{- end }}
+
       {{- with .Values.volumes }}
       volumes:
       {{- toYaml . | nindent 6 }}
