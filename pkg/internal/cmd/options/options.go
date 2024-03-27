@@ -98,7 +98,9 @@ func (o *Options) Prepare(cmd *cobra.Command, approvers ...approver.Interface) *
 func (o *Options) Complete() error {
 	klog.InitFlags(nil)
 	log := klog.TODO()
-	flag.Set("v", o.logLevel)
+	if err := flag.Set("v", o.logLevel); err != nil {
+		return fmt.Errorf("failed to set log level: %s", err)
+	}
 	o.Logr = log
 
 	var err error
@@ -179,5 +181,7 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 			"Certificate and private key must be named 'tls.crt' and 'tls.key' "+
 			"respectively.")
 
-	fs.MarkDeprecated("webhook-certificate-dir", "webhook-certificate-dir is deprecated")
+	if err := fs.MarkDeprecated("webhook-certificate-dir", "webhook-certificate-dir is deprecated"); err != nil {
+		panic(err)
+	}
 }

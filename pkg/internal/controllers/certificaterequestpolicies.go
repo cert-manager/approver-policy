@@ -89,7 +89,7 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 	// Only setup generic event triggers if at least one Reconciler gave an
 	// enqueue channel.
 	if len(enqueueListSelect) > 0 {
-		opts.Manager.Add(manager.RunnableFunc(func(ctx context.Context) error {
+		if err := opts.Manager.Add(manager.RunnableFunc(func(ctx context.Context) error {
 			enqueueListSelect = append(enqueueListSelect, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
 
 			for {
@@ -113,7 +113,9 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 					// Continue with loop
 				}
 			}
-		}))
+		})); err != nil {
+			return fmt.Errorf("failed to add CertificateRequestPolicy generic event watcher: %w", err)
+		}
 	}
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
