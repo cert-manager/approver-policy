@@ -143,7 +143,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			expError:  false,
 			expStatusPatch: &cmapi.CertificateRequestStatus{
 				Conditions: []cmapi.CertificateRequestCondition{
-					cmapi.CertificateRequestCondition{
+					{
 						Type:               cmapi.CertificateRequestConditionDenied,
 						Status:             cmmeta.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
@@ -163,7 +163,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			expError:  false,
 			expStatusPatch: &cmapi.CertificateRequestStatus{
 				Conditions: []cmapi.CertificateRequestCondition{
-					cmapi.CertificateRequestCondition{
+					{
 						Type:               cmapi.CertificateRequestConditionApproved,
 						Status:             cmmeta.ConditionTrue,
 						LastTransitionTime: fixedmetatime,

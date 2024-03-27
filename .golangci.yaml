@@ -13,7 +13,6 @@ issues:
         - gosec
         - unparam
         - gocritic
-        - gofmt
       text: ".*"
 linters:
   # Explicitly define all enabled linters

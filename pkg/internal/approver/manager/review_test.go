@@ -78,7 +78,7 @@ func Test_Review(t *testing.T) {
 					return nil, errors.New("this is an error")
 				}
 			},
-			policies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			policies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
@@ -92,7 +92,7 @@ func Test_Review(t *testing.T) {
 					return nil, nil
 				}
 			},
-			policies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			policies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
@@ -107,13 +107,13 @@ func Test_Review(t *testing.T) {
 			},
 			predicate: func(t *testing.T) predicate.Predicate {
 				return func(_ context.Context, _ *cmapi.CertificateRequest, _ []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
-					return []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+					return []policyapi.CertificateRequestPolicy{{
 						ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 						Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 					}}, nil
 				}
 			},
-			policies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			policies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
@@ -128,13 +128,13 @@ func Test_Review(t *testing.T) {
 			},
 			predicate: func(t *testing.T) predicate.Predicate {
 				return func(_ context.Context, _ *cmapi.CertificateRequest, _ []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
-					return []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+					return []policyapi.CertificateRequestPolicy{{
 						ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 						Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 					}}, nil
 				}
 			},
-			policies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			policies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
@@ -153,11 +153,11 @@ func Test_Review(t *testing.T) {
 			predicate: func(t *testing.T) predicate.Predicate {
 				return func(_ context.Context, _ *cmapi.CertificateRequest, _ []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 					return []policyapi.CertificateRequestPolicy{
-						policyapi.CertificateRequestPolicy{
+						{
 							ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 							Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 						},
-						policyapi.CertificateRequestPolicy{
+						{
 							ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 							Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 						},
@@ -165,11 +165,11 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
@@ -186,11 +186,11 @@ func Test_Review(t *testing.T) {
 			predicate: func(t *testing.T) predicate.Predicate {
 				return func(_ context.Context, _ *cmapi.CertificateRequest, _ []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 					return []policyapi.CertificateRequestPolicy{
-						policyapi.CertificateRequestPolicy{
+						{
 							ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 							Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 						},
-						policyapi.CertificateRequestPolicy{
+						{
 							ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 							Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 						},
@@ -198,11 +198,11 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},

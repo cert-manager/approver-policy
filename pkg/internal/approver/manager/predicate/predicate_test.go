@@ -82,7 +82,7 @@ func Test_RBACBound(t *testing.T) {
 		},
 		"if single CertificateRequestPolicy exists but not bound, return nothing": {
 			apiObjects: []client.Object{},
-			policies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			policies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -93,13 +93,13 @@ func Test_RBACBound(t *testing.T) {
 		"if multiple CertificateRequestPolicy exists but not bound, return nothing": {
 			apiObjects: []client.Object{},
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -122,13 +122,13 @@ func Test_RBACBound(t *testing.T) {
 					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
 				},
 			},
-			policies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			policies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				}},
 			}},
-			expPolicies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			expPolicies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -149,13 +149,13 @@ func Test_RBACBound(t *testing.T) {
 					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
 				},
 			},
-			policies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			policies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				}},
 			}},
-			expPolicies: []policyapi.CertificateRequestPolicy{policyapi.CertificateRequestPolicy{
+			expPolicies: []policyapi.CertificateRequestPolicy{{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -179,13 +179,13 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -193,13 +193,13 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -224,13 +224,13 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -238,13 +238,13 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -280,13 +280,13 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -294,13 +294,13 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -336,25 +336,25 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-c"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-d"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -362,13 +362,13 @@ func Test_RBACBound(t *testing.T) {
 				},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
-				policyapi.CertificateRequestPolicy{
+				{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -429,7 +429,7 @@ func Test_Ready(t *testing.T) {
 		},
 		"single policy with ready condition false should return no policies": {
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionFalse},
 				}}},
 			},
@@ -437,59 +437,59 @@ func Test_Ready(t *testing.T) {
 		},
 		"single policy with ready condition true should return policy": {
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 				}}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 				}}},
 			},
 		},
 		"one policy which is ready another not, return single policy": {
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionFalse},
 				}}},
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 				}}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 				}}},
 			},
 		},
 		"mix of different conditions including ready should return only ready policies": {
 			policies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionFalse},
 					{Type: "C", Status: corev1.ConditionTrue},
 				}}},
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 					{Type: "B", Status: corev1.ConditionTrue},
 				}}},
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 					{Type: "A", Status: corev1.ConditionTrue},
 				}}},
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 				}}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 					{Type: "B", Status: corev1.ConditionTrue},
 				}}},
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 					{Type: "A", Status: corev1.ConditionTrue},
 				}}},
-				policyapi.CertificateRequestPolicy{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: corev1.ConditionTrue},
 				}}},
 			},
