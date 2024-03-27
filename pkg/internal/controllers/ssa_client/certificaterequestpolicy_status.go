@@ -19,10 +19,11 @@ package ssa_client
 import (
 	"encoding/json"
 
-	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 )
 
 type certificateRequestPolicyStatusStatusApplyConfiguration struct {

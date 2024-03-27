@@ -22,9 +22,10 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	"github.com/cert-manager/approver-policy/pkg/internal/cmd"
+
 	_ "github.com/cert-manager/approver-policy/pkg/internal/approver/allowed"
 	_ "github.com/cert-manager/approver-policy/pkg/internal/approver/constraints"
-	"github.com/cert-manager/approver-policy/pkg/internal/cmd"
 )
 
 // ExecutePolicyApprover executes the main approver-policy program making use

@@ -20,9 +20,10 @@ import (
 	"context"
 	"testing"
 
-	testenv "github.com/cert-manager/approver-policy/test/env"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+
+	testenv "github.com/cert-manager/approver-policy/test/env"
 )
 
 // Test_Controllers runs the full suite of tests for the approver-policy

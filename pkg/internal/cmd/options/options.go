@@ -20,10 +20,6 @@ import (
 	"flag"
 	"fmt"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
 	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -34,6 +30,10 @@ import (
 	"k8s.io/klog/v2/klogr"
 
 	"github.com/cert-manager/approver-policy/pkg/approver"
+
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 // Options are the main options for the approver-policy. Populated via
