@@ -12,7 +12,6 @@ issues:
         - errorlint
         - gosec
         - unparam
-        - gocritic
       text: ".*"
 linters:
   # Explicitly define all enabled linters
