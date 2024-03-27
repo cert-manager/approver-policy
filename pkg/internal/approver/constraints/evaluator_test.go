@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -122,7 +122,7 @@ func Test_Evaluate(t *testing.T) {
 				Constraints: &policyapi.CertificateRequestPolicyConstraints{
 					PrivateKey: &policyapi.CertificateRequestPolicyConstraintsPrivateKey{
 						Algorithm: &ecdsaAlg,
-						MinSize:   pointer.Int(4000),
+						MinSize:   ptr.To(4000),
 					},
 				},
 			},
@@ -142,7 +142,7 @@ func Test_Evaluate(t *testing.T) {
 				Constraints: &policyapi.CertificateRequestPolicyConstraints{
 					PrivateKey: &policyapi.CertificateRequestPolicyConstraintsPrivateKey{
 						Algorithm: &rsaAlg,
-						MaxSize:   pointer.Int(200),
+						MaxSize:   ptr.To(200),
 					},
 				},
 			},

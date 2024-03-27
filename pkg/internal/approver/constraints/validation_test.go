@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -57,8 +57,8 @@ func Test_Validate(t *testing.T) {
 					Constraints: &policyapi.CertificateRequestPolicyConstraints{
 						PrivateKey: &policyapi.CertificateRequestPolicyConstraintsPrivateKey{
 							Algorithm: &badAlg,
-							MinSize:   pointer.Int(9999),
-							MaxSize:   pointer.Int(-1),
+							MinSize:   ptr.To(9999),
+							MaxSize:   ptr.To(-1),
 						},
 						MinDuration: &metav1.Duration{Duration: -time.Minute},
 						MaxDuration: &metav1.Duration{Duration: -2 * time.Minute},
@@ -84,8 +84,8 @@ func Test_Validate(t *testing.T) {
 					Constraints: &policyapi.CertificateRequestPolicyConstraints{
 						PrivateKey: &policyapi.CertificateRequestPolicyConstraintsPrivateKey{
 							Algorithm: &edAlg,
-							MinSize:   pointer.Int(100),
-							MaxSize:   pointer.Int(500),
+							MinSize:   ptr.To(100),
+							MaxSize:   ptr.To(500),
 						},
 					},
 				},
@@ -104,8 +104,8 @@ func Test_Validate(t *testing.T) {
 					Constraints: &policyapi.CertificateRequestPolicyConstraints{
 						PrivateKey: &policyapi.CertificateRequestPolicyConstraintsPrivateKey{
 							Algorithm: &rsaAlg,
-							MinSize:   pointer.Int(100),
-							MaxSize:   pointer.Int(500),
+							MinSize:   ptr.To(100),
+							MaxSize:   ptr.To(500),
 						},
 						MinDuration: &metav1.Duration{Duration: 0},
 						MaxDuration: &metav1.Duration{Duration: 2 * time.Minute},

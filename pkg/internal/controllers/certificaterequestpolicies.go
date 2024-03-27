@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -151,7 +151,7 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 		if err := c.client.Status().Patch(ctx, crp, patch, &client.SubResourcePatchOptions{
 			PatchOptions: client.PatchOptions{
 				FieldManager: "approver-policy",
-				Force:        pointer.Bool(true),
+				Force:        ptr.To(true),
 			},
 		}); err != nil {
 			err = fmt.Errorf("failed to apply CertificateRequestPolicy.Status patch: %w", err)

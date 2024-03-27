@@ -24,7 +24,7 @@ import (
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/komega"
 
@@ -244,7 +244,7 @@ var _ = Context("Review", func() {
 		}
 		policyDeny2 := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: pointer.String("foo.example.com")}},
+				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
@@ -324,7 +324,7 @@ var _ = Context("Review", func() {
 		policyDeny2 := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: pointer.String("foo.example.com")}},
+				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
@@ -356,7 +356,7 @@ var _ = Context("Review", func() {
 		policyDeny2 := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: pointer.String("foo.example.com")}},
+				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}

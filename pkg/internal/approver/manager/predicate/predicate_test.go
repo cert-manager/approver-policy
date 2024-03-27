@@ -28,7 +28,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -530,7 +530,7 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
 					}},
 				}},
 			},
@@ -540,12 +540,12 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("name-2"), Kind: pointer.String("kind-2"), Group: pointer.String("group-2"),
+						Name: ptr.To("name-2"), Kind: ptr.To("kind-2"), Group: ptr.To("group-2"),
 					}},
 				}},
 			},
@@ -558,7 +558,7 @@ func Test_SelectorIssuerRef(t *testing.T) {
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
 					}},
 				}},
 			},
@@ -572,19 +572,19 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 			},
@@ -611,24 +611,24 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 			},
@@ -637,19 +637,19 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
 					}},
 				}},
 			},
@@ -658,39 +658,39 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("name"), Kind: pointer.String("kind"), Group: pointer.String("group"),
+						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("test-*"), Kind: pointer.String("*-kind"), Group: pointer.String("*up"),
+						Name: ptr.To("test-*"), Kind: ptr.To("*-kind"), Group: ptr.To("*up"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("test-name"), Kind: pointer.String("test-kind"), Group: pointer.String("test-group"),
+						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("test-*"), Kind: pointer.String("*-kind"), Group: pointer.String("*up"),
+						Name: ptr.To("test-*"), Kind: ptr.To("*-kind"), Group: ptr.To("*up"),
 					}},
 				}},
 			},
