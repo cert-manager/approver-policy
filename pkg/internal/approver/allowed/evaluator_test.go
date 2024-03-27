@@ -51,14 +51,14 @@ func Test_Evaluate(t *testing.T) {
 		expErr      bool
 	}{
 		"if no allowed defined, no attributes set in request, return NotDenied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA))),
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t))),
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: nil,
 			},
 			expResponse: approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: ""},
 		},
 		"if no allowed defined, all attributes set in request, return Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("hello-world"),
 				gen.SetCSRDNSNames("example.com", "foo.bar"),
 				gen.SetCSRIPAddresses(net.ParseIP("1.1.1.1"), net.ParseIP("2.3.4.5")),
@@ -101,7 +101,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if all allowed defined, all attributes set in request but are different, return Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("hello-world"),
 				gen.SetCSRDNSNames("example.com", "foo.bar"),
 				gen.SetCSRIPAddresses(net.ParseIP("1.1.1.1"), net.ParseIP("2.3.4.5")),
@@ -162,7 +162,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if all allowed defined, all attributes set in request and match exactly, return Not-Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("hello-world"),
 				gen.SetCSRDNSNames("example.com", "foo.bar", "*.example.com"),
 				gen.SetCSRIPAddresses(net.ParseIP("1.1.1.1"), net.ParseIP("2.3.4.5")),
@@ -207,7 +207,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if all allowed defined, all attributes set in request and match with wildcard, return Not-Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("hello-world"),
 				gen.SetCSRDNSNames("example.com", "foo.bar"),
 				gen.SetCSRIPAddresses(net.ParseIP("1.1.1.1"), net.ParseIP("2.3.4.5")),
@@ -252,7 +252,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if all allowed defined as required, none of the attributes are set, return Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA))),
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t))),
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
 					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: pointer.Bool(true), Value: pointer.String("*")},
@@ -292,7 +292,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if all allowed defined as required, all of the attributes are set, return Not-Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("hello-world"),
 				gen.SetCSRDNSNames("example.com", "foo.bar"),
 				gen.SetCSRIPAddresses(net.ParseIP("1.1.1.1"), net.ParseIP("2.3.4.5")),
@@ -332,7 +332,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if all has validation, but all attributes are invalid, return Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("hello-world"),
 				gen.SetCSRDNSNames("example.com", "foo.bar"),
 				gen.SetCSRIPAddresses(net.ParseIP("1.1.1.1"), net.ParseIP("2.3.4.5")),
@@ -388,7 +388,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if all has validation, and all attributes are valid, return Not-Denied": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("cn-1.foo.svc"),
 				gen.SetCSRDNSNames("cn-1.foo.svc"),
 				gen.SetCSRIPAddresses(net.ParseIP("10.0.1.14")),
@@ -428,7 +428,7 @@ func Test_Evaluate(t *testing.T) {
 			},
 		},
 		"if has values AND validations, both should apply": {
-			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA,
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t,
 				gen.SetCSRCommonName("hello-world"),
 				gen.SetCSRDNSNames("foo.com"),
 				gen.SetCSRURIs(uri1),
@@ -476,9 +476,9 @@ func noErrModifier(fn func(*x509.CertificateRequest)) func(*x509.CertificateRequ
 	}
 }
 
-func csrFrom(t *testing.T, keyAlgorithm x509.PublicKeyAlgorithm, mods ...gen.CSRModifier) []byte {
+func csrFrom(t *testing.T, mods ...gen.CSRModifier) []byte {
 	t.Helper()
-	csr, _, err := gen.CSR(keyAlgorithm, mods...)
+	csr, _, err := gen.CSR(x509.ECDSA, mods...)
 	if err != nil {
 		t.Fatal(err)
 	}

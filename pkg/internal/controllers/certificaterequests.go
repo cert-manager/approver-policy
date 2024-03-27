@@ -253,6 +253,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 // Update the status with the provided condition details & return
 // the added condition.
 // This function is copied from https://github.com/cert-manager/issuer-lib/blob/main/conditions/certificaterequest.go
+// nolint:unparam
 func setCertificateRequestStatusCondition(
 	clock clock.PassiveClock,
 	existingConditions []cmapi.CertificateRequestCondition,
