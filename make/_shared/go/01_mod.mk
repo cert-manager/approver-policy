@@ -20,7 +20,16 @@ ifndef repo_name
 $(error repo_name is not set)
 endif
 
+go_base_dir := $(dir $(lastword $(MAKEFILE_LIST)))/base/
 golangci_lint_override := $(dir $(lastword $(MAKEFILE_LIST)))/.golangci.override.yaml
+
+.PHONY: generate-govulncheck
+## Generate base files in the repository
+## @category [shared] Generate/ Verify
+generate-govulncheck:
+	cp -r $(go_base_dir)/. ./
+
+shared_generate_targets += generate-govulncheck
 
 .PHONY: verify-govulncheck
 ## Verify all Go modules for vulnerabilities using govulncheck
