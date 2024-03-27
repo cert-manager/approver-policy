@@ -17,9 +17,9 @@ limitations under the License.
 package test
 
 import (
-	. "github.com/onsi/ginkgo/v2"
-
 	testenv "github.com/cert-manager/approver-policy/test/env"
+
+	. "github.com/onsi/ginkgo/v2"
 )
 
 var (

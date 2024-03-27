@@ -19,10 +19,10 @@ package smoke
 import (
 	"flag"
 
+	"github.com/cert-manager/approver-policy/test/smoke/config"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/cert-manager/approver-policy/test/smoke/config"
 )
 
 var (
