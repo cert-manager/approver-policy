@@ -114,7 +114,7 @@ func RunControlPlane(t *testing.T, ctx context.Context, crdDirs ...string) *Envi
 	validationObject := getCMValidatingWebhookConfig(webhookOpts.URL, webhookOpts.CAPEM)
 	mutatationObject := getCMMutatingWebhookConfig(webhookOpts.URL, webhookOpts.CAPEM)
 	for _, crd := range append(crdObjects, validationObject, mutatationObject) {
-		if err := adminClient.Create(context.TODO(), crd); err != nil {
+		if err := adminClient.Create(ctx, crd); err != nil {
 			t.Fatalf("%s: %s", crd.GetName(), err)
 		}
 	}
