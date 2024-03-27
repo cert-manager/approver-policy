@@ -50,9 +50,7 @@ func (c constraints) Name() string {
 }
 
 // RegisterFlags is a no-op, constraints doesn't need any flags.
-func (c constraints) RegisterFlags(_ *pflag.FlagSet) {
-	return
-}
+func (c constraints) RegisterFlags(_ *pflag.FlagSet) {}
 
 // Prepare is a no-op, constraints doesn't need to prepare anything.
 func (c constraints) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {
