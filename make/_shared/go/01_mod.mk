@@ -16,6 +16,12 @@ ifndef bin_dir
 $(error bin_dir is not set)
 endif
 
+ifndef repo_name
+$(error repo_name is not set)
+endif
+
+golangci_lint_override := $(dir $(lastword $(MAKEFILE_LIST)))/.golangci.override.yaml
+
 .PHONY: verify-govulncheck
 ## Verify all Go modules for vulnerabilities using govulncheck
 ## @category [shared] Generate/ Verify
@@ -39,3 +45,60 @@ verify-govulncheck: | $(NEEDS_GOVULNCHECK)
 				popd >/dev/null; \
 				echo ""; \
 			done
+
+ifdef golangci_lint_config
+
+# see https://stackoverflow.com/a/53408233
+sed_inplace := sed -i''
+ifeq ($(HOST_OS),darwin)
+	sed_inplace := sed -i ''
+endif
+
+.PHONY: generate-golangci-lint-config
+## Generate a golangci-lint configuration file
+## @category [shared] Generate/ Verify
+generate-golangci-lint-config: | $(NEEDS_YQ) $(bin_dir)/scratch
+	cp $(golangci_lint_config) $(bin_dir)/scratch/golangci-lint.yaml.tmp
+	$(YQ) -i 'del(.linters.enable)' $(bin_dir)/scratch/golangci-lint.yaml.tmp
+	$(YQ) eval-all -i '. as $$item ireduce ({}; . * $$item)' $(bin_dir)/scratch/golangci-lint.yaml.tmp $(golangci_lint_override)
+	$(sed_inplace) 's|{{REPO-NAME}}|$(repo_name)|g' $(bin_dir)/scratch/golangci-lint.yaml.tmp
+	mv $(bin_dir)/scratch/golangci-lint.yaml.tmp $(golangci_lint_config)
+
+shared_generate_targets += generate-golangci-lint-config
+
+.PHONY: verify-golangci-lint
+## Verify all Go modules using golangci-lint
+## @category [shared] Generate/ Verify
+verify-golangci-lint: | $(NEEDS_GOLANGCI-LINT) $(NEEDS_YQ) $(bin_dir)/scratch
+	@find . -name go.mod -not \( -path "./$(bin_dir)/*" -or -path "./make/_shared/*" \) -printf '%h\n' \
+		| while read d; do \
+				echo "Running '$(bin_dir)/tools/golangci-lint run --go $(VENDORED_GO_VERSION) -c $(CURDIR)/$(golangci_lint_config)' in directory '$${d}'"; \
+				pushd "$${d}" >/dev/null; \
+				$(GOLANGCI-LINT) run --go $(VENDORED_GO_VERSION) -c $(CURDIR)/$(golangci_lint_config) || exit; \
+				popd >/dev/null; \
+				echo ""; \
+			done
+
+shared_verify_targets_dirty += verify-golangci-lint
+
+.PHONY: fix-golangci-lint
+## Fix all Go modules using golangci-lint
+## @category [shared] Generate/ Verify
+fix-golangci-lint: | $(NEEDS_GOLANGCI-LINT) $(NEEDS_YQ) $(bin_dir)/scratch
+	gci write \
+		-s "standard" \
+		-s "default" \
+		-s "prefix($(repo_name))" \
+		-s "blank" \
+		-s "dot" .
+
+	@find . -name go.mod -not \( -path "./$(bin_dir)/*" -or -path "./make/_shared/*" \) -printf '%h\n' \
+		| while read d; do \
+				echo "Running '$(bin_dir)/tools/golangci-lint run --go $(VENDORED_GO_VERSION) -c $(CURDIR)/$(golangci_lint_config) --fix' in directory '$${d}'"; \
+				pushd "$${d}" >/dev/null; \
+				$(GOLANGCI-LINT) run --go $(VENDORED_GO_VERSION) -c $(CURDIR)/$(golangci_lint_config) --fix || exit; \
+				popd >/dev/null; \
+				echo ""; \
+			done
+
+endif
