@@ -8,7 +8,6 @@ issues:
         - promlinter
         - prealloc
         - containedctx
-        - gci
         - errorlint
         - gosec
       text: ".*"
