@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/clock"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -89,7 +89,7 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 	// Only setup generic event triggers if at least one Reconciler gave an
 	// enqueue channel.
 	if len(enqueueListSelect) > 0 {
-		opts.Manager.Add(manager.RunnableFunc(func(ctx context.Context) error {
+		if err := opts.Manager.Add(manager.RunnableFunc(func(ctx context.Context) error {
 			enqueueListSelect = append(enqueueListSelect, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
 
 			for {
@@ -113,7 +113,9 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 					// Continue with loop
 				}
 			}
-		}))
+		})); err != nil {
+			return fmt.Errorf("failed to add CertificateRequestPolicy generic event watcher: %w", err)
+		}
 	}
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
@@ -151,7 +153,7 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 		if err := c.client.Status().Patch(ctx, crp, patch, &client.SubResourcePatchOptions{
 			PatchOptions: client.PatchOptions{
 				FieldManager: "approver-policy",
-				Force:        pointer.Bool(true),
+				Force:        ptr.To(true),
 			},
 		}); err != nil {
 			err = fmt.Errorf("failed to apply CertificateRequestPolicy.Status patch: %w", err)

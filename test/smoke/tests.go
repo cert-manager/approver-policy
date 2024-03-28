@@ -28,7 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -73,11 +73,11 @@ var _ = Describe("Smoke", func() {
 			},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
-					CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: pointer.String("*.test.policy")},
+					CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("*.test.policy")},
 				},
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String(issuer.Name),
+						Name: ptr.To(issuer.Name),
 					},
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
 						MatchNames:  []string{"smoke-test-policy-*"},

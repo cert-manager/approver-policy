@@ -25,7 +25,7 @@ import (
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -34,7 +34,6 @@ import (
 	"github.com/cert-manager/approver-policy/pkg/internal/approver/allowed"
 	"github.com/cert-manager/approver-policy/pkg/internal/approver/constraints"
 	"github.com/cert-manager/approver-policy/pkg/registry"
-	testenv "github.com/cert-manager/approver-policy/test/env"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -84,8 +83,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -96,7 +95,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should select on all CertificateRequests where issuerRef={name=* kind=* group=*}, RBAC bound, and plugin return Ready", func() {
@@ -109,7 +108,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -120,8 +119,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -132,7 +131,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should select on all CertificateRequests where issuerRef={name=my-* kind=*uer group=*}, RBAC bound, and plugin return Ready", func() {
@@ -145,7 +144,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("my-*"), Kind: pointer.String("*uer"), Group: pointer.String("*"),
+						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -156,8 +155,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -168,7 +167,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the IssuerRef does not match", func() {
@@ -180,7 +179,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("my-*"), Kind: pointer.String("*uer"), Group: pointer.String("foo"),
+						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("foo"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -191,15 +190,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the IssuerRef matches but the policy is not ready", func() {
@@ -211,7 +210,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("my-*"), Kind: pointer.String("*uer"), Group: pointer.String("cert-manager.io"),
+						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("cert-manager.io"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -222,15 +221,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the IssuerRef matches and policy is ready but not bound to user", func() {
@@ -242,7 +241,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("my-*"), Kind: pointer.String("*uer"), Group: pointer.String("cert-manager.io"),
+						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("cert-manager.io"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -253,14 +252,14 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userCreateCRRoleName)
 	})
 
 	It("it should not select on policies where the user is not RBAC bound", func() {
@@ -272,7 +271,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("*"), Kind: pointer.String("*"), Group: pointer.String("*"),
+						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -283,14 +282,14 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userCreateCRRoleName)
 	})
 
 	// Namespace Selector
@@ -313,8 +312,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -325,7 +324,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should select on all CertificateRequests where Namespace={matchNames=[*]}, RBAC bound, and plugin return Ready", func() {
@@ -349,8 +348,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -361,7 +360,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should select on all CertificateRequests where Namespace={matchNames=[test-*]}, RBAC bound, and plugin return Ready", func() {
@@ -385,8 +384,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -397,7 +396,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should select on all CertificateRequests where Namespace={matchNames=[*-*]}, RBAC bound, and plugin return Ready", func() {
@@ -421,8 +420,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -433,7 +432,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select CertificateRequests where namespace={matchLabels=[foo=bar]}, RBAC bound, and plugin return Ready", func() {
@@ -457,8 +456,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -469,7 +468,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should select on all CertificateRequests where namespace={matchLabels=[foo=bar]}, RBAC bound, and plugin return Ready", func() {
@@ -496,8 +495,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -508,7 +507,7 @@ var _ = Context("Selector", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the namespace match name matches, but match labels does not match", func() {
@@ -532,15 +531,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the namespace match labels match, but match names does not match", func() {
@@ -568,15 +567,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the namespace matches but the policy is not ready", func() {
@@ -600,15 +599,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the namespace selector matches and policy is ready but not bound to user", func() {
@@ -631,14 +630,14 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the namespace selector matches but issuerRef does not", func() {
@@ -654,7 +653,7 @@ var _ = Context("Selector", func() {
 						MatchNames: []string{"foo", namespace.Name},
 					},
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("foo"), Kind: pointer.String("bar"), Group: pointer.String("*"),
+						Name: ptr.To("foo"), Kind: ptr.To("bar"), Group: ptr.To("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -665,15 +664,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should not select on CertificateRequests where the issuerRef selector matches, but namespace does not", func() {
@@ -689,7 +688,7 @@ var _ = Context("Selector", func() {
 						MatchNames: []string{"foo"},
 					},
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("my-issuer"), Kind: pointer.String("Issuer"), Group: pointer.String("*"),
+						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -700,15 +699,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("it should select on CertificateRequests where the issuerRef and namespace selector matches", func() {
@@ -724,7 +723,7 @@ var _ = Context("Selector", func() {
 						MatchNames: []string{"foo", namespace.Name},
 					},
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: pointer.String("my-issuer"), Kind: pointer.String("Issuer"), Group: pointer.String("*"),
+						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -735,15 +734,15 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if namespace selector doesn't match, don't approve or deny. If selector updated with match, should approve CertificateRequest", func() {
@@ -767,8 +766,8 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
@@ -781,6 +780,6 @@ var _ = Context("Selector", func() {
 		// Now namespace has a selecting namespace, should approve request.
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 })

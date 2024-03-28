@@ -21,7 +21,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -110,25 +109,14 @@ func (c constraints) Evaluate(_ context.Context, policy *policyapi.CertificateRe
 // decodePublicKey will return the algorithm and size of the given public key.
 // If the public key cannot be decoded, an error is returned.
 func decodePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
-	switch pub.(type) {
+	switch pubKey := pub.(type) {
 	case *rsa.PublicKey:
-		rsapub, ok := pub.(*rsa.PublicKey)
-		if !ok {
-			return "", -1, errors.New("failed to decode RSA public key")
-		}
-		return cmapi.RSAKeyAlgorithm, rsapub.N.BitLen(), nil
+		return cmapi.RSAKeyAlgorithm, pubKey.N.BitLen(), nil
 
 	case *ecdsa.PublicKey:
-		ecdsapub, ok := pub.(*ecdsa.PublicKey)
-		if !ok {
-			return "", -1, errors.New("failed to decode ECDSA public key")
-		}
-		return cmapi.ECDSAKeyAlgorithm, ecdsapub.Curve.Params().BitSize, nil
+		return cmapi.ECDSAKeyAlgorithm, pubKey.Curve.Params().BitSize, nil
 
 	case *ed25519.PublicKey:
-		if _, ok := pub.(*ed25519.PublicKey); !ok {
-			return "", -1, errors.New("failed to decode Ed25519 public key")
-		}
 		return cmapi.Ed25519KeyAlgorithm, -1, nil
 
 	default:

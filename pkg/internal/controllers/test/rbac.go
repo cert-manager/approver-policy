@@ -179,7 +179,7 @@ var _ = Context("RBAC", func() {
 		})
 		policy := createPolicy()
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
 		createRoleBinding("approver-policy-test-rbac")
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
@@ -195,7 +195,7 @@ var _ = Context("RBAC", func() {
 		// Prove that the request is now bound, and the request was reconciled again.
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, roleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, roleName, userCreateCRRoleName)
 	})
 
 	It("if a RoleBinding is created which binds the user, the request should be re-reconciled and approved", func() {
@@ -204,7 +204,7 @@ var _ = Context("RBAC", func() {
 		})
 		policy := createPolicy()
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
 		roleName := createRole(policy, "")
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
@@ -220,7 +220,7 @@ var _ = Context("RBAC", func() {
 		// Prove that the request is now bound, and the request was reconciled again.
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, roleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, roleName, userCreateCRRoleName)
 	})
 
 	It("if a ClusterRole is created which binds the user, the request should be re-reconciled and approved", func() {
@@ -229,7 +229,7 @@ var _ = Context("RBAC", func() {
 		})
 		policy := createPolicy()
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
 		createClusterRoleBinding("approver-policy-test-rbac")
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
@@ -245,7 +245,7 @@ var _ = Context("RBAC", func() {
 		// Prove that the request is now bound, and the request was reconciled again.
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userCreateCRRoleName)
 		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRole{ObjectMeta: metav1.ObjectMeta{Name: clusterRoleName}})).NotTo(HaveOccurred())
 		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "approver-policy-test-rbac"}})).NotTo(HaveOccurred())
 	})
@@ -256,7 +256,7 @@ var _ = Context("RBAC", func() {
 		})
 		policy := createPolicy()
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
 		clusterRoleName := createClusterRole(policy, "")
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
@@ -272,7 +272,7 @@ var _ = Context("RBAC", func() {
 		// Prove that the request is now bound, and the request was reconciled again.
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userCreateCRRoleName)
 		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRole{ObjectMeta: metav1.ObjectMeta{Name: clusterRoleName}})).NotTo(HaveOccurred())
 		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRoleBinding{ObjectMeta: metav1.ObjectMeta{Name: clusterRoleName}})).NotTo(HaveOccurred())
 	})

@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/rest"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
-	"k8s.io/klog/v2/klogr"
 
 	"github.com/cert-manager/approver-policy/pkg/approver"
 
@@ -98,8 +97,10 @@ func (o *Options) Prepare(cmd *cobra.Command, approvers ...approver.Interface) *
 
 func (o *Options) Complete() error {
 	klog.InitFlags(nil)
-	log := klogr.New()
-	flag.Set("v", o.logLevel)
+	log := klog.TODO()
+	if err := flag.Set("v", o.logLevel); err != nil {
+		return fmt.Errorf("failed to set log level: %s", err)
+	}
 	o.Logr = log
 
 	var err error
@@ -180,5 +181,7 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 			"Certificate and private key must be named 'tls.crt' and 'tls.key' "+
 			"respectively.")
 
-	fs.MarkDeprecated("webhook-certificate-dir", "webhook-certificate-dir is deprecated")
+	if err := fs.MarkDeprecated("webhook-certificate-dir", "webhook-certificate-dir is deprecated"); err != nil {
+		panic(err)
+	}
 }

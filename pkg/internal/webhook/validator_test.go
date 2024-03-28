@@ -26,8 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/klog/v2/klogr"
-	"k8s.io/utils/pointer"
+	"k8s.io/klog/v2/ktesting"
+	"k8s.io/utils/ptr"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
@@ -66,7 +66,7 @@ func Test_validate(t *testing.T) {
 		"if the object being validated is not a CertificateRequestPolicy return an error": {
 			crp: &corev1.Pod{},
 
-			expectedError: pointer.String("expected a CertificateRequestPolicy, but got a *v1.Pod"),
+			expectedError: ptr.To("expected a CertificateRequestPolicy, but got a *v1.Pod"),
 		},
 		"if the CertificateRequestPolicy refers to a plugin that is not registered return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -78,7 +78,7 @@ func Test_validate(t *testing.T) {
 			},
 			registeredPlugins: []string{"foo", "baz"},
 
-			expectedError: pointer.String("[spec.plugins: Unsupported value: \"bar\": supported values: \"foo\", \"baz\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]"),
+			expectedError: ptr.To("[spec.plugins: Unsupported value: \"bar\": supported values: \"foo\", \"baz\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]"),
 		},
 		"if neither issuer ref nor namespace are defined, return error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -90,7 +90,7 @@ func Test_validate(t *testing.T) {
 			},
 			registeredPlugins: []string{"foo", "bar"},
 
-			expectedError: pointer.String("spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"),
+			expectedError: ptr.To("spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"),
 		},
 		"if an invalid namespace label selector is defined, return error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -107,7 +107,7 @@ func Test_validate(t *testing.T) {
 			},
 			registeredPlugins: []string{"foo", "bar"},
 
-			expectedError: pointer.String("spec.selector.namespace.matchLabels: Invalid value: map[string]string{\"$%234\":\"8dsdk\"}: key: Invalid value: \"$%234\": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')"),
+			expectedError: ptr.To("spec.selector.namespace.matchLabels: Invalid value: map[string]string{\"$%234\":\"8dsdk\"}: key: Invalid value: \"$%234\": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')"),
 		},
 		"if a registered webhook does not allow CertificateRequestPolicy, return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -125,7 +125,7 @@ func Test_validate(t *testing.T) {
 			registeredPlugins: []string{"foo", "bar"},
 			webhooks:          []approver.Webhook{passingWebhook, notAllowedWebhook},
 
-			expectedError: pointer.String("spec: Invalid value: \"foo\": some error occurred"),
+			expectedError: ptr.To("spec: Invalid value: \"foo\": some error occurred"),
 		},
 		"if a registered webhook errors when validating CertificateRequestPolicy, return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -143,7 +143,7 @@ func Test_validate(t *testing.T) {
 			registeredPlugins: []string{"foo", "bar"},
 			webhooks:          []approver.Webhook{passingWebhook, failingWebhook},
 
-			expectedError: pointer.String("some error"),
+			expectedError: ptr.To("some error"),
 		},
 		"if a registered webhook does not allow CertificteRequestPolicy without further detail, return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -161,7 +161,7 @@ func Test_validate(t *testing.T) {
 			registeredPlugins: []string{"foo", "bar"},
 			webhooks:          []approver.Webhook{passingWebhook, notAllowedWebhookNoDetail},
 
-			expectedError: pointer.String("a plugin did not allow the CertificateRequest for unknown reasons"),
+			expectedError: ptr.To("a plugin did not allow the CertificateRequest for unknown reasons"),
 		},
 		"if a webhook validation returns warnings, add return them": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -214,7 +214,7 @@ func Test_validate(t *testing.T) {
 				WithScheme(policyapi.GlobalScheme).
 				Build()
 
-			v := &validator{lister: fakeclient, log: klogr.New(), webhooks: test.webhooks, registeredPlugins: test.registeredPlugins}
+			v := &validator{lister: fakeclient, log: ktesting.NewLogger(t, ktesting.DefaultConfig), webhooks: test.webhooks, registeredPlugins: test.registeredPlugins}
 			gotWarnings, gotErr := v.validate(context.Background(), test.crp)
 			if test.expectedError == nil && gotErr != nil {
 				t.Errorf("unexpected error: %v", gotErr)

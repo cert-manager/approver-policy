@@ -57,9 +57,7 @@ func (a allowed) Name() string {
 }
 
 // RegisterFlags is a no-op, allowed doesn't need any flags.
-func (a allowed) RegisterFlags(_ *pflag.FlagSet) {
-	return
-}
+func (a allowed) RegisterFlags(_ *pflag.FlagSet) {}
 
 // Prepare is a no-op, allowed doesn't need to prepare anything.
 func (a allowed) Prepare(_ context.Context, _ logr.Logger, _ manager.Manager) error {

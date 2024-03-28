@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog/v2/ktesting"
 	fakeclock "k8s.io/utils/clock/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -439,7 +439,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			fakerecorder := record.NewFakeRecorder(1)
 
 			c := &certificaterequestpolicies{
-				log:         klogr.New(),
+				log:         ktesting.NewLogger(t, ktesting.DefaultConfig),
 				clock:       fixedclock,
 				client:      fakeclient,
 				lister:      fakeclient,

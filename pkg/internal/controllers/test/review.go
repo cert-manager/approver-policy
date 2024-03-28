@@ -24,7 +24,7 @@ import (
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/komega"
 
@@ -34,7 +34,6 @@ import (
 	"github.com/cert-manager/approver-policy/pkg/internal/approver/allowed"
 	"github.com/cert-manager/approver-policy/pkg/internal/approver/constraints"
 	"github.com/cert-manager/approver-policy/pkg/registry"
-	testenv "github.com/cert-manager/approver-policy/test/env"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -84,8 +83,8 @@ var _ = Context("Review", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
@@ -93,7 +92,7 @@ var _ = Context("Review", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if a policy denies the request, the CertificateRequest should be denied", func() {
@@ -114,8 +113,8 @@ var _ = Context("Review", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
@@ -123,7 +122,7 @@ var _ = Context("Review", func() {
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if a policy plugin denies the request, the CertificateRequest should be denied", func() {
@@ -154,8 +153,8 @@ var _ = Context("Review", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
@@ -163,7 +162,7 @@ var _ = Context("Review", func() {
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if a policy initially denies the request but is updated to allow, the second request should be approved", func() {
@@ -183,8 +182,8 @@ var _ = Context("Review", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policy.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
@@ -203,7 +202,7 @@ var _ = Context("Review", func() {
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if one policy denies the request but one allows, the request should be approved", func() {
@@ -225,15 +224,15 @@ var _ = Context("Review", func() {
 		waitForReady(ctx, env.AdminClient, policyDeny.Name)
 		waitForReady(ctx, env.AdminClient, policyApprove.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyDeny.Name, policyApprove.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny.Name, policyApprove.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if two policies deny the request but one allows, it should approve the request", func() {
@@ -245,7 +244,7 @@ var _ = Context("Review", func() {
 		}
 		policyDeny2 := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: pointer.String("foo.example.com")}},
+				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
@@ -265,15 +264,15 @@ var _ = Context("Review", func() {
 		waitForReady(ctx, env.AdminClient, policyDeny2.Name)
 		waitForReady(ctx, env.AdminClient, policyApprove.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyDeny1.Name, policyDeny2.Name, policyApprove.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name, policyApprove.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if one policy denies the request but two allows, it should approve the request", func() {
@@ -303,15 +302,15 @@ var _ = Context("Review", func() {
 		waitForReady(ctx, env.AdminClient, policyApprove1.Name)
 		waitForReady(ctx, env.AdminClient, policyApprove2.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyDeny.Name, policyApprove1.Name, policyApprove2.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny.Name, policyApprove1.Name, policyApprove2.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if two policies deny the request, it should deny the request", func() {
@@ -325,7 +324,7 @@ var _ = Context("Review", func() {
 		policyDeny2 := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: pointer.String("foo.example.com")}},
+				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
@@ -335,15 +334,15 @@ var _ = Context("Review", func() {
 		waitForReady(ctx, env.AdminClient, policyDeny1.Name)
 		waitForReady(ctx, env.AdminClient, policyDeny2.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyDeny1.Name, policyDeny2.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if three policies deny the request, it should deny the request", func() {
@@ -357,7 +356,7 @@ var _ = Context("Review", func() {
 		policyDeny2 := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
 			Spec: policyapi.CertificateRequestPolicySpec{
-				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: pointer.String("foo.example.com")}},
+				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
@@ -376,15 +375,15 @@ var _ = Context("Review", func() {
 		waitForReady(ctx, env.AdminClient, policyDeny2.Name)
 		waitForReady(ctx, env.AdminClient, policyDeny3.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyDeny1.Name, policyDeny2.Name, policyDeny3.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name, policyDeny3.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if one policy denies the request and one allows but is not ready, should deny the request", func() {
@@ -428,15 +427,15 @@ var _ = Context("Review", func() {
 		waitForNotReady(ctx, env.AdminClient, policyApprove.Name)
 		waitForReady(ctx, env.AdminClient, policyDeny.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyApprove.Name, policyDeny.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyApprove.Name, policyDeny.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if one policy allows the request and one denies but is not ready, should approve the request", func() {
@@ -472,15 +471,15 @@ var _ = Context("Review", func() {
 		waitForReady(ctx, env.AdminClient, policyApprove.Name)
 		waitForNotReady(ctx, env.AdminClient, policyDeny.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyApprove.Name, policyDeny.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyApprove.Name, policyDeny.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if two policies allow the request but one of those is not ready, one denies the request, should approve the request", func() {
@@ -527,15 +526,15 @@ var _ = Context("Review", func() {
 		waitForNotReady(ctx, env.AdminClient, policyApprove2.Name)
 		waitForReady(ctx, env.AdminClient, policyDeny.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyApprove1.Name, policyApprove2.Name, policyDeny.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyApprove1.Name, policyApprove2.Name, policyDeny.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	It("if three policies deny the request but all are not ready, should neither approve or deny the request", func() {
@@ -581,15 +580,15 @@ var _ = Context("Review", func() {
 		waitForNotReady(ctx, env.AdminClient, policyDeny2.Name)
 		waitForNotReady(ctx, env.AdminClient, policyDeny3.Name)
 
-		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name, testenv.UserClientName)
-		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, testenv.UserClientName, policyDeny1.Name, policyDeny2.Name, policyDeny3.Name)
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name, policyDeny3.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("example.com"),
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
-		deleteRoleAndRoleBindings(ctx, env.AdminClient, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
 	Context("Reconcile consistency", func() {

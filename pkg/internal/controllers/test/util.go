@@ -37,6 +37,7 @@ import (
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/internal/controllers"
 	"github.com/cert-manager/approver-policy/pkg/registry"
+	testenv "github.com/cert-manager/approver-policy/test/env"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -237,7 +238,7 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 // that binds to the given user to use the CertificateRequestPolicies in the
 // given Namespace. The name of the Role and RoleBinding is returned, which
 // should be deleted after the test has completed by the consumer.
-func bindUserToUseCertificateRequestPolicies(ctx context.Context, cl client.Client, ns, username string, policyNames ...string) string {
+func bindUserToUseCertificateRequestPolicies(ctx context.Context, cl client.Client, ns string, policyNames ...string) string {
 	role := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-policy-use-",
@@ -262,7 +263,7 @@ func bindUserToUseCertificateRequestPolicies(ctx context.Context, cl client.Clie
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:     "User",
-				Name:     username,
+				Name:     testenv.UserClientName,
 				APIGroup: "rbac.authorization.k8s.io",
 			},
 		},
@@ -281,7 +282,7 @@ func bindUserToUseCertificateRequestPolicies(ctx context.Context, cl client.Clie
 // binds to the given user to create CertificateRequests in the given
 // Namespace. The name of the Role and RoleBinding is returned, which should be
 // deleted after the test has completed by the consumer.
-func bindUserToCreateCertificateRequest(ctx context.Context, cl client.Client, ns, username string) string {
+func bindUserToCreateCertificateRequest(ctx context.Context, cl client.Client, ns string) string {
 	role := rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-cr-create-",
@@ -305,7 +306,7 @@ func bindUserToCreateCertificateRequest(ctx context.Context, cl client.Client, n
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:     "User",
-				Name:     username,
+				Name:     testenv.UserClientName,
 				APIGroup: "rbac.authorization.k8s.io",
 			},
 		},
@@ -322,7 +323,7 @@ func bindUserToCreateCertificateRequest(ctx context.Context, cl client.Client, n
 
 // deleteRoleAndRoleBindings deletes the Role and RoleBindings that have the
 // given name.
-func deleteRoleAndRoleBindings(ctx context.Context, cl client.Client, ns string, names ...string) {
+func deleteRoleAndRoleBindings(ctx context.Context, ns string, names ...string) {
 	for _, name := range names {
 		Expect(env.AdminClient.Delete(ctx, &rbacv1.Role{ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: name}})).ToNot(HaveOccurred())
 		Expect(env.AdminClient.Delete(ctx, &rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: name}})).ToNot(HaveOccurred())
