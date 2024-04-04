@@ -24,10 +24,12 @@ rules:
 - apiGroups: ["cert-manager.io"]
   resources: ["signers"]
   verbs: ["approve"]
+  {{- with .Values.app.approveSignerNames }}
   resourceNames:
-  {{- range .Values.app.approveSignerNames }}
+  {{- range . }}
    - "{{ . }}"
   {{- end  }}
+  {{- end }}
 
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["roles", "clusterroles", "rolebindings", "clusterrolebindings"]

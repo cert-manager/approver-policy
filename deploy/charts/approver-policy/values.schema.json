@@ -108,11 +108,8 @@
       "type": "object"
     },
     "helm-values.app.approveSignerNames": {
-      "default": [
-        "issuers.cert-manager.io/*",
-        "clusterissuers.cert-manager.io/*"
-      ],
-      "description": "List of signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy.\n\nref: https://cert-manager.io/docs/concepts/certificaterequest/#approval",
+      "default": [],
+      "description": "List of signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy. Defaults to an empty array, allowing approval for all signers.\nref: https://cert-manager.io/docs/concepts/certificaterequest/#approval",
       "items": {},
       "type": "array"
     },

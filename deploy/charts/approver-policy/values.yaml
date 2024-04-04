@@ -67,13 +67,11 @@ app:
 
   # List of signer names that approver-policy will be given permission to
   # approve and deny. CertificateRequests referencing these signer names can be
-  # processed by approver-policy.
-  #
+  # processed by approver-policy. Defaults to an empty array, allowing approval
+  # for all signers.
   # ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
   # +docs:property
-  approveSignerNames:
-  - "issuers.cert-manager.io/*"
-  - "clusterissuers.cert-manager.io/*"
+  approveSignerNames: []
 
   metrics:
     # Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.

@@ -127,12 +127,10 @@ Extra CLI arguments that will be passed to the approver-policy process.
 #### **app.approveSignerNames** ~ `array`
 > Default value:
 > ```yaml
-> - issuers.cert-manager.io/*
-> - clusterissuers.cert-manager.io/*
+> []
 > ```
 
-List of signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy.  
-  
+List of signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy. Defaults to an empty array, allowing approval for all signers.  
 ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
 
 #### **app.metrics.port** ~ `number`
