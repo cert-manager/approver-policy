@@ -2,9 +2,6 @@ issues:
   exclude-rules:
     - linters:
         - promlinter
-        - prealloc
-        - containedctx
-        - errorlint
         - gosec
       text: ".*"
 linters:
