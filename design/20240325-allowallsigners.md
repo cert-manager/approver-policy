@@ -11,7 +11,20 @@ in the Helm chart.
 To approve for any other issuer using approver-policy, users are required to find the name of the "signer" value and append to
 the `approveSignerNames` helm value.
 
-This design proposes to default to allowing all signers.
+This design proposes to default to allowing all signers by changing the default value of the `approveSignerNames` parameter from:
+
+```yaml
+approveSignerNames:
+- "issuers.cert-manager.io/*"
+- "clusterissuers.cert-manager.io/*"
+```
+
+to:
+
+```yaml
+approveSignerNames:
+- "*"
+```
 
 ## Justification
 
@@ -40,6 +53,23 @@ implementing approver-policy may quite reasonably forget that the need to also a
 Another big contributing factor is that users have to deal with `CertificateRequestPolicy` RBAC in a different way;
 through a Role/ClusterRole allowing the "use" verb for `CertificateRequestPolicy` resources. The signer RBAC gets
 forgotten by users that have to configure their `CertificateRequestPolicy` RBAC.
+
+## Upgrading After This Change
+
+If a user has already set a custom value for `approveSignerNames`, no action is required.
+
+Otherwise, users upgrading must choose to either accept the new default or to manually reset the old default.
+
+If the user accepts the new default then no action is required. This will be the case for most users.
+
+If the user doesn't want the new default, they need to take action by setting the following `values.yaml` file
+at install time:
+
+```yaml
+approveSignerNames:
+- "issuers.cert-manager.io/*"
+- "clusterissuers.cert-manager.io/*"
+```
 
 ## Security Impact
 
