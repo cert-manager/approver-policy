@@ -120,12 +120,12 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
 		For(new(policyapi.CertificateRequestPolicy)).
-		WatchesRawSource(&source.Channel{Source: genericChan}, handler.EnqueueRequestsFromMapFunc(
+		WatchesRawSource(source.Channel(genericChan, handler.EnqueueRequestsFromMapFunc(
 			func(_ context.Context, obj client.Object) []reconcile.Request {
 				log.Info("reconciling certificaterequestpolicy after receiving event message", "name", obj.GetName())
 				return []ctrl.Request{{NamespacedName: types.NamespacedName{Name: obj.GetName()}}}
 			},
-		)).
+		))).
 		Complete(&certificaterequestpolicies{
 			log:         log,
 			clock:       clock.RealClock{},
