@@ -591,7 +591,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 			c := &certificaterequestpolicies{clock: fixedclock}
 			c.setCertificateRequestPolicyCondition(
 				test.existingConditions,
-				&test.patchConditions,
+				&test.patchConditions, // #nosec G601 -- False positive. See https://github.com/golang/go/discussions/56010
 				policyGeneration,
 				test.newCondition,
 			)

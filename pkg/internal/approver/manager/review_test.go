@@ -216,7 +216,7 @@ func Test_Review(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() {
 				for _, obj := range test.policies {
-					if err := env.AdminClient.Delete(context.TODO(), &obj); err != nil {
+					if err := env.AdminClient.Delete(context.TODO(), &obj); /* #nosec G601 -- Func drops pointer at end of call. */ err != nil {
 						// Don't Fatal here as a ditch effort to at least try to clean-up
 						// everything.
 						t.Errorf("failed to delete policy: %s", err)
@@ -225,7 +225,7 @@ func Test_Review(t *testing.T) {
 			})
 
 			for _, obj := range test.policies {
-				if err := env.AdminClient.Create(context.TODO(), &obj); err != nil {
+				if err := env.AdminClient.Create(context.TODO(), &obj); /* #nosec G601 -- Func drops pointer at end of call. */ err != nil {
 					t.Fatalf("failed to create new policy: %s", err)
 				}
 			}

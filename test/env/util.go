@@ -89,7 +89,7 @@ func writeKubeconfig(t *testing.T, restConfig *rest.Config, name string) string 
 	}
 
 	path := filepath.Join(t.TempDir(), name)
-	if err := os.WriteFile(path, buff.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(path, buff.Bytes(), 0600); err != nil {
 		t.Fatal(err)
 	}
 
