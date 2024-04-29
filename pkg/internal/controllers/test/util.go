@@ -186,9 +186,9 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 			// https://github.com/kubernetes-sigs/controller-runtime/issues/1842
 			var l cmapi.CertificateRequestList
 			Expect(env.AdminClient.List(ctx, &l)).To(Succeed())
-			for i, o := range l.Items {
-				By(fmt.Sprintf("Deleting: %s", client.ObjectKeyFromObject(&o).String()))
-				Expect(env.AdminClient.Delete(ctx, &l.Items[i])).To(Succeed())
+			for _, obj := range l.Items {
+				By(fmt.Sprintf("Deleting: %s", client.ObjectKeyFromObject(&obj). /* #nosec G601 -- Func drops pointer at end of call. */ String()))
+				Expect(env.AdminClient.Delete(ctx, &obj) /* #nosec G601 -- Func drops pointer at end of call. */).To(Succeed())
 			}
 		}
 

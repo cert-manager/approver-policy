@@ -125,6 +125,7 @@ func (m *mngr) Review(ctx context.Context, cr *cmapi.CertificateRequest) (manage
 		)
 
 		for _, evaluator := range m.evaluators {
+			// #nosec G601 -- False positive. The function does not keep this pointer past its scope.
 			response, err := evaluator.Evaluate(ctx, &policy, cr)
 			if err != nil {
 				// if a single evaluator errors, then return early without trying

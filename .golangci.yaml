@@ -2,7 +2,6 @@ issues:
   exclude-rules:
     - linters:
         - promlinter
-        - gosec
       text: ".*"
 linters:
   # Explicitly define all enabled linters

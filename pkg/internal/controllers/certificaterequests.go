@@ -103,7 +103,8 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		for _, cr := range crList.Items {
 			// Check for approval status early, rather than relying on the
 			// predicate or doing it in the actual Reconcile func.
-			if apiutil.CertificateRequestIsApproved(&cr) || apiutil.CertificateRequestIsDenied(&cr) {
+			if apiutil.CertificateRequestIsApproved(&cr) || /* #nosec G601 -- Func drops pointer at end of call. */
+				apiutil.CertificateRequestIsDenied(&cr) /* #nosec G601 -- Func drops pointer at end of call. */ {
 				continue
 			}
 			requests = append(requests, reconcile.Request{
