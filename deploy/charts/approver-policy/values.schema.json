@@ -422,7 +422,9 @@
       "type": "string"
     },
     "helm-values.nodeSelector": {
-      "default": {},
+      "default": {
+        "kubernetes.io/os": "linux"
+      },
       "description": "The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
       "type": "object"
     },
