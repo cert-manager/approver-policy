@@ -177,7 +177,9 @@ affinity: {}
 # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
 # matching labels.
 # For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
-nodeSelector: {}
+# +docs:property=nodeSelector
+nodeSelector:
+  kubernetes.io/os: linux
 
 # A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
 #

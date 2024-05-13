@@ -308,10 +308,11 @@ affinity:
 #### **nodeSelector** ~ `object`
 > Default value:
 > ```yaml
-> {}
+> kubernetes.io/os: linux
 > ```
 
 The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels. For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
+
 #### **tolerations** ~ `array`
 > Default value:
 > ```yaml
