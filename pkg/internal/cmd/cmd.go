@@ -27,7 +27,6 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/server/tls/authority"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -100,7 +99,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("unable to create controller manager: %w", err)
 			}
 
-			if err := mgr.Add(&dynamicCertRunnable{source: certificateSource}); err != nil {
+			if err := mgr.Add(certificateSource); err != nil {
 				return err
 			}
 
@@ -141,19 +140,3 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 	return cmd
 }
-
-type dynamicCertRunnable struct {
-	source *servertls.DynamicSource
-}
-
-func (c *dynamicCertRunnable) Start(ctx context.Context) error {
-	return c.source.Run(ctx)
-}
-
-func (c *dynamicCertRunnable) NeedLeaderElection() bool {
-	// By default, a runnable in c/r is leader election aware.
-	// Since we need certs for all replicas, this runnable must NOT be leader election aware.
-	return false
-}
-
-var _ manager.LeaderElectionRunnable = &dynamicCertRunnable{}
