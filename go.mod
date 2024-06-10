@@ -4,10 +4,10 @@ go 1.22.0
 
 require (
 	github.com/cert-manager/cert-manager v1.15.0
-	github.com/go-logr/logr v1.4.1
+	github.com/go-logr/logr v1.4.2
 	github.com/google/cel-go v0.17.8
 	github.com/google/go-cmp v0.6.0
-	github.com/onsi/ginkgo/v2 v2.17.3
+	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/prometheus/client_golang v1.19.1
 	github.com/spf13/cobra v1.8.0
@@ -22,7 +22,7 @@ require (
 	k8s.io/component-base v0.30.1
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
-	sigs.k8s.io/controller-runtime v0.18.2
+	sigs.k8s.io/controller-runtime v0.18.4
 )
 
 require (
