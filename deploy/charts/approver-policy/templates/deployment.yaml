@@ -47,6 +47,7 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 7
         args:
+          - --log-format={{.Values.app.logFormat}}
           - --log-level={{.Values.app.logLevel}}
 
           {{- range .Values.app.extraArgs }}

@@ -59,6 +59,8 @@ image:
 imagePullSecrets: []
 
 app:
+  # The format of approver-policy logging. Accepted values are text or json.
+  logFormat: text
   # Verbosity of approver-policy logging. This is a value from 1 to 5.
   logLevel: 1
 

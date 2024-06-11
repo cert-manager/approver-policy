@@ -17,8 +17,10 @@ limitations under the License.
 package options
 
 import (
-	"flag"
+	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
@@ -38,9 +40,6 @@ import (
 // Options are the main options for the approver-policy. Populated via
 // processing command line flags.
 type Options struct {
-	// logLevel is the verbosity level the driver will write logs at.
-	logLevel string
-
 	// kubeConfigFlags is used for generating a Kubernetes rest config via CLI
 	// flags.
 	kubeConfigFlags *genericclioptions.ConfigFlags
@@ -62,11 +61,50 @@ type Options struct {
 	// API.
 	RestConfig *rest.Config
 
+	// log are options controlling logging
+	log logOptions
+
 	// Webhook are options specific to the Kubernetes Webhook.
 	Webhook
 
 	// Logr is the shared base logger.
 	Logr logr.Logger
+}
+
+type logOptions struct {
+	format logFormat
+	level  int
+}
+
+const (
+	logFormatText logFormat = "text"
+	logFormatJSON logFormat = "json"
+)
+
+type logFormat string
+
+// String is used both by fmt.Print and by Cobra in help text
+func (e *logFormat) String() string {
+	if len(*e) == 0 {
+		return string(logFormatText)
+	}
+	return string(*e)
+}
+
+// Set must have pointer receiver to avoid changing the value of a copy
+func (e *logFormat) Set(v string) error {
+	switch v {
+	case "text", "json":
+		*e = logFormat(v)
+		return nil
+	default:
+		return errors.New(`must be one of "text" or "json"`)
+	}
+}
+
+// Type is only used in help text
+func (e *logFormat) Type() string {
+	return "string"
 }
 
 // Webhook holds options specific to running the approver-policy Webhook
@@ -96,11 +134,20 @@ func (o *Options) Prepare(cmd *cobra.Command, approvers ...approver.Interface) *
 }
 
 func (o *Options) Complete() error {
-	klog.InitFlags(nil)
-	log := klog.TODO()
-	if err := flag.Set("v", o.logLevel); err != nil {
-		return fmt.Errorf("failed to set log level: %s", err)
+	opts := &slog.HandlerOptions{
+		// To avoid a breaking change in application configuration,
+		// we negate the (configured) logr verbosity level to get the corresponding slog level
+		Level: slog.Level(-o.log.level),
 	}
+	var handler slog.Handler = slog.NewTextHandler(os.Stdout, opts)
+	if o.log.format == logFormatJSON {
+		handler = slog.NewJSONHandler(os.Stdout, opts)
+	}
+
+	slog.SetDefault(slog.New(handler))
+
+	log := logr.FromSlogHandler(handler)
+	klog.SetLogger(log)
 	o.Logr = log
 
 	var err error
@@ -116,6 +163,7 @@ func (o *Options) addFlags(cmd *cobra.Command, approvers ...approver.Interface) 
 	var nfs cliflag.NamedFlagSets
 
 	o.addAppFlags(nfs.FlagSet("App"))
+	o.addLoggingFlags(nfs.FlagSet("Logging"))
 	o.addWebhookFlags(nfs.FlagSet("Webhook"))
 	o.kubeConfigFlags = genericclioptions.NewConfigFlags(true)
 	o.kubeConfigFlags.AddFlags(nfs.FlagSet("Kubernetes"))
@@ -143,9 +191,6 @@ func (o *Options) addFlags(cmd *cobra.Command, approvers ...approver.Interface) 
 }
 
 func (o *Options) addAppFlags(fs *pflag.FlagSet) {
-	fs.StringVarP(&o.logLevel, "log-level", "v", "1",
-		"Log level (1-5).")
-
 	fs.StringVar(&o.LeaderElectionNamespace, "leader-election-namespace", "",
 		"Namespace to lease leader election for controller replica set.")
 
@@ -155,6 +200,16 @@ func (o *Options) addAppFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&o.ReadyzAddress, "readiness-probe-bind-address", ":6060",
 		"TCP address for exposing the HTTP readiness probe which will be served on the HTTP path '/readyz'.")
+}
+
+func (o *Options) addLoggingFlags(fs *pflag.FlagSet) {
+	fs.Var(&o.log.format,
+		"log-format",
+		"Log format (text or json)")
+
+	fs.IntVarP(&o.log.level,
+		"log-level", "v", 1,
+		"Log level (1-5).")
 }
 
 func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {

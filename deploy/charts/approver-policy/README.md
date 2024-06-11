@@ -110,6 +110,13 @@ Kubernetes imagePullPolicy on Deployment.
 > ```
 
 Optional secrets used for pulling the approver-policy container image.
+#### **app.logFormat** ~ `string`
+> Default value:
+> ```yaml
+> text
+> ```
+
+The format of approver-policy logging. Accepted values are text or json.
 #### **app.logLevel** ~ `number`
 > Default value:
 > ```yaml
