@@ -92,6 +92,9 @@
         "extraArgs": {
           "$ref": "#/$defs/helm-values.app.extraArgs"
         },
+        "logFormat": {
+          "$ref": "#/$defs/helm-values.app.logFormat"
+        },
         "logLevel": {
           "$ref": "#/$defs/helm-values.app.logLevel"
         },
@@ -118,6 +121,11 @@
       "description": "Extra CLI arguments that will be passed to the approver-policy process.",
       "items": {},
       "type": "array"
+    },
+    "helm-values.app.logFormat": {
+      "default": "text",
+      "description": "The format of approver-policy logging. Accepted values are text or json.",
+      "type": "string"
     },
     "helm-values.app.logLevel": {
       "default": 1,
