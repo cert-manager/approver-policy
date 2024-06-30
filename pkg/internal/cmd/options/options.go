@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
@@ -122,6 +123,15 @@ type Webhook struct {
 	// CASecretNamespace is the namespace that the
 	// cert-manager-approver-policy-tls Secret is stored.
 	CASecretNamespace string
+
+	// CADuration for webhook server DynamicSource CA.
+	// DynamicSource is upstream cert-manager's CA Provider.
+	// Defaults to 1 year.
+	CADuration time.Duration
+
+	// LeafDuration for webhook server TLS certificates.
+	// Defaults to 7 days.
+	LeafDuration time.Duration
 }
 
 func New() *Options {
@@ -228,6 +238,14 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.Webhook.CASecretNamespace,
 		"webhook-ca-secret-namespace", "cert-manager",
 		"Namespace that the cert-manager-approver-policy-tls Secret is stored.")
+
+	fs.DurationVar(&o.Webhook.CADuration,
+		"webhook-ca-duration", time.Hour*24*365,
+		"Duration for webhook server DynamicSource CA. Defaults to 1 year.")
+
+	fs.DurationVar(&o.Webhook.LeafDuration,
+		"webhook-leaf-cert-duration", time.Hour*24*7,
+		"Duration for webhook server TLS certificates. Defaults to 7 days.")
 
 	var deprecatedCertDir string
 	fs.StringVar(&deprecatedCertDir,

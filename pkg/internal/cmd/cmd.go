@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"time"
 
 	logf "github.com/cert-manager/cert-manager/pkg/logs"
 	servertls "github.com/cert-manager/cert-manager/pkg/server/tls"
@@ -67,8 +66,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 					SecretNamespace: opts.Webhook.CASecretNamespace,
 					SecretName:      "cert-manager-approver-policy-tls",
 					RESTConfig:      opts.RestConfig,
-					CADuration:      time.Hour * 24,
-					LeafDuration:    time.Hour,
+					CADuration:      opts.Webhook.CADuration,
+					LeafDuration:    opts.Webhook.LeafDuration,
 				},
 			}
 
