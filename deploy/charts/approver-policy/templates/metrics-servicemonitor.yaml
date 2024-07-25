@@ -20,7 +20,7 @@ spec:
     matchNames:
       - {{ .Release.Namespace }}
   endpoints:
-  - targetPort: {{ .Values.app.metrics.port }}
+  - port: metrics
     path: "/metrics"
     interval: {{ .Values.app.metrics.service.servicemonitor.interval }}
     scrapeTimeout: {{ .Values.app.metrics.service.servicemonitor.scrapeTimeout }}
