@@ -30,8 +30,10 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2/ktesting"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -212,6 +214,11 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 		// the controllerLock ensures that
 		LeaderElection: false,
 		Logger:         log.WithName("manager"),
+		Controller: config.Controller{
+			// need to skip unique controller name validation
+			// since all tests need a dedicated controller
+			SkipNameValidation: ptr.To(true),
+		},
 	})
 	Expect(err).NotTo(HaveOccurred())
 
