@@ -18,6 +18,7 @@ package metrics
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -177,6 +178,8 @@ func mockCollector(t *testing.T, crs []cmapi.CertificateRequest) *collector {
 	}
 }
 
+var errNotImplemented = errors.New("not implemented")
+
 type mockCache struct {
 	t       *testing.T
 	objects []cmapi.CertificateRequest
@@ -195,24 +198,20 @@ func (mock *mockCache) List(ctx context.Context, given client.ObjectList, opts .
 
 // The rest of the functions are stubbed out.
 func (mock *mockCache) GetInformer(ctx context.Context, obj client.Object, opts ...cache.InformerGetOption) (cache.Informer, error) {
-	mock.t.FailNow()
-	return nil, nil
+	return nil, errNotImplemented
 }
 func (mock *mockCache) RemoveInformer(ctx context.Context, obj client.Object) error {
-	mock.t.FailNow()
-	return nil
+	return errNotImplemented
 }
 func (mock *mockCache) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind, opts ...cache.InformerGetOption) (cache.Informer, error) {
-	mock.t.FailNow()
-	return nil, nil
+	return nil, errNotImplemented
 }
 func (mock *mockCache) Start(ctx context.Context) error {
-	mock.t.FailNow()
-	return nil
+	return errNotImplemented
 }
 func (mock *mockCache) IndexField(ctx context.Context, obj client.Object, field string, extractValue client.IndexerFunc) error {
-	return nil
+	return errNotImplemented
 }
 func (mock *mockCache) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
-	return nil
+	return errNotImplemented
 }
