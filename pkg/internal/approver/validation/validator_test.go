@@ -38,6 +38,8 @@ func Test_Validator_Compile(t *testing.T) {
 		{name: "err-undeclared-vars", expr: "foo = bar", wantErr: true},
 		{name: "err-must-return-bool", expr: "size('foo')", wantErr: true},
 		{name: "err-invalid-property", expr: "size(cr.foo) < 24", wantErr: true},
+		{name: "check-username-property", expr: "size(cr.username) > 0", wantErr: false},
+		{name: "check-serviceaccount-getname", expr: "self.startsWith(serviceaccount.getName(cr.username))", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,5 +91,49 @@ func Test_Validator_Validate(t *testing.T) {
 func newCertificateRequest(namespace string) cmapi.CertificateRequest {
 	request := cmapi.CertificateRequest{}
 	request.SetNamespace(namespace)
+	return request
+}
+
+func Test_Validator_Validate_ServiceAccount(t *testing.T) {
+	v := &validator{expression: "self.startsWith('spiffe://acme.com/ns/%s/sa/%s'.format([serviceaccount.getNamespace(cr.username),serviceaccount.getName(cr.username)]))"}
+	err := v.compile()
+	assert.NoError(t, err)
+
+	type args struct {
+		val string
+		cr  cmapi.CertificateRequest
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{name: "correct-namespace-and-name", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/bar", cr: newCertificateRequestWithUsername("system:serviceaccount:foo-ns:bar")}, want: true},
+		{name: "correct-namespace-wrong-name", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/foo", cr: newCertificateRequestWithUsername("system:serviceaccount:foo-ns:bar")}, want: false},
+		{name: "wrong-namespace-correct-name", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/bar", cr: newCertificateRequestWithUsername("system:serviceaccount:bar-ns:bar")}, want: false},
+		{name: "not-serviceaccount", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/bar", cr: newCertificateRequestWithUsername("bar")}, want: false},
+		{name: "unrelated", args: args{val: "spiffe://example.com", cr: newCertificateRequestWithUsername("system:serviceaccount:foo-ns:bar")}, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := v.Validate(tt.args.val, tt.args.cr)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func newCertificateRequestWithUsername(username string) cmapi.CertificateRequest {
+	request := cmapi.CertificateRequest{
+		Spec: cmapi.CertificateRequestSpec{
+			Username: username,
+		},
+	}
 	return request
 }

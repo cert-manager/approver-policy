@@ -61,7 +61,9 @@ func (v *validator) compile() error {
 		cel.Variable(varSelf, cel.StringType),
 		cel.Variable(varRequest, cel.ObjectType("cm.io.policy.pkg.internal.approver.validation.CertificateRequest")),
 		ext.Strings(),
+		ServiceAccount(),
 	)
+
 	if err != nil {
 		return err
 	}
@@ -89,6 +91,7 @@ func (v *validator) Validate(value string, request cmapi.CertificateRequest) (bo
 		varRequest: &CertificateRequest{
 			Name:      request.GetName(),
 			Namespace: request.GetNamespace(),
+			Username:  request.Spec.Username,
 		},
 	}
 
