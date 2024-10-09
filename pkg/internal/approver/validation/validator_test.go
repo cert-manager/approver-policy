@@ -39,7 +39,9 @@ func Test_Validator_Compile(t *testing.T) {
 		{name: "err-must-return-bool", expr: "size('foo')", wantErr: true},
 		{name: "err-invalid-property", expr: "size(cr.foo) < 24", wantErr: true},
 		{name: "check-username-property", expr: "size(cr.username) > 0", wantErr: false},
-		{name: "check-serviceaccount-getname", expr: "self.startsWith(serviceaccount.getName(cr.username))", wantErr: false},
+		{name: "check-serviceaccount-getname", expr: "self.startsWith(ServiceAccount(cr.username).getName())", wantErr: false},
+		{name: "check-serviceaccount-getnamespace", expr: "self.startsWith(ServiceAccount(cr.username).getNamespace())", wantErr: false},
+		{name: "check-serviceaccount-isSA", expr: "ServiceAccount(cr.username).isServiceAccount()", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -95,7 +97,7 @@ func newCertificateRequest(namespace string) cmapi.CertificateRequest {
 }
 
 func Test_Validator_Validate_ServiceAccount(t *testing.T) {
-	v := &validator{expression: "self.startsWith('spiffe://acme.com/ns/%s/sa/%s'.format([serviceaccount.getNamespace(cr.username),serviceaccount.getName(cr.username)]))"}
+	v := &validator{expression: "ServiceAccount(cr.username).isServiceAccount() && self.startsWith('spiffe://acme.com/ns/%s/sa/%s'.format([ServiceAccount(cr.username).getNamespace(),ServiceAccount(cr.username).getName()]))"}
 	err := v.compile()
 	assert.NoError(t, err)
 
@@ -110,6 +112,7 @@ func Test_Validator_Validate_ServiceAccount(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "correct-namespace-and-name", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/bar", cr: newCertificateRequestWithUsername("system:serviceaccount:foo-ns:bar")}, want: true},
+		{name: "correct-namespace-and-name2", args: args{val: "spiffe://acme.com/ns/bar-ns/sa/foo", cr: newCertificateRequestWithUsername("system:serviceaccount:bar-ns:foo")}, want: true},
 		{name: "correct-namespace-wrong-name", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/foo", cr: newCertificateRequestWithUsername("system:serviceaccount:foo-ns:bar")}, want: false},
 		{name: "wrong-namespace-correct-name", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/bar", cr: newCertificateRequestWithUsername("system:serviceaccount:bar-ns:bar")}, want: false},
 		{name: "not-serviceaccount", args: args{val: "spiffe://acme.com/ns/foo-ns/sa/bar", cr: newCertificateRequestWithUsername("bar")}, want: false},

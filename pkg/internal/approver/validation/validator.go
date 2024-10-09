@@ -61,7 +61,7 @@ func (v *validator) compile() error {
 		cel.Variable(varSelf, cel.StringType),
 		cel.Variable(varRequest, cel.ObjectType("cm.io.policy.pkg.internal.approver.validation.CertificateRequest")),
 		ext.Strings(),
-		ServiceAccount(),
+		ServiceAccountLib(),
 	)
 
 	if err != nil {

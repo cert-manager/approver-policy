@@ -1,57 +1,136 @@
 package validation
 
 import (
+	"fmt"
+	reflect "reflect"
+
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
 	"k8s.io/apiserver/pkg/authentication/serviceaccount"
 )
 
-func ServiceAccount() cel.EnvOption {
-	return cel.Lib(saLib)
+func ServiceAccountLib() cel.EnvOption {
+	return cel.Lib(&saLib{})
 }
 
-var saLib = &sa{}
+type saLib struct{}
+type ServiceAccount struct {
+	Name             string
+	Namespace        string
+	IsServiceAccount bool
+}
 
-type sa struct{}
+var (
+	SAType = cel.ObjectType("cm.io.policy.pkg.internal.approver.validation.ServiceAccount")
+)
+
+// ConvertToNative implements ref.Val.ConvertToNative.
+func (sa ServiceAccount) ConvertToNative(typeDesc reflect.Type) (interface{}, error) {
+	if reflect.TypeOf(sa).AssignableTo(typeDesc) {
+		return sa, nil
+	}
+	if reflect.TypeOf("").AssignableTo(typeDesc) {
+		return sa, nil
+	}
+	return nil, fmt.Errorf("type conversion error from 'serviceaccount' to '%v'", typeDesc)
+}
+
+// ConvertToType implements ref.Val.ConvertToType.
+func (sa ServiceAccount) ConvertToType(typeVal ref.Type) ref.Val {
+	switch typeVal {
+	case SAType:
+		return sa
+	case types.TypeType:
+		return SAType
+	}
+	return types.NewErr("type conversion error from '%s' to '%s'", SAType, typeVal)
+}
+
+// Equal implements ref.Val.Equal.
+func (sa ServiceAccount) Equal(other ref.Val) ref.Val {
+	otherDur, ok := other.(ServiceAccount)
+	if !ok {
+		return types.MaybeNoSuchOverloadErr(other)
+	}
+	return types.Bool(sa.IsServiceAccount && otherDur.IsServiceAccount && sa.Name == otherDur.Name && sa.Namespace == otherDur.Namespace)
+}
+
+// Type implements ref.Val.Type.Y
+func (sa ServiceAccount) Type() ref.Type {
+	return SAType
+}
+
+// Value implements ref.Val.Value.
+func (sa ServiceAccount) Value() interface{} {
+	return sa
+}
 
 var saLibraryDecls = map[string][]cel.FunctionOpt{
-	"serviceaccount.getName": {
-		cel.Overload("serviceaccount_get_name", []*cel.Type{cel.StringType}, cel.StringType,
+	"ServiceAccount": {
+		cel.Overload("username_to_serviceaccount", []*cel.Type{cel.StringType}, SAType,
+			cel.UnaryBinding(stringToServiceAccount))},
+	"getName": {
+		cel.MemberOverload("serviceaccount_get_name", []*cel.Type{SAType}, cel.StringType,
 			cel.UnaryBinding(getServiceAccountName))},
-	"serviceaccount.getNamespace": {
-		cel.Overload("serviceaccount_get_namespace", []*cel.Type{cel.StringType}, cel.StringType,
+	"getNamespace": {
+		cel.MemberOverload("serviceaccount_get_namespace", []*cel.Type{SAType}, cel.StringType,
 			cel.UnaryBinding(getServiceAccountNamespace))},
+	"isServiceAccount": {
+		cel.MemberOverload("serviceaccount_is_sa", []*cel.Type{SAType}, cel.BoolType,
+			cel.UnaryBinding(isServiceAccount))},
 }
 
-func getServiceAccountName(arg ref.Val) ref.Val {
+func stringToServiceAccount(arg ref.Val) ref.Val {
 	s, ok := arg.Value().(string)
 	if !ok {
 		return types.MaybeNoSuchOverloadErr(arg)
 	}
 
-	_, name, err := serviceaccount.SplitUsername(s)
+	ns, name, err := serviceaccount.SplitUsername(s)
+
 	if err != nil {
-		// Return an empty string if unable to parse the username field for circumstances where non-k8s serviceaccount username is presented
-		return types.String("")
+		return ServiceAccount{
+			Name:             "",
+			Namespace:        "",
+			IsServiceAccount: false,
+		}
 	}
-	return types.String(name)
+
+	return ServiceAccount{
+		Name:             name,
+		Namespace:        ns,
+		IsServiceAccount: true,
+	}
+}
+
+func isServiceAccount(arg ref.Val) ref.Val {
+	s, ok := arg.Value().(ServiceAccount)
+	if !ok {
+		return types.MaybeNoSuchOverloadErr(arg)
+	}
+
+	return types.Bool(s.IsServiceAccount)
+}
+func getServiceAccountName(arg ref.Val) ref.Val {
+	s, ok := arg.Value().(ServiceAccount)
+	if !ok {
+		return types.MaybeNoSuchOverloadErr(arg)
+	}
+
+	return types.String(s.Name)
 }
 
 func getServiceAccountNamespace(arg ref.Val) ref.Val {
-	s, ok := arg.Value().(string)
+	s, ok := arg.Value().(ServiceAccount)
 	if !ok {
 		return types.MaybeNoSuchOverloadErr(arg)
 	}
-	namespace, _, err := serviceaccount.SplitUsername(s)
-	if err != nil {
-		// Return an empty string if unable to parse the username field for circumstances where non-k8s serviceaccount username is presented
-		return types.String("")
-	}
-	return types.String(namespace)
+
+	return types.String(s.Namespace)
 }
 
-func (*sa) CompileOptions() []cel.EnvOption {
+func (*saLib) CompileOptions() []cel.EnvOption {
 	options := []cel.EnvOption{}
 	for name, overloads := range saLibraryDecls {
 		options = append(options, cel.Function(name, overloads...))
@@ -59,6 +138,6 @@ func (*sa) CompileOptions() []cel.EnvOption {
 	return options
 }
 
-func (*sa) ProgramOptions() []cel.ProgramOption {
+func (*saLib) ProgramOptions() []cel.ProgramOption {
 	return []cel.ProgramOption{}
 }
