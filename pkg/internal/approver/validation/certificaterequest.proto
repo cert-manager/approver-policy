@@ -7,4 +7,5 @@ option go_package = "github.com/cert-manager/approver-policy/pkg/internal/approv
 message CertificateRequest {
   string name = 1;
   string namespace = 2;
+  string username = 3;
 }
