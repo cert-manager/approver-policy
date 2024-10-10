@@ -1,8 +1,24 @@
+/*
+Copyright 2024 The cert-manager Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package validation
 
 import (
 	"fmt"
-	reflect "reflect"
+	"reflect"
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
@@ -16,9 +32,8 @@ func ServiceAccountLib() cel.EnvOption {
 
 type saLib struct{}
 type ServiceAccount struct {
-	Name             string
-	Namespace        string
-	IsServiceAccount bool
+	Name      string
+	Namespace string
 }
 
 var (
@@ -53,7 +68,7 @@ func (sa ServiceAccount) Equal(other ref.Val) ref.Val {
 	if !ok {
 		return types.MaybeNoSuchOverloadErr(other)
 	}
-	return types.Bool(sa.IsServiceAccount && otherDur.IsServiceAccount && sa.Name == otherDur.Name && sa.Namespace == otherDur.Namespace)
+	return types.Bool(sa.Name == otherDur.Name && sa.Namespace == otherDur.Namespace)
 }
 
 // Type implements ref.Val.Type.Y
@@ -67,7 +82,7 @@ func (sa ServiceAccount) Value() interface{} {
 }
 
 var saLibraryDecls = map[string][]cel.FunctionOpt{
-	"ServiceAccount": {
+	"serviceAccount": {
 		cel.Overload("username_to_serviceaccount", []*cel.Type{cel.StringType}, SAType,
 			cel.UnaryBinding(stringToServiceAccount))},
 	"getName": {
@@ -77,7 +92,7 @@ var saLibraryDecls = map[string][]cel.FunctionOpt{
 		cel.MemberOverload("serviceaccount_get_namespace", []*cel.Type{SAType}, cel.StringType,
 			cel.UnaryBinding(getServiceAccountNamespace))},
 	"isServiceAccount": {
-		cel.MemberOverload("serviceaccount_is_sa", []*cel.Type{SAType}, cel.BoolType,
+		cel.Overload("serviceaccount_is_sa", []*cel.Type{cel.StringType}, cel.BoolType,
 			cel.UnaryBinding(isServiceAccount))},
 }
 
@@ -91,27 +106,32 @@ func stringToServiceAccount(arg ref.Val) ref.Val {
 
 	if err != nil {
 		return ServiceAccount{
-			Name:             "",
-			Namespace:        "",
-			IsServiceAccount: false,
+			Name:      "",
+			Namespace: "",
 		}
 	}
 
 	return ServiceAccount{
-		Name:             name,
-		Namespace:        ns,
-		IsServiceAccount: true,
+		Name:      name,
+		Namespace: ns,
 	}
 }
 
 func isServiceAccount(arg ref.Val) ref.Val {
-	s, ok := arg.Value().(ServiceAccount)
+	s, ok := arg.Value().(string)
 	if !ok {
 		return types.MaybeNoSuchOverloadErr(arg)
 	}
 
-	return types.Bool(s.IsServiceAccount)
+	_, _, err := serviceaccount.SplitUsername(s)
+
+	if err != nil {
+		return types.False
+	}
+
+	return types.True
 }
+
 func getServiceAccountName(arg ref.Val) ref.Val {
 	s, ok := arg.Value().(ServiceAccount)
 	if !ok {
