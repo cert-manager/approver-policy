@@ -26,9 +26,9 @@ import (
 	"k8s.io/apiserver/pkg/authentication/serviceaccount"
 )
 
-func ServiceAccountLib() cel.EnvOption {
-	return cel.Lib(&saLib{})
-}
+var (
+	SAType = cel.ObjectType("cm.io.policy.pkg.internal.approver.validation.ServiceAccount")
+)
 
 type saLib struct{}
 type ServiceAccount struct {
@@ -36,9 +36,9 @@ type ServiceAccount struct {
 	Namespace string
 }
 
-var (
-	SAType = cel.ObjectType("cm.io.policy.pkg.internal.approver.validation.ServiceAccount")
-)
+func ServiceAccountLib() cel.EnvOption {
+	return cel.Lib(&saLib{})
+}
 
 // ConvertToNative implements ref.Val.ConvertToNative.
 func (sa ServiceAccount) ConvertToNative(typeDesc reflect.Type) (interface{}, error) {
@@ -46,7 +46,7 @@ func (sa ServiceAccount) ConvertToNative(typeDesc reflect.Type) (interface{}, er
 		return sa, nil
 	}
 	if reflect.TypeOf("").AssignableTo(typeDesc) {
-		return sa, nil
+		return serviceaccount.MakeUsername(sa.Namespace, sa.Name), nil
 	}
 	return nil, fmt.Errorf("type conversion error from 'serviceaccount' to '%v'", typeDesc)
 }
@@ -64,11 +64,11 @@ func (sa ServiceAccount) ConvertToType(typeVal ref.Type) ref.Val {
 
 // Equal implements ref.Val.Equal.
 func (sa ServiceAccount) Equal(other ref.Val) ref.Val {
-	otherDur, ok := other.(ServiceAccount)
+	otherSA, ok := other.(ServiceAccount)
 	if !ok {
 		return types.MaybeNoSuchOverloadErr(other)
 	}
-	return types.Bool(sa.Name == otherDur.Name && sa.Namespace == otherDur.Namespace)
+	return types.Bool(sa.Name == otherSA.Name && sa.Namespace == otherSA.Namespace)
 }
 
 // Type implements ref.Val.Type.Y
@@ -105,10 +105,7 @@ func stringToServiceAccount(arg ref.Val) ref.Val {
 	ns, name, err := serviceaccount.SplitUsername(s)
 
 	if err != nil {
-		return ServiceAccount{
-			Name:      "",
-			Namespace: "",
-		}
+		return types.NewErr("Unable to convert to serviceaccount: err: %s, username: %s", err, s)
 	}
 
 	return ServiceAccount{
