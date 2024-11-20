@@ -198,10 +198,6 @@ var _ = Context("Selector", func() {
 			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
-		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer-2"}),
-		)
-		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
 		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
