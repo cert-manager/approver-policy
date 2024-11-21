@@ -519,12 +519,32 @@ func Test_SelectorIssuerRef(t *testing.T) {
 	}
 
 	tests := map[string]struct {
+		request     *cmapi.CertificateRequest
 		policies    []policyapi.CertificateRequestPolicy
 		expPolicies []policyapi.CertificateRequestPolicy
 	}{
 		"if no policies given, return no policies": {
 			policies:    nil,
 			expPolicies: nil,
+		},
+		"if policy specifies cert-manager defaults and request omits defaults, return policy": {
+			request: &cmapi.CertificateRequest{Spec: cmapi.CertificateRequestSpec{IssuerRef: cmmeta.ObjectReference{
+				Name: "my-issuer",
+			}}},
+			policies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("cert-manager.io"),
+					}},
+				}},
+			},
+			expPolicies: []policyapi.CertificateRequestPolicy{
+				{Spec: policyapi.CertificateRequestPolicySpec{
+					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("cert-manager.io"),
+					}},
+				}},
+			},
 		},
 		"if policy given that doesn't match, return no policies": {
 			policies: []policyapi.CertificateRequestPolicy{
@@ -699,7 +719,10 @@ func Test_SelectorIssuerRef(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			policies, err := SelectorIssuerRef(context.TODO(), baseRequest, test.policies)
+			if test.request == nil {
+				test.request = baseRequest
+			}
+			policies, err := SelectorIssuerRef(context.TODO(), test.request, test.policies)
 			assert.NoError(t, err)
 			if !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
 				t.Errorf("unexpected policies returned:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)

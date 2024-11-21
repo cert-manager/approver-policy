@@ -170,6 +170,38 @@ var _ = Context("Selector", func() {
 		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
 	})
 
+	It("it should select on CertificateRequests with issuerRef={name=my-issuer} where issuerRef={name=my-issuer kind=Issuer group=cert-manager.io}, RBAC bound, and plugin return Ready", func() {
+		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
+						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("cert-manager.io"),
+					},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin": {},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		waitForReady(ctx, env.AdminClient, policy.Name)
+
+		userCreateCRRoleName := bindUserToCreateCertificateRequest(ctx, env.AdminClient, namespace.Name)
+		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policy.Name)
+
+		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames(),
+			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer"}),
+		)
+		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
+
+		deleteRoleAndRoleBindings(ctx, namespace.Name, userUsePolicyRoleName, userCreateCRRoleName)
+	})
+
 	It("it should not select on CertificateRequests where the IssuerRef does not match", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil

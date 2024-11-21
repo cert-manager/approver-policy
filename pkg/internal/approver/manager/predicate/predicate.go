@@ -60,6 +60,15 @@ func Ready(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.
 func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 	var matchingPolicies []policyapi.CertificateRequestPolicy
 
+	// cert-manager applies controller defaults for issuer Kind and Group,
+	// which means that default values are NOT materialized in resources
+	// if omitted.
+	// So in order to make policies addressing these default values effective,
+	// we must apply cert-manager defaults on request when matching policies.
+	issKind := nonEmptyOrDefault(cr.Spec.IssuerRef.Kind, cmapi.IssuerKind)
+	issGroup := nonEmptyOrDefault(cr.Spec.IssuerRef.Group, "cert-manager.io")
+	issName := cr.Spec.IssuerRef.Name
+
 	for _, policy := range policies {
 		issRefSel := policy.Spec.Selector.IssuerRef
 		// If the issuerRef selector is nil, we match the policy and continue
@@ -69,15 +78,13 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 			continue
 		}
 
-		issRef := cr.Spec.IssuerRef
-
-		if issRefSel.Name != nil && !util.WildcardMatches(*issRefSel.Name, issRef.Name) {
+		if issRefSel.Name != nil && !util.WildcardMatches(*issRefSel.Name, issName) {
 			continue
 		}
-		if issRefSel.Kind != nil && !util.WildcardMatches(*issRefSel.Kind, issRef.Kind) {
+		if issRefSel.Kind != nil && !util.WildcardMatches(*issRefSel.Kind, issKind) {
 			continue
 		}
-		if issRefSel.Group != nil && !util.WildcardMatches(*issRefSel.Group, issRef.Group) {
+		if issRefSel.Group != nil && !util.WildcardMatches(*issRefSel.Group, issGroup) {
 			continue
 		}
 		matchingPolicies = append(matchingPolicies, policy)
@@ -202,4 +209,11 @@ func RBACBound(client client.Client) Predicate {
 
 		return boundPolicies, nil
 	}
+}
+
+func nonEmptyOrDefault(s, d string) string {
+	if len(s) == 0 {
+		return d
+	}
+	return s
 }
