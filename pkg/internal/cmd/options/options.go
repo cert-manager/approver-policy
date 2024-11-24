@@ -120,9 +120,13 @@ type Webhook struct {
 	// ServiceName is the service that exposes the Webhook server.
 	ServiceName string
 
-	// CASecretNamespace is the namespace that the
-	// cert-manager-approver-policy-tls Secret is stored.
+	// CASecretName is the namespace that the approver-policy
+	// webhook CA certificate Secret is stored.
 	CASecretNamespace string
+
+	// CASecretName is the name of the Secret use to store
+	// the approver-policy webhook CA certificate.
+	CASecretName string
 
 	// CADuration for webhook server DynamicSource CA.
 	// DynamicSource is upstream cert-manager's CA Provider.
@@ -237,7 +241,11 @@ func (o *Options) addWebhookFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&o.Webhook.CASecretNamespace,
 		"webhook-ca-secret-namespace", "cert-manager",
-		"Namespace that the cert-manager-approver-policy-tls Secret is stored.")
+		"Namespace that the approver-policy webhook CA certificate Secret is stored.")
+
+	fs.StringVar(&o.Webhook.CASecretName,
+		"webhook-ca-secret-name", "cert-manager-approver-policy-tls",
+		"Name of Secret used to store the approver-policy webhook CA certificate Secret.")
 
 	fs.DurationVar(&o.Webhook.CADuration,
 		"webhook-ca-duration", time.Hour*24*365,

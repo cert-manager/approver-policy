@@ -64,7 +64,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				DNSNames: []string{fmt.Sprintf("%s.%s.svc", opts.Webhook.ServiceName, opts.Webhook.CASecretNamespace)},
 				Authority: &authority.DynamicAuthority{
 					SecretNamespace: opts.Webhook.CASecretNamespace,
-					SecretName:      "cert-manager-approver-policy-tls",
+					SecretName:      opts.Webhook.CASecretName,
 					RESTConfig:      opts.RestConfig,
 					CADuration:      opts.Webhook.CADuration,
 					LeafDuration:    opts.Webhook.LeafDuration,

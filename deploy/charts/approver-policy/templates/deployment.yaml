@@ -61,6 +61,7 @@ spec:
           - --webhook-port={{.Values.app.webhook.port}}
           - --webhook-service-name={{ include "cert-manager-approver-policy.name" . }}
           - --webhook-ca-secret-namespace={{.Release.Namespace}}
+          - --webhook-ca-secret-name={{ include "cert-manager-approver-policy.name" . }}-tls
 
         {{- with .Values.volumeMounts }}
         volumeMounts:
