@@ -30,10 +30,6 @@ oci_manager_image_name_development := cert-manager.local/cert-manager-approver-p
 deploy_name := approver-policy
 deploy_namespace := cert-manager
 
-api_docs_outfile := docs/api/api.md
-api_docs_package := $(repo_name)/pkg/apis/policy/v1alpha1
-api_docs_branch := main
-
 helm_chart_source_dir := deploy/charts/approver-policy
 helm_chart_name := cert-manager-approver-policy
 helm_chart_version := $(VERSION)
