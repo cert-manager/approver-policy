@@ -351,7 +351,7 @@ var _ = Context("Ready", func() {
 		Consistently(func() bool {
 			Eventually(func() error {
 				return env.AdminClient.Get(ctx, client.ObjectKeyFromObject(&policy), &policy)
-			}, "10ms", "10s").Should(BeNil())
+			}, "10ms", "10s").Should(Succeed())
 			for _, condition := range policy.Status.Conditions {
 				if condition.ObservedGeneration != policy.Generation {
 					return true
