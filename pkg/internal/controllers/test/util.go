@@ -52,7 +52,7 @@ func waitForApproval(ctx context.Context, cl client.Client, ns, name string) {
 		cr := new(cmapi.CertificateRequest)
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)
-		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(Succeed())
 		return apiutil.CertificateRequestIsApproved(cr)
 	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeTrue(), "expected approval")
 }
@@ -64,7 +64,7 @@ func waitForDenial(ctx context.Context, cl client.Client, ns, name string) {
 		cr := new(cmapi.CertificateRequest)
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)
-		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(Succeed())
 		return apiutil.CertificateRequestIsDenied(cr)
 	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeTrue(), "expected denial")
 }
@@ -76,7 +76,7 @@ func waitForNoApproveOrDeny(ctx context.Context, cl client.Client, ns, name stri
 		cr := new(cmapi.CertificateRequest)
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Namespace: ns, Name: name}, cr)
-		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(Succeed())
 		return apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr)
 	}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeFalse(), "expected neither approved not denied")
 }
@@ -89,7 +89,7 @@ func waitForReady(ctx context.Context, cl client.Client, name string) {
 		var policy policyapi.CertificateRequestPolicy
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Name: name}, &policy)
-		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(Succeed())
 		for _, condition := range policy.Status.Conditions {
 			if condition.ObservedGeneration != policy.Generation {
 				return false
@@ -110,7 +110,7 @@ func waitForNotReady(ctx context.Context, cl client.Client, name string) {
 		var policy policyapi.CertificateRequestPolicy
 		Eventually(func() error {
 			return cl.Get(ctx, client.ObjectKey{Name: name}, &policy)
-		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(BeNil())
+		}).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(Succeed())
 		for _, condition := range policy.Status.Conditions {
 			if condition.ObservedGeneration != policy.Generation {
 				return false
