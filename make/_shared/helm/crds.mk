@@ -49,7 +49,7 @@ $(crds_dir)/README.md: $(crds_dir_readme) | $(crds_dir)
 .PHONY: generate-crds
 ## Generate CRD manifests.
 ## @category [shared] Generate/ Verify
-generate-crds: | $(NEEDS_CONTROLLER-GEN) $(NEEDS_YQ)
+generate-crds: | $(crds_dir)/README.md $(NEEDS_CONTROLLER-GEN) $(NEEDS_YQ)
 	$(eval directories := $(shell ls -d */ | grep -v -e 'make' $(shell git check-ignore -- * | sed 's/^/-e /')))
 
 	$(CONTROLLER-GEN) crd \
