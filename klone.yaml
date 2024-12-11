@@ -35,7 +35,7 @@ targets:
     - folder_name: helm
       repo_url: https://github.com/cert-manager/makefile-modules.git
       repo_ref: main
-      repo_hash: 6eccdeac5eab23905699243209e0f81afad6f081
+      repo_hash: fbd26411777b12c2574d05f146cee617c6c50b63
       repo_path: modules/helm
     - folder_name: help
       repo_url: https://github.com/cert-manager/makefile-modules.git
