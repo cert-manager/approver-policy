@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-approver_policy_crds := $(bin_dir)/scratch/approver-policy-crds.yaml
-$(approver_policy_crds): $(helm_chart_archive) | $(NEEDS_HELM) $(NEEDS_YQ) $(bin_dir)/scratch
-	$(HELM) template test "$(helm_chart_archive)" | \
-		$(YQ) e '. | select(.kind == "CustomResourceDefinition")' \
-		> $@
-
 .PHONY: test-unit
 ## Unit tests
 ## @category Testing
-test-unit: | $(cert_manager_crds) $(approver_policy_crds) $(NEEDS_GO) $(NEEDS_GINKGO) $(NEEDS_ETCD) $(NEEDS_KUBE-APISERVER) $(NEEDS_KUBECTL) $(ARTIFACTS)
+test-unit: | $(cert_manager_crds) $(NEEDS_GO) $(NEEDS_GINKGO) $(NEEDS_ETCD) $(NEEDS_KUBE-APISERVER) $(NEEDS_KUBECTL) $(ARTIFACTS)
 	CERT_MANAGER_CRDS=$(CURDIR)/$(cert_manager_crds) \
-	APPROVER_POLICY_CRDS=$(CURDIR)/$(approver_policy_crds) \
 	KUBEBUILDER_ASSETS=$(CURDIR)/$(bin_dir)/tools \
 	$(GINKGO) \
 		--output-dir=$(ARTIFACTS) \

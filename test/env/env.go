@@ -67,6 +67,8 @@ type Environment struct {
 func RunControlPlane(t *testing.T, ctx context.Context, crdDirs ...string) *Environment {
 	env := &envtest.Environment{
 		AttachControlPlaneOutput: false,
+		CRDDirectoryPaths:        crdDirs,
+		ErrorIfCRDPathMissing:    true,
 	}
 
 	t.Logf("starting API server...")
@@ -97,33 +99,19 @@ func RunControlPlane(t *testing.T, ctx context.Context, crdDirs ...string) *Envi
 		stopWebhook()
 	})
 
-	crds := readCRDsAtDirectories(t, crdDirs...)
-	for _, crd := range crds {
-		t.Logf("found CRD with name %q", crd.Name)
-	}
-	patchCMConversionCRDs(crds, webhookOpts.URL, webhookOpts.CAPEM)
-
 	adminClient, err := client.New(env.Config, client.Options{Scheme: policyapi.GlobalScheme})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Install CRDs and validating/mutating webhook configurations, not using
-	// WebhookInstallOptions as it patches the CA to be it's own
-	crdObjects := crdsToRuntimeObjects(crds)
+	// Install validating/mutating webhook configurations, not using
+	// WebhookInstallOptions as it patches the CA to be its own
 	validationObject := getCMValidatingWebhookConfig(webhookOpts.URL, webhookOpts.CAPEM)
 	mutatationObject := getCMMutatingWebhookConfig(webhookOpts.URL, webhookOpts.CAPEM)
-	for _, crd := range append(crdObjects, validationObject, mutatationObject) {
+	for _, crd := range []client.Object{validationObject, mutatationObject} {
 		if err := adminClient.Create(ctx, crd); err != nil {
 			t.Fatalf("%s: %s", crd.GetName(), err)
 		}
-	}
-
-	// Wait for CRDs to become ready
-	if err := envtest.WaitForCRDs(env.Config, crds,
-		envtest.CRDInstallOptions{MaxTime: 5 * time.Second, PollInterval: 15 * time.Millisecond},
-	); err != nil {
-		t.Fatal(err)
 	}
 
 	user, err := env.AddUser(envtest.User{Name: UserClientName, Groups: []string{"group-1", "group-2"}}, env.Config)
