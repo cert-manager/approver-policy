@@ -1,7 +1,6 @@
 module github.com/cert-manager/approver-policy
 
-go 1.22.0
-toolchain go1.23.4
+go 1.23.0
 
 require (
 	github.com/cert-manager/cert-manager v1.16.2
