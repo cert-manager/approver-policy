@@ -18,6 +18,7 @@ package predicate
 
 import (
 	"context"
+	"path"
 	"testing"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -44,7 +45,7 @@ func Test_RBACBound(t *testing.T) {
 
 	env := testenv.RunControlPlane(t, ctx,
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
-		testenv.GetenvOrFail(t, "APPROVER_POLICY_CRDS"),
+		path.Join("..", "..", "..", "..", "..", "deploy", "crds"),
 	)
 
 	const (
