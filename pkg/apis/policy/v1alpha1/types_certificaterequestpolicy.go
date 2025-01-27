@@ -24,6 +24,7 @@ import (
 
 var CertificateRequestPolicyKind = "CertificateRequestPolicy"
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=`.status.conditions[?(@.type == "Ready")].status`,description="CertificateRequestPolicy is ready for evaluation"
@@ -42,6 +43,7 @@ type CertificateRequestPolicy struct {
 	Status CertificateRequestPolicyStatus `json:"status,omitempty"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // CertificateRequestPolicyList is a list of CertificateRequestPolicies.
 type CertificateRequestPolicyList struct {
