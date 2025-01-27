@@ -43,7 +43,6 @@ type CertificateRequestPolicy struct {
 	Status CertificateRequestPolicyStatus `json:"status,omitempty"`
 }
 
-// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // CertificateRequestPolicyList is a list of CertificateRequestPolicies.
 type CertificateRequestPolicyList struct {
