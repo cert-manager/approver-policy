@@ -35,8 +35,9 @@ import (
 
 func Test_Evaluate(t *testing.T) {
 	var (
-		ecdsaAlg = cmapi.ECDSAKeyAlgorithm
-		rsaAlg   = cmapi.RSAKeyAlgorithm
+		ecdsaAlg   = cmapi.ECDSAKeyAlgorithm
+		ed25519Alg = cmapi.Ed25519KeyAlgorithm
+		rsaAlg     = cmapi.RSAKeyAlgorithm
 	)
 
 	tests := map[string]struct {
@@ -45,6 +46,17 @@ func Test_Evaluate(t *testing.T) {
 		expResponse approver.EvaluationResponse
 		expErr      bool
 	}{
+		"passes on Ed25519 CSR with private key constraints set": {
+			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.Ed25519))),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Constraints: &policyapi.CertificateRequestPolicyConstraints{
+					PrivateKey: &policyapi.CertificateRequestPolicyConstraintsPrivateKey{
+						Algorithm: &ed25519Alg,
+					},
+				},
+			},
+			expResponse: approver.EvaluationResponse{Result: approver.ResultNotDenied, Message: ""},
+		},
 		"if no constraints defined, should return NotDenied": {
 			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t, x509.ECDSA))),
 			policy: policyapi.CertificateRequestPolicySpec{
