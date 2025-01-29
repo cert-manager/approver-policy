@@ -116,7 +116,7 @@ func decodePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
 	case *ecdsa.PublicKey:
 		return cmapi.ECDSAKeyAlgorithm, pubKey.Curve.Params().BitSize, nil
 
-	case *ed25519.PublicKey:
+	case ed25519.PublicKey:
 		return cmapi.Ed25519KeyAlgorithm, -1, nil
 
 	default:
