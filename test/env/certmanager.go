@@ -20,46 +20,9 @@ import (
 	"fmt"
 
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-// patchCMConversionCRDs patches the passed CRD objects to include the URL and
-// CA of the cert-manager webhook serving certificate. Only patches
-// cert-manager CRDs.
-func patchCMConversionCRDs(crds []*apiextensionsv1.CustomResourceDefinition, url string, caPEM []byte) {
-	for _, crd := range crds {
-		// Ensure all PreserveUnknownFields are set to false for _all_ CRDs.
-		crd.Spec.PreserveUnknownFields = false
-
-		// Don't patch non-cert-manager CRDs
-		if crd.Spec.Group != "cert-manager.io" && crd.Spec.Group != "acme.cert-manager.io" {
-			continue
-		}
-
-		if crd.Spec.Conversion == nil {
-			continue
-		}
-		if crd.Spec.Conversion.Webhook == nil {
-			continue
-		}
-		if crd.Spec.Conversion.Webhook.ClientConfig == nil {
-			continue
-		}
-		if crd.Spec.Conversion.Webhook.ClientConfig.Service == nil {
-			continue
-		}
-		path := ""
-		if crd.Spec.Conversion.Webhook.ClientConfig.Service.Path != nil {
-			path = *crd.Spec.Conversion.Webhook.ClientConfig.Service.Path
-		}
-		url := fmt.Sprintf("%s%s", url, path)
-		crd.Spec.Conversion.Webhook.ClientConfig.URL = &url
-		crd.Spec.Conversion.Webhook.ClientConfig.CABundle = caPEM
-		crd.Spec.Conversion.Webhook.ClientConfig.Service = nil
-	}
-}
 
 // getCMValidatingWebhookConfig returns a ValidatingWebhookConfiguration object
 // for the cert-manager webhook. url should be the URL that the webhook process

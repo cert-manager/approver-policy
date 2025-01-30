@@ -18,6 +18,7 @@ package test
 
 import (
 	"context"
+	"path"
 	"testing"
 
 	"github.com/onsi/ginkgo/v2"
@@ -38,7 +39,7 @@ func Test_Controllers(t *testing.T) {
 
 	env = testenv.RunControlPlane(t, ctx,
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
-		testenv.GetenvOrFail(t, "APPROVER_POLICY_CRDS"),
+		path.Join("..", "..", "..", "..", "deploy", "crds"),
 	)
 
 	ginkgo.RunSpecs(t, "approver-policy-controllers")
