@@ -38,8 +38,12 @@ spec:
         image: "{{ template "image" (tuple .Values.image $.Chart.AppVersion) }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.app.webhook.port }}
-        - containerPort: {{ .Values.app.metrics.port }}
+        - name: https
+          containerPort: {{ .Values.app.webhook.port }}
+        - name: http-metrics
+          containerPort: {{ .Values.app.metrics.port }}
+        - name: healthcheck
+          containerPort: {{ .Values.app.readinessProbe.port }}
         readinessProbe:
           httpGet:
             port: {{ .Values.app.readinessProbe.port }}
