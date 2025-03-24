@@ -19,11 +19,11 @@ test-unit: | $(cert_manager_crds) $(NEEDS_GO) $(NEEDS_GINKGO) $(NEEDS_ETCD) $(NE
 	CERT_MANAGER_CRDS=$(CURDIR)/$(cert_manager_crds) \
 	KUBEBUILDER_ASSETS=$(CURDIR)/$(bin_dir)/tools \
 	$(GINKGO) \
-		--output-dir=$(ARTIFACTS) \
-		--junit-report=junit-go-e2e.xml \
+		--output-dir $(ARTIFACTS) \
+		--junit-report junit-go-e2e.xml \
 		--cover \
-		--coverprofile=filtered.cov \
-		./cmd/... ./pkg/... \
-		-ldflags $(go_manager_ldflags)
+		--coverprofile filtered.cov \
+		--ldflags "$(go_manager_ldflags)" \
+		./cmd/... ./pkg/...
 
 	$(GO) tool cover -html=$(ARTIFACTS)/filtered.cov -o=$(ARTIFACTS)/filtered.html
