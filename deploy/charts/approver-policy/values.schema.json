@@ -6,6 +6,9 @@
         "affinity": {
           "$ref": "#/$defs/helm-values.affinity"
         },
+        "allowAllIssuerRbac": {
+          "$ref": "#/$defs/helm-values.allowAllIssuerRbac"
+        },
         "app": {
           "$ref": "#/$defs/helm-values.app"
         },
@@ -82,6 +85,11 @@
       "default": {},
       "description": "A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).\n\nFor example:\naffinity:\n  nodeAffinity:\n   requiredDuringSchedulingIgnoredDuringExecution:\n     nodeSelectorTerms:\n     - matchExpressions:\n       - key: foo.bar.com/role\n         operator: In\n         values:\n         - master",
       "type": "object"
+    },
+    "helm-values.allowAllIssuerRbac": {
+      "default": true,
+      "description": "Enable or disable the approver-policy",
+      "type": "boolean"
     },
     "helm-values.app": {
       "additionalProperties": false,

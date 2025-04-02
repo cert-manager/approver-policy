@@ -2,7 +2,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: allow-all
+  labels:
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
+  name: {{ include "cert-manager-approver-policy.name" . }}-allow-all
 rules:
   - apiGroups:
       - cert-manager.io
