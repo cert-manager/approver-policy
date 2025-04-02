@@ -1,0 +1,13 @@
+{{- if .Values.allowAllIssuerRbac -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: allow-all
+rules:
+  - apiGroups:
+      - cert-manager.io
+    resources:
+      - "signers"
+    verbs:
+      - "approve"
+{{- end -}}

@@ -30,6 +30,9 @@ crds:
 # +docs:type=number,string,null
 replicaCount: 1
 
+# Enable or disable the approver-policy
+allowAllIssuerRbac: true
+
 image:
   # Target image registry. This value is prepended to the target image repository, if set.
   # For example:
