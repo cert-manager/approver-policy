@@ -65,7 +65,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Authority: &authority.DynamicAuthority{
 					SecretNamespace: opts.Webhook.CASecretNamespace,
 					SecretName:      opts.Webhook.CASecretName,
+					SecretLabels:    map[string]string{"app.kubernetes.io/managed-by": "approver-policy"},
 					RESTConfig:      opts.RestConfig,
+					CommonName:      "approver-policy-webhook-ca",
 					CADuration:      opts.Webhook.CADuration,
 					LeafDuration:    opts.Webhook.LeafDuration,
 				},
