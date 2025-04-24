@@ -173,7 +173,7 @@ func Test_Metrics(t *testing.T) {
 func mockCollector(t *testing.T, crs []cmapi.CertificateRequest) *collector {
 	return &collector{
 		cache: &mockCache{t: t, objects: crs},
-		ctx:   context.Background(),
+		ctx:   t.Context(),
 		log:   logr.Discard(),
 	}
 }

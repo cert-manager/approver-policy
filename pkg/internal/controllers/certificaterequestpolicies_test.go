@@ -447,7 +447,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				reconcilers: test.reconcilers,
 			}
 
-			resp, statusPatch, err := c.reconcileStatusPatch(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Name: policyName}})
+			resp, statusPatch, err := c.reconcileStatusPatch(t.Context(), ctrl.Request{NamespacedName: types.NamespacedName{Name: policyName}})
 			if (err != nil) != test.expError {
 				t.Errorf("unexpected error, exp=%t got=%v", test.expError, err)
 			}

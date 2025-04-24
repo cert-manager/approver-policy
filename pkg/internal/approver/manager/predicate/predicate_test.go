@@ -17,7 +17,6 @@ limitations under the License.
 package predicate
 
 import (
-	"context"
 	"path"
 	"testing"
 
@@ -38,12 +37,7 @@ import (
 )
 
 func Test_RBACBound(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.TODO())
-	t.Cleanup(func() {
-		cancel()
-	})
-
-	env := testenv.RunControlPlane(t, ctx,
+	env := testenv.RunControlPlane(t, t.Context(),
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
 		path.Join("..", "..", "..", "..", "..", "deploy", "crds"),
 	)
@@ -53,7 +47,7 @@ func Test_RBACBound(t *testing.T) {
 		requestNamespace = "test-namespace"
 	)
 
-	if err := env.AdminClient.Create(context.TODO(),
+	if err := env.AdminClient.Create(t.Context(),
 		&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: requestNamespace}},
 	); err != nil {
 		t.Fatal(err)
@@ -379,11 +373,12 @@ func Test_RBACBound(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() {
 				for _, obj := range test.apiObjects {
-					if err := env.AdminClient.Delete(context.TODO(), obj); err != nil {
+					if err := env.AdminClient.Delete(ctx, obj); err != nil {
 						// Don't Fatal here as a ditch effort to at least try to clean-up
 						// everything.
 						t.Errorf("failed to deleted existing object: %s", err)
@@ -392,7 +387,7 @@ func Test_RBACBound(t *testing.T) {
 			})
 
 			for _, obj := range test.apiObjects {
-				if err := env.AdminClient.Create(context.TODO(), obj); err != nil {
+				if err := env.AdminClient.Create(ctx, obj); err != nil {
 					t.Fatalf("failed to create new object: %s", err)
 				}
 			}
@@ -408,7 +403,7 @@ func Test_RBACBound(t *testing.T) {
 					},
 				},
 			}
-			policies, err := RBACBound(env.AdminClient)(context.TODO(), req, test.policies)
+			policies, err := RBACBound(env.AdminClient)(ctx, req, test.policies)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expPolicies, policies)
 		})
@@ -499,7 +494,7 @@ func Test_Ready(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			policies, err := Ready(context.TODO(), nil, test.policies)
+			policies, err := Ready(t.Context(), nil, test.policies)
 			assert.NoError(t, err)
 			if !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
 				t.Errorf("unexpected policies returned:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
@@ -723,7 +718,7 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			if test.request == nil {
 				test.request = baseRequest
 			}
-			policies, err := SelectorIssuerRef(context.TODO(), test.request, test.policies)
+			policies, err := SelectorIssuerRef(t.Context(), test.request, test.policies)
 			assert.NoError(t, err)
 			if !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
 				t.Errorf("unexpected policies returned:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
@@ -1050,7 +1045,7 @@ func Test_SelectorNamespace(t *testing.T) {
 			}
 			fakeclient := builder.Build()
 
-			policies, err := SelectorNamespace(fakeclient)(context.TODO(), baseRequest, test.policies)
+			policies, err := SelectorNamespace(fakeclient)(t.Context(), baseRequest, test.policies)
 			assert.Equal(t, err != nil, test.expErr, "%v", err)
 			if !test.expErr && !apiequality.Semantic.DeepEqual(test.expPolicies, policies) {
 				t.Errorf("unexpected policies returned:\nexp=%#+v\ngot=%#+v", test.expPolicies, policies)
