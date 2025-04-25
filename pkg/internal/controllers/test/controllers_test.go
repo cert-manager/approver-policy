@@ -17,7 +17,6 @@ limitations under the License.
 package test
 
 import (
-	"context"
 	"path"
 	"testing"
 
@@ -32,12 +31,7 @@ import (
 func Test_Controllers(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
 
-	ctx, cancel := context.WithCancel(context.TODO())
-	t.Cleanup(func() {
-		cancel()
-	})
-
-	env = testenv.RunControlPlane(t, ctx,
+	env = testenv.RunControlPlane(t, t.Context(),
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
 		path.Join("..", "..", "..", "..", "deploy", "crds"),
 	)

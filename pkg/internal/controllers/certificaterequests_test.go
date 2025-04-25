@@ -194,7 +194,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 				clock:    fixedclock,
 			}
 
-			resp, statusPatch, err := c.reconcileStatusPatch(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: gen.DefaultTestNamespace, Name: requestName}})
+			resp, statusPatch, err := c.reconcileStatusPatch(t.Context(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: gen.DefaultTestNamespace, Name: requestName}})
 			if (err != nil) != test.expError {
 				t.Errorf("unexpected error, exp=%t got=%v", test.expError, err)
 			}

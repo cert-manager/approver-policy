@@ -17,7 +17,6 @@ limitations under the License.
 package allowed
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -211,7 +210,7 @@ func Test_Validate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			response, err := Approver().Validate(context.TODO(), test.policy)
+			response, err := Approver().Validate(t.Context(), test.policy)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expResponse, response)
 		})

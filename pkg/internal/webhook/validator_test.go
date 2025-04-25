@@ -215,7 +215,7 @@ func Test_validate(t *testing.T) {
 				Build()
 
 			v := &validator{lister: fakeclient, log: ktesting.NewLogger(t, ktesting.DefaultConfig), webhooks: test.webhooks, registeredPlugins: test.registeredPlugins}
-			gotWarnings, gotErr := v.validate(context.Background(), test.crp)
+			gotWarnings, gotErr := v.validate(t.Context(), test.crp)
 			if test.expectedError == nil && gotErr != nil {
 				t.Errorf("unexpected error: %v", gotErr)
 			} else if test.expectedError != nil && (gotErr == nil || *test.expectedError != gotErr.Error()) {

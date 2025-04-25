@@ -36,12 +36,7 @@ import (
 )
 
 func Test_Review(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.TODO())
-	t.Cleanup(func() {
-		cancel()
-	})
-
-	env := testenv.RunControlPlane(t, ctx,
+	env := testenv.RunControlPlane(t, t.Context(),
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
 		path.Join("..", "..", "..", "..", "deploy", "crds"),
 	)
@@ -213,11 +208,12 @@ func Test_Review(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() {
 				for _, obj := range test.policies {
-					if err := env.AdminClient.Delete(context.TODO(), &obj); /* #nosec G601 -- Func drops pointer at end of call. */ err != nil {
+					if err := env.AdminClient.Delete(ctx, &obj); /* #nosec G601 -- Func drops pointer at end of call. */ err != nil {
 						// Don't Fatal here as a ditch effort to at least try to clean-up
 						// everything.
 						t.Errorf("failed to delete policy: %s", err)
@@ -226,7 +222,7 @@ func Test_Review(t *testing.T) {
 			})
 
 			for _, obj := range test.policies {
-				if err := env.AdminClient.Create(context.TODO(), &obj); /* #nosec G601 -- Func drops pointer at end of call. */ err != nil {
+				if err := env.AdminClient.Create(ctx, &obj); /* #nosec G601 -- Func drops pointer at end of call. */ err != nil {
 					t.Fatalf("failed to create new policy: %s", err)
 				}
 			}
@@ -237,7 +233,7 @@ func Test_Review(t *testing.T) {
 				evaluators: []approver.Evaluator{test.evaluator(t)},
 			}
 
-			response, err := mngr.Review(context.TODO(), &cmapi.CertificateRequest{
+			response, err := mngr.Review(ctx, &cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-req"},
 				Spec: cmapi.CertificateRequestSpec{
 					Username: "example",

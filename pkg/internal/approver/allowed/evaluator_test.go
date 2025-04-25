@@ -17,7 +17,6 @@ limitations under the License.
 package allowed
 
 import (
-	"context"
 	"crypto/x509"
 	"net"
 	"net/url"
@@ -460,7 +459,7 @@ func Test_Evaluate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			response, err := Approver().Evaluate(context.TODO(), &policyapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
+			response, err := Approver().Evaluate(t.Context(), &policyapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
 			assert.Equal(t, test.expErr, err != nil, "%v", err)
 			if diff := cmp.Diff(response, test.expResponse); diff != "" {
 				t.Errorf("unexpected evaluation response (-want +got):\n%v", diff)
