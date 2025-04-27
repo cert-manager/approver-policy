@@ -140,6 +140,34 @@ Extra CLI arguments that will be passed to the approver-policy process.
 List of signer names that approver-policy will be given permission to approve and deny. CertificateRequests referencing these signer names can be processed by approver-policy. Defaults to an empty array, allowing approval for all signers.  
 ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
 
+#### **app.usePoliciesRbac.enabled** ~ `bool`
+> Default value:
+> ```yaml
+> true
+> ```
+
+Create RBAC to grant permission to use policies.
+#### **app.usePoliciesRbac.policyNames** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
+
+List of policies that the referenced service account will be given permission to use. Defaults to an empty array, allowing use of all policies.
+#### **app.usePoliciesRbac.serviceAccount.name** ~ `string`
+> Default value:
+> ```yaml
+> cert-manager
+> ```
+
+Name of ServiceAccount.
+#### **app.usePoliciesRbac.serviceAccount.namespace** ~ `string`
+> Default value:
+> ```yaml
+> cert-manager
+> ```
+
+Namespace of ServiceAccount.
 #### **app.metrics.port** ~ `number`
 > Default value:
 > ```yaml
