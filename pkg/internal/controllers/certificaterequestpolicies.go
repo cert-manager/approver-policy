@@ -195,11 +195,10 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 
 		// Capture requeue. If requeue is not currently set or the given
 		// requeueAfter is smaller than the current, set to given requeueAfter.
-		if response.Requeue || response.RequeueAfter > 0 {
-			if !result.Requeue || result.RequeueAfter > response.RequeueAfter {
+		if response.RequeueAfter > 0 {
+			if result.RequeueAfter == 0 || result.RequeueAfter > response.RequeueAfter {
 				result.RequeueAfter = response.RequeueAfter
 			}
-			result.Requeue = true
 		}
 
 		el = append(el, response.Errors...)
