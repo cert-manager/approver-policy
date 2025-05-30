@@ -235,7 +235,7 @@ var _ = Context("Selector", func() {
 
 	It("it should not select on CertificateRequests where the IssuerRef matches but the policy is not ready", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{Requeue: true, RequeueAfter: time.Millisecond * 50}}, nil
+			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{RequeueAfter: time.Millisecond * 50}}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all"},
@@ -612,7 +612,7 @@ var _ = Context("Selector", func() {
 
 	It("it should not select on CertificateRequests where the namespace matches but the policy is not ready", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{Requeue: true, RequeueAfter: time.Millisecond * 50}}, nil
+			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{RequeueAfter: time.Millisecond * 50}}, nil
 		})
 
 		policy := policyapi.CertificateRequestPolicy{

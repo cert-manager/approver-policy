@@ -246,7 +246,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		c.recorder.Event(cr, corev1.EventTypeWarning, "UnknownResponse", "Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue")
 
 		// We can do nothing but keep retrying the review here.
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil, nil
+		return ctrl.Result{RequeueAfter: time.Second * 5}, nil, nil
 
 	}
 }

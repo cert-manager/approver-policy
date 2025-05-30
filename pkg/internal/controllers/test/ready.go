@@ -214,7 +214,7 @@ var _ = Context("Ready", func() {
 				return approver.ReconcilerReadyResponse{Ready: true}, nil
 			}
 			i++
-			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{Requeue: true, RequeueAfter: time.Millisecond * 100}}, nil
+			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{RequeueAfter: time.Millisecond * 100}}, nil
 		})
 
 		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {

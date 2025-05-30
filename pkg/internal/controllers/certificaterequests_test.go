@@ -109,7 +109,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 				return manager.ReviewResponse{}, nil
 			}),
-			expResult:      ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
+			expResult:      ctrl.Result{RequeueAfter: time.Second * 5},
 			expError:       false,
 			expStatusPatch: nil,
 			expEvent:       "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
@@ -119,7 +119,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 			manager: fakemanager.NewFakeManager().WithReview(func(context.Context, *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 				return manager.ReviewResponse{Result: 5, Message: "unknown result"}, nil
 			}),
-			expResult:      ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5},
+			expResult:      ctrl.Result{RequeueAfter: time.Second * 5},
 			expError:       false,
 			expStatusPatch: nil,
 			expEvent:       "Warning UnknownResponse Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue",
