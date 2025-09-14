@@ -104,7 +104,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return err
 			}
 
-			metrics.RegisterMetrics(ctx, opts.Logr.WithName("metrics"), mgr.GetCache())
+			metrics.RegisterMetrics(ctx, opts.Logr.WithName("metrics"), mgr.GetClient())
 
 			if err := webhook.Register(ctx, webhook.Options{
 				Log:      opts.Logr,

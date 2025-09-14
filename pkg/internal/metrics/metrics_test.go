@@ -17,8 +17,6 @@ limitations under the License.
 package metrics
 
 import (
-	"context"
-	"errors"
 	"strings"
 	"testing"
 
@@ -27,14 +25,100 @@ import (
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 )
 
 func Test_Metrics(t *testing.T) {
+	t.Run("certificaterequests_approval reports the approval status of CertificateRequests", func(t *testing.T) {
+		mock := mockCollector(t, []*cmapi.CertificateRequest{
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "approved-1", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Approved", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "approved-2", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Approved", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "approved-3", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Approved", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "approved-4", Namespace: "other"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Approved", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "denied-1", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Denied", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "denied-2", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Denied", Status: "True"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "denied-3", Namespace: "other"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+					{Type: "Denied", Status: "True"},
+				}},
+			},
+			// Three unmatched CRs.
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "unmatched-1", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "unmatched-2", Namespace: "bar"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+				}},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: "unmatched-3", Namespace: "other"},
+				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
+					{Type: "Ready", Status: "False"},
+				}},
+			},
+		})
+		const expected = `
+			# HELP certmanager_approverpolicy_certificaterequests_approval The approval status of CertificateRequests. Possible values for the 'status' label: 'approved', 'denied', 'unmatched'.
+			# TYPE certmanager_approverpolicy_certificaterequests_approval gauge
+			certmanager_approverpolicy_certificaterequests_approval{namespace="bar",status="approved"} 3
+			certmanager_approverpolicy_certificaterequests_approval{namespace="bar",status="denied"} 2
+			certmanager_approverpolicy_certificaterequests_approval{namespace="bar",status="unmatched"} 2
+			certmanager_approverpolicy_certificaterequests_approval{namespace="other",status="approved"} 1
+			certmanager_approverpolicy_certificaterequests_approval{namespace="other",status="denied"} 1
+			certmanager_approverpolicy_certificaterequests_approval{namespace="other",status="unmatched"} 1
+		`
+		err := testutil.CollectAndCompare(mock, strings.NewReader(expected), "certmanager_approverpolicy_certificaterequests_approval")
+		require.NoError(t, err)
+	})
+
 	t.Run("approved_count counts the CRs that have the Approved condition", func(t *testing.T) {
-		mock := mockCollector(t, []cmapi.CertificateRequest{
+		mock := mockCollector(t, []*cmapi.CertificateRequest{
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
@@ -64,7 +148,7 @@ func Test_Metrics(t *testing.T) {
 			},
 		})
 		const expected = `
-            # HELP approverpolicy_certificaterequest_approved_count Number of CertificateRequests that have been approved (Approved=True).
+            # HELP approverpolicy_certificaterequest_approved_count DEPRECATED: use certmanager_approverpolicy_certificaterequests_approval instead. Number of CertificateRequests that have been approved (Approved=True).
 			# TYPE approverpolicy_certificaterequest_approved_count gauge
             approverpolicy_certificaterequest_approved_count{namespace="bar"} 2
             approverpolicy_certificaterequest_approved_count{namespace="other"} 1
@@ -74,7 +158,7 @@ func Test_Metrics(t *testing.T) {
 	})
 
 	t.Run("denied_count counts the CRs that have the Denied condition", func(t *testing.T) {
-		mock := mockCollector(t, []cmapi.CertificateRequest{
+		mock := mockCollector(t, []*cmapi.CertificateRequest{
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
@@ -104,7 +188,7 @@ func Test_Metrics(t *testing.T) {
 			},
 		})
 		const expected = `
-		# HELP approverpolicy_certificaterequest_denied_count Number of CertificateRequests that have been denied (Denied=True).
+		# HELP approverpolicy_certificaterequest_denied_count DEPRECATED: use certmanager_approverpolicy_certificaterequests_approval instead. Number of CertificateRequests that have been denied (Denied=True).
 		# TYPE approverpolicy_certificaterequest_denied_count gauge
 		approverpolicy_certificaterequest_denied_count{namespace="bar"} 2
 		approverpolicy_certificaterequest_denied_count{namespace="other"} 1
@@ -114,7 +198,7 @@ func Test_Metrics(t *testing.T) {
 	})
 
 	t.Run("unmatched_count is only about CRs with no Approved and Denied condition", func(t *testing.T) {
-		mock := mockCollector(t, []cmapi.CertificateRequest{
+		mock := mockCollector(t, []*cmapi.CertificateRequest{
 			// Three unmatched CRs.
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo1", Namespace: "bar"},
@@ -159,7 +243,7 @@ func Test_Metrics(t *testing.T) {
 			},
 		})
 		const expected = `
-        	# HELP approverpolicy_certificaterequest_unmatched_count Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved or Denied condition set yet.
+        	# HELP approverpolicy_certificaterequest_unmatched_count DEPRECATED: use certmanager_approverpolicy_certificaterequests_approval instead. Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved or Denied condition set yet.
         	# TYPE approverpolicy_certificaterequest_unmatched_count gauge
 			approverpolicy_certificaterequest_unmatched_count{namespace="bar"} 2
             approverpolicy_certificaterequest_unmatched_count{namespace="other"} 1
@@ -170,48 +254,18 @@ func Test_Metrics(t *testing.T) {
 
 }
 
-func mockCollector(t *testing.T, crs []cmapi.CertificateRequest) *collector {
-	return &collector{
-		cache: &mockCache{t: t, objects: crs},
-		ctx:   t.Context(),
-		log:   logr.Discard(),
+func mockCollector(t *testing.T, crs []*cmapi.CertificateRequest) *collector {
+	objs := make([]runtime.Object, len(crs))
+	for i, cr := range crs {
+		objs[i] = cr
 	}
-}
 
-var errNotImplemented = errors.New("not implemented")
-
-type mockCache struct {
-	t       *testing.T
-	objects []cmapi.CertificateRequest
-}
-
-// The only two functions we care about are WaitForCacheSync and List.
-func (mock *mockCache) WaitForCacheSync(ctx context.Context) bool {
-	return true
-}
-func (mock *mockCache) List(ctx context.Context, given client.ObjectList, opts ...client.ListOption) error {
-	require.IsType(mock.t, &cmapi.CertificateRequestList{}, given)
-	crList := given.(*cmapi.CertificateRequestList)
-	crList.Items = mock.objects
-	return nil
-}
-
-// The rest of the functions are stubbed out.
-func (mock *mockCache) GetInformer(ctx context.Context, obj client.Object, opts ...cache.InformerGetOption) (cache.Informer, error) {
-	return nil, errNotImplemented
-}
-func (mock *mockCache) RemoveInformer(ctx context.Context, obj client.Object) error {
-	return errNotImplemented
-}
-func (mock *mockCache) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind, opts ...cache.InformerGetOption) (cache.Informer, error) {
-	return nil, errNotImplemented
-}
-func (mock *mockCache) Start(ctx context.Context) error {
-	return errNotImplemented
-}
-func (mock *mockCache) IndexField(ctx context.Context, obj client.Object, field string, extractValue client.IndexerFunc) error {
-	return errNotImplemented
-}
-func (mock *mockCache) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
-	return errNotImplemented
+	return &collector{
+		reader: fake.NewClientBuilder().
+			WithScheme(policyapi.GlobalScheme).
+			WithRuntimeObjects(objs...).
+			Build(),
+		ctx: t.Context(),
+		log: logr.Discard(),
+	}
 }
