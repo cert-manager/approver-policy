@@ -89,7 +89,7 @@ func RunControlPlane(t *testing.T, ctx context.Context, crdDirs ...string) *Envi
 	kubeconifgPath := writeKubeconfig(t, env.Config, "cert-manager-webhook-kubeconfig.yaml")
 	t.Logf("cert-manager webhook kubeconfig written to %q", kubeconifgPath)
 
-	webhookOpts, stopWebhook := webhooktesting.StartWebhookServer(t, ctx, []string{"--kubeconfig=" + kubeconifgPath})
+	webhookOpts, stopWebhook := webhooktesting.StartWebhookServer(t, []string{"--kubeconfig=" + kubeconifgPath})
 	t.Logf("running cert-manager webhook on %q", webhookOpts.URL)
 
 	// Register cleanup func to stop the cert-manager webhook after the test has
