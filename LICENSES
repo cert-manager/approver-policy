@@ -42,7 +42,7 @@ github.com/Masterminds/semver/v3,MIT
 github.com/antlr4-go/antlr/v4,BSD-3-Clause
 github.com/beorn7/perks/quantile,MIT
 github.com/blang/semver/v4,MIT
-github.com/cenkalti/backoff/v4,MIT
+github.com/cenkalti/backoff/v5,MIT
 github.com/cert-manager/approver-policy,Apache-2.0
 github.com/cert-manager/cert-manager,Apache-2.0
 github.com/cespare/xxhash/v2,MIT
@@ -61,6 +61,7 @@ github.com/go-logr/zapr,Apache-2.0
 github.com/go-openapi/jsonpointer,Apache-2.0
 github.com/go-openapi/jsonreference,Apache-2.0
 github.com/go-openapi/swag,Apache-2.0
+github.com/go-openapi/swag/jsonname,Apache-2.0
 github.com/gogo/protobuf,BSD-3-Clause
 github.com/google/btree,Apache-2.0
 github.com/google/cel-go,Apache-2.0
@@ -82,7 +83,6 @@ github.com/munnerz/goautoneg,BSD-3-Clause
 github.com/onsi/ginkgo/v2,MIT
 github.com/onsi/gomega,MIT
 github.com/peterbourgon/diskv,MIT
-github.com/pkg/errors,BSD-2-Clause
 github.com/pmezard/go-difflib/difflib,BSD-3-Clause
 github.com/prometheus/client_golang/internal/github.com/golang/gddo/httputil,BSD-3-Clause
 github.com/prometheus/client_golang/prometheus,Apache-2.0
