@@ -86,7 +86,7 @@ func (v *validator) Validate(value string, request cmapi.CertificateRequest) (bo
 		return false, errors.New("must compile first")
 	}
 
-	vars := map[string]interface{}{
+	vars := map[string]any{
 		varSelf: value,
 		varRequest: &CertificateRequest{
 			Name:      request.GetName(),

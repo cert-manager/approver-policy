@@ -41,11 +41,11 @@ func ServiceAccountLib() cel.EnvOption {
 }
 
 // ConvertToNative implements ref.Val.ConvertToNative.
-func (sa ServiceAccount) ConvertToNative(typeDesc reflect.Type) (interface{}, error) {
-	if reflect.TypeOf(sa).AssignableTo(typeDesc) {
+func (sa ServiceAccount) ConvertToNative(typeDesc reflect.Type) (any, error) {
+	if reflect.TypeFor[ServiceAccount]().AssignableTo(typeDesc) {
 		return sa, nil
 	}
-	if reflect.TypeOf("").AssignableTo(typeDesc) {
+	if reflect.TypeFor[string]().AssignableTo(typeDesc) {
 		return serviceaccount.MakeUsername(sa.Namespace, sa.Name), nil
 	}
 	return nil, fmt.Errorf("type conversion error from 'serviceaccount' to '%v'", typeDesc)
@@ -77,7 +77,7 @@ func (sa ServiceAccount) Type() ref.Type {
 }
 
 // Value implements ref.Val.Value.
-func (sa ServiceAccount) Value() interface{} {
+func (sa ServiceAccount) Value() any {
 	return sa
 }
 
