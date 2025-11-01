@@ -108,7 +108,7 @@ func (c constraints) Evaluate(_ context.Context, policy *policyapi.CertificateRe
 
 // decodePublicKey will return the algorithm and size of the given public key.
 // If the public key cannot be decoded, an error is returned.
-func decodePublicKey(pub interface{}) (cmapi.PrivateKeyAlgorithm, int, error) {
+func decodePublicKey(pub any) (cmapi.PrivateKeyAlgorithm, int, error) {
 	switch pubKey := pub.(type) {
 	case *rsa.PublicKey:
 		return cmapi.RSAKeyAlgorithm, pubKey.N.BitLen(), nil

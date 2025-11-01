@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/go-logr/logr"
@@ -75,15 +76,7 @@ func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission
 	// Ensure no plugin has been defined which is not registered.
 	var unrecognisedNames []string
 	for name := range policy.Spec.Plugins {
-		var found bool
-		for _, known := range v.registeredPlugins {
-			if name == known {
-				found = true
-				break
-			}
-		}
-
-		if !found {
+		if !slices.Contains(v.registeredPlugins, name) {
 			unrecognisedNames = append(unrecognisedNames, name)
 		}
 	}
