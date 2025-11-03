@@ -37,19 +37,23 @@ var CertificateRequestPolicyKind = "CertificateRequestPolicy"
 // makes decisions on whether applicable CertificateRequests should be approved
 // or denied.
 type CertificateRequestPolicy struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ObjectMeta `json:"metadata"`
 
-	Spec   CertificateRequestPolicySpec   `json:"spec,omitempty"`
-	Status CertificateRequestPolicyStatus `json:"status,omitempty"`
+	Spec CertificateRequestPolicySpec `json:"spec"`
+	// +optional
+	Status CertificateRequestPolicyStatus `json:"status,omitzero"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // CertificateRequestPolicyList is a list of CertificateRequestPolicies.
 type CertificateRequestPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []CertificateRequestPolicy `json:"items"`
+	// +optional
+	metav1.ListMeta `json:"metadata"`
+
+	Items []CertificateRequestPolicy `json:"items"`
 }
 
 // CertificateRequestPolicySpec defines the desired state of
