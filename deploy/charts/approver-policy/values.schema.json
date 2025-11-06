@@ -74,6 +74,12 @@
         },
         "volumes": {
           "$ref": "#/$defs/helm-values.volumes"
+        },
+        "securityContext": {
+          "$ref": "#/$defs/helm-values.securityContext"
+        },
+        "containerSecurityContext": {
+          "$ref": "#/$defs/helm-values.containerSecurityContext"
         }
       },
       "type": "object"
@@ -511,6 +517,29 @@
       "description": "Optional extra volumes.\n\nFor example:\nvolumes:\n- name: my-volume\n  secret:\n    secretName: my-secret",
       "items": {},
       "type": "array"
+    },
+    "helm-values.securityContext": {
+      "default": {
+        "runAsNonRoot": true,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "description": "Pod Security Context.\nFor more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
+    },
+    "helm-values.containerSecurityContext": {
+      "default": {
+        "allowPrivilegeEscalation": false,
+        "capabilities": {
+          "drop": [
+            "ALL"
+          ]
+        },
+        "readOnlyRootFilesystem": true
+      },
+      "description": "Container Security Context to be set on the controller component container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
     }
   },
   "$ref": "#/$defs/helm-values",
