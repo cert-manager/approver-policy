@@ -465,7 +465,9 @@ strategy:
 #### **securityContext** ~ `object`
 > Default value:
 > ```yaml
-> {}
+>runAsNonRoot: true
+>seccompProfile:
+>  type: RuntimeDefault
 > ```
 
 Kubernetes pod securityContext.  
@@ -482,7 +484,11 @@ securityContext:
 #### **containerSecurityContext** ~ `object`
 > Default value:
 > ```yaml
-> {}
+>allowPrivilegeEscalation: false
+>capabilities:
+>  drop:
+>  - ALL
+>readOnlyRootFilesystem: true
 > ```
 
 Kubernetes container securityContext.  
