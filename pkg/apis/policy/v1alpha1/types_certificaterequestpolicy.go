@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -418,40 +417,7 @@ type CertificateRequestPolicyStatus struct {
 
 // CertificateRequestPolicyCondition contains condition information for a
 // CertificateRequestPolicyStatus.
-type CertificateRequestPolicyCondition struct {
-	// Type of the condition, known values are (`Ready`).
-	Type CertificateRequestPolicyConditionType `json:"type"`
-
-	// Status of the condition, one of ('True', 'False', 'Unknown').
-	Status corev1.ConditionStatus `json:"status"`
-
-	// LastTransitionTime is the timestamp corresponding to the last status
-	// change of this condition.
-	// +optional
-	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
-
-	// Reason is a brief machine readable explanation for the condition's last
-	// transition.
-	// +optional
-	Reason string `json:"reason,omitempty"`
-
-	// Message is a human readable description of the details of the last
-	// transition, complementing reason.
-	// +optional
-	Message string `json:"message,omitempty"`
-
-	// If set, this represents the .metadata.generation that the condition was
-	// set based upon.
-	// For instance, if .metadata.generation is currently 12, but the
-	// .status.condition[x].observedGeneration is 9, the condition is out of
-	// date with respect to the current state of the CertificateRequestPolicy.
-	// +optional
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-}
-
-// CertificateRequestPolicyConditionType represents a CertificateRequestPolicy
-// condition value.
-type CertificateRequestPolicyConditionType string
+type CertificateRequestPolicyCondition = metav1.Condition
 
 const (
 	// CertificateRequestPolicyConditionReady indicates that the
@@ -459,5 +425,5 @@ const (
 	// configuration including plugin options are accepted and ready for
 	// evaluating CertificateRequests.
 	// +k8s:deepcopy-gen=false
-	CertificateRequestPolicyConditionReady CertificateRequestPolicyConditionType = "Ready"
+	CertificateRequestPolicyConditionReady string = "Ready"
 )

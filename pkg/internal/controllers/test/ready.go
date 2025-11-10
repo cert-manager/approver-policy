@@ -20,7 +20,6 @@ import (
 	"context"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -356,7 +355,7 @@ var _ = Context("Ready", func() {
 				if condition.ObservedGeneration != policy.Generation {
 					return true
 				}
-				if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == corev1.ConditionTrue {
+				if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == metav1.ConditionTrue {
 					return true
 				}
 			}
