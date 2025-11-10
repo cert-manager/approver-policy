@@ -462,7 +462,42 @@ strategy:
     maxSurge: 0
     maxUnavailable: 1
 ```
+#### **securityContext** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Kubernetes pod securityContext.  
+For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+  
+For example:
+
+```yaml
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+```
+#### **containerSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Kubernetes container securityContext.  
+For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+  
+For example:
+
+```yaml
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+```
 
 For more information, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy).
-
 <!-- /AUTO-GENERATED -->
