@@ -12,6 +12,9 @@
         "commonLabels": {
           "$ref": "#/$defs/helm-values.commonLabels"
         },
+        "containerSecurityContext": {
+          "$ref": "#/$defs/helm-values.containerSecurityContext"
+        },
         "crds": {
           "$ref": "#/$defs/helm-values.crds"
         },
@@ -60,6 +63,9 @@
         "resources": {
           "$ref": "#/$defs/helm-values.resources"
         },
+        "securityContext": {
+          "$ref": "#/$defs/helm-values.securityContext"
+        },
         "strategy": {
           "$ref": "#/$defs/helm-values.strategy"
         },
@@ -74,12 +80,6 @@
         },
         "volumes": {
           "$ref": "#/$defs/helm-values.volumes"
-        },
-        "securityContext": {
-          "$ref": "#/$defs/helm-values.securityContext"
-        },
-        "containerSecurityContext": {
-          "$ref": "#/$defs/helm-values.containerSecurityContext"
         }
       },
       "type": "object"
@@ -335,6 +335,19 @@
       "description": "Allow custom labels to be placed on resources - optional.",
       "type": "object"
     },
+    "helm-values.containerSecurityContext": {
+      "default": {
+        "allowPrivilegeEscalation": false,
+        "capabilities": {
+          "drop": [
+            "ALL"
+          ]
+        },
+        "readOnlyRootFilesystem": true
+      },
+      "description": "Container Security Context to be set on the controller component container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
+    },
     "helm-values.crds": {
       "additionalProperties": false,
       "properties": {
@@ -489,6 +502,16 @@
       "description": "Kubernetes pod resources.\nFor more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).\n\nFor example:\nresources:\n  limits:\n    cpu: 100m\n    memory: 128Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi",
       "type": "object"
     },
+    "helm-values.securityContext": {
+      "default": {
+        "runAsNonRoot": true,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "description": "Pod Security Context.\nFor more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
+    },
     "helm-values.strategy": {
       "default": {},
       "description": "Deployment update strategy for the approver-policy Deployment.\n\nThis could be needed when deploying approver-policy on each control-plane node and setting anti-affinities to forbid two pods on the same node. In this situation, default values of maxSurge (25% round up to next integer = 1) and maxUnavailable (25% round down to next integer = 0) block the rolling update as the new surge pod can't be scheduled on a control-plane node due to anti-affinities. Setting maxSurge to 0 and maxUnavailable to 1 would solve the problem.\n\nFor example:\nstrategy:\n  type: RollingUpdate\n  rollingUpdate:\n    maxSurge: 0\n    maxUnavailable: 1\nFor more information, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy).",
@@ -517,29 +540,6 @@
       "description": "Optional extra volumes.\n\nFor example:\nvolumes:\n- name: my-volume\n  secret:\n    secretName: my-secret",
       "items": {},
       "type": "array"
-    },
-    "helm-values.securityContext": {
-      "default": {
-        "runAsNonRoot": true,
-        "seccompProfile": {
-          "type": "RuntimeDefault"
-        }
-      },
-      "description": "Pod Security Context.\nFor more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
-      "type": "object"
-    },
-    "helm-values.containerSecurityContext": {
-      "default": {
-        "allowPrivilegeEscalation": false,
-        "capabilities": {
-          "drop": [
-            "ALL"
-          ]
-        },
-        "readOnlyRootFilesystem": true
-      },
-      "description": "Container Security Context to be set on the controller component container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
-      "type": "object"
     }
   },
   "$ref": "#/$defs/helm-values",
