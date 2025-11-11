@@ -296,3 +296,21 @@ strategy: {}
 # but certain domains should be excluded.
 # +docs:property
 # no_proxy: "127.0.0.1,localhost"
+
+# Pod Security Context.
+# For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+# +docs:property
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container Security Context to be set on the controller component container.
+# For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+# +docs:property
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true

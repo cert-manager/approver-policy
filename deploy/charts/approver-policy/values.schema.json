@@ -12,6 +12,9 @@
         "commonLabels": {
           "$ref": "#/$defs/helm-values.commonLabels"
         },
+        "containerSecurityContext": {
+          "$ref": "#/$defs/helm-values.containerSecurityContext"
+        },
         "crds": {
           "$ref": "#/$defs/helm-values.crds"
         },
@@ -59,6 +62,9 @@
         },
         "resources": {
           "$ref": "#/$defs/helm-values.resources"
+        },
+        "securityContext": {
+          "$ref": "#/$defs/helm-values.securityContext"
         },
         "strategy": {
           "$ref": "#/$defs/helm-values.strategy"
@@ -329,6 +335,19 @@
       "description": "Allow custom labels to be placed on resources - optional.",
       "type": "object"
     },
+    "helm-values.containerSecurityContext": {
+      "default": {
+        "allowPrivilegeEscalation": false,
+        "capabilities": {
+          "drop": [
+            "ALL"
+          ]
+        },
+        "readOnlyRootFilesystem": true
+      },
+      "description": "Container Security Context to be set on the controller component container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
+    },
     "helm-values.crds": {
       "additionalProperties": false,
       "properties": {
@@ -481,6 +500,16 @@
     "helm-values.resources": {
       "default": {},
       "description": "Kubernetes pod resources.\nFor more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).\n\nFor example:\nresources:\n  limits:\n    cpu: 100m\n    memory: 128Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi",
+      "type": "object"
+    },
+    "helm-values.securityContext": {
+      "default": {
+        "runAsNonRoot": true,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "description": "Pod Security Context.\nFor more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
       "type": "object"
     },
     "helm-values.strategy": {
