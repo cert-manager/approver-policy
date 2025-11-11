@@ -94,7 +94,7 @@ func waitForReady(ctx context.Context, cl client.Client, name string) {
 			if condition.ObservedGeneration != policy.Generation {
 				return false
 			}
-			if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == corev1.ConditionTrue {
+			if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == metav1.ConditionTrue {
 				return true
 			}
 		}
@@ -115,7 +115,7 @@ func waitForNotReady(ctx context.Context, cl client.Client, name string) {
 			if condition.ObservedGeneration != policy.Generation {
 				return false
 			}
-			if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == corev1.ConditionFalse {
+			if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == metav1.ConditionFalse {
 				return true
 			}
 		}

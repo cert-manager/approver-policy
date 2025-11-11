@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,7 +46,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 
 	var (
 		fixedTime     = time.Date(2021, 01, 01, 01, 0, 0, 0, time.UTC)
-		fixedmetatime = &metav1.Time{Time: fixedTime}
+		fixedmetatime = metav1.Time{Time: fixedTime}
 		fixedclock    = fakeclock.NewFakeClock(fixedTime)
 	)
 
@@ -77,7 +76,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -99,7 +98,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -121,7 +120,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
@@ -156,7 +155,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -178,7 +177,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -205,7 +204,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -220,7 +219,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
 				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -235,7 +234,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -250,7 +249,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
 				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
@@ -265,7 +264,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
@@ -280,7 +279,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
 				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -300,7 +299,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionTrue,
+						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
 						Message:            "CertificateRequestPolicy is ready for approval evaluation",
@@ -315,7 +314,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
 				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: [foo: Forbidden: not allowed, bar: Forbidden: also not allowed]",
@@ -335,7 +334,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: [foo: Forbidden: not allowed, bar: Forbidden: also not allowed]",
@@ -350,7 +349,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
 				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: [foo: Forbidden: not allowed, bar: Forbidden: also not allowed]",
@@ -370,7 +369,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
 				Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: foo: Forbidden: not allowed",
@@ -385,7 +384,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
 				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
 					{Type: policyapi.CertificateRequestPolicyConditionReady,
-						Status:             corev1.ConditionFalse,
+						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
 						Message:            "CertificateRequestPolicy is not ready for approval evaluation: [foo: Forbidden: not allowed, bar: Forbidden: also not allowed]",
@@ -455,7 +454,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 
 	var (
 		fixedTime     = time.Date(2021, 01, 01, 01, 0, 0, 0, time.UTC)
-		fixedmetatime = &metav1.Time{Time: fixedTime}
+		fixedmetatime = metav1.Time{Time: fixedTime}
 		fixedclock    = fakeclock.NewFakeClock(fixedTime)
 	)
 
@@ -469,13 +468,13 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 			existingConditions: []policyapi.CertificateRequestPolicyCondition{},
 			newCondition: policyapi.CertificateRequestPolicyCondition{
 				Type:    "A",
-				Status:  corev1.ConditionTrue,
+				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
 			expectedConditions: []policyapi.CertificateRequestPolicyCondition{{
 				Type:               "A",
-				Status:             corev1.ConditionTrue,
+				Status:             metav1.ConditionTrue,
 				Reason:             "B",
 				Message:            "C",
 				LastTransitionTime: fixedmetatime,
@@ -486,7 +485,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 			patchConditions: []policyapi.CertificateRequestPolicyCondition{{Type: "B"}},
 			newCondition: policyapi.CertificateRequestPolicyCondition{
 				Type:    "A",
-				Status:  corev1.ConditionTrue,
+				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
@@ -494,7 +493,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				{Type: "B"},
 				{
 					Type:               "A",
-					Status:             corev1.ConditionTrue,
+					Status:             metav1.ConditionTrue,
 					Reason:             "B",
 					Message:            "C",
 					LastTransitionTime: fixedmetatime,
@@ -507,7 +506,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				{Type: "B"},
 				{
 					Type:               "A",
-					Status:             corev1.ConditionFalse,
+					Status:             metav1.ConditionFalse,
 					Reason:             "B",
 					Message:            "C",
 					LastTransitionTime: fixedmetatime,
@@ -516,7 +515,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 			},
 			newCondition: policyapi.CertificateRequestPolicyCondition{
 				Type:    "A",
-				Status:  corev1.ConditionTrue,
+				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
@@ -524,7 +523,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				{Type: "B"},
 				{
 					Type:               "A",
-					Status:             corev1.ConditionTrue,
+					Status:             metav1.ConditionTrue,
 					Reason:             "B",
 					Message:            "C",
 					LastTransitionTime: fixedmetatime,
@@ -537,16 +536,16 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				{Type: "B"},
 				{
 					Type:               "A",
-					Status:             corev1.ConditionTrue,
+					Status:             metav1.ConditionTrue,
 					Reason:             "B",
 					Message:            "C",
-					LastTransitionTime: &metav1.Time{Time: fixedTime.Add(-time.Second)},
+					LastTransitionTime: metav1.Time{Time: fixedTime.Add(-time.Second)},
 					ObservedGeneration: policyGeneration - 1,
 				},
 			},
 			newCondition: policyapi.CertificateRequestPolicyCondition{
 				Type:    "A",
-				Status:  corev1.ConditionTrue,
+				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
@@ -554,10 +553,10 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 				{Type: "B"},
 				{
 					Type:               "A",
-					Status:             corev1.ConditionTrue,
+					Status:             metav1.ConditionTrue,
 					Reason:             "B",
 					Message:            "C",
-					LastTransitionTime: &metav1.Time{Time: fixedTime.Add(-time.Second)},
+					LastTransitionTime: metav1.Time{Time: fixedTime.Add(-time.Second)},
 					ObservedGeneration: policyGeneration,
 				},
 			},

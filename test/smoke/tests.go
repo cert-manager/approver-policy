@@ -103,7 +103,7 @@ var _ = Describe("Policy", func() {
 			Expect(cl.Get(ctx, client.ObjectKey{Name: policy.Name}, &policy)).To(Succeed())
 			for _, condition := range policy.Status.Conditions {
 				if condition.Type == policyapi.CertificateRequestPolicyConditionReady {
-					return condition.Status == corev1.ConditionTrue && condition.ObservedGeneration == policy.Generation
+					return condition.Status == metav1.ConditionTrue && condition.ObservedGeneration == policy.Generation
 				}
 			}
 			return false

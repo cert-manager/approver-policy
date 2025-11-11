@@ -220,7 +220,7 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 			policy.Generation,
 			policyapi.CertificateRequestPolicyCondition{
 				Type:    policyapi.CertificateRequestPolicyConditionReady,
-				Status:  corev1.ConditionFalse,
+				Status:  metav1.ConditionFalse,
 				Reason:  "NotReady",
 				Message: message,
 			},
@@ -240,7 +240,7 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 		policy.Generation,
 		policyapi.CertificateRequestPolicyCondition{
 			Type:    policyapi.CertificateRequestPolicyConditionReady,
-			Status:  corev1.ConditionTrue,
+			Status:  metav1.ConditionTrue,
 			Reason:  "Ready",
 			Message: message,
 		},
@@ -264,7 +264,7 @@ func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(
 	generation int64,
 	newCondition policyapi.CertificateRequestPolicyCondition,
 ) {
-	newCondition.LastTransitionTime = &metav1.Time{Time: c.clock.Now()}
+	newCondition.LastTransitionTime = metav1.Time{Time: c.clock.Now()}
 	newCondition.ObservedGeneration = generation
 
 	for _, existingCondition := range existingConditions {
