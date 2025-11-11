@@ -10,18 +10,6 @@
 
 nameOverride replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names.
 
-#### **http_proxy** ~ `string`
-
-Configures the HTTP_PROXY environment variable where a HTTP proxy is required.
-
-#### **https_proxy** ~ `string`
-
-Configures the HTTPS_PROXY environment variable where a HTTP proxy is required.
-
-#### **no_proxy** ~ `string`
-
-Configures the NO_PROXY environment variable where a HTTP proxy is required, but certain domains should be excluded.
-
 #### **crds.enabled** ~ `bool`
 > Default value:
 > ```yaml
@@ -462,48 +450,42 @@ strategy:
     maxSurge: 0
     maxUnavailable: 1
 ```
+
+For more information, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy).
+#### **http_proxy** ~ `string`
+
+Configures the HTTP_PROXY environment variable where a HTTP proxy is required.
+
+#### **https_proxy** ~ `string`
+
+Configures the HTTPS_PROXY environment variable where a HTTP proxy is required.
+
+#### **no_proxy** ~ `string`
+
+Configures the NO_PROXY environment variable where a HTTP proxy is required, but certain domains should be excluded.
+
 #### **securityContext** ~ `object`
 > Default value:
 > ```yaml
->runAsNonRoot: true
->seccompProfile:
->  type: RuntimeDefault
+> runAsNonRoot: true
+> seccompProfile:
+>   type: RuntimeDefault
 > ```
 
-Kubernetes pod securityContext.  
+Pod Security Context.  
 For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
-  
-For example:
 
-```yaml
-securityContext:
-  runAsNonRoot: true
-  seccompProfile:
-    type: RuntimeDefault
-```
 #### **containerSecurityContext** ~ `object`
 > Default value:
 > ```yaml
->allowPrivilegeEscalation: false
->capabilities:
->  drop:
->  - ALL
->readOnlyRootFilesystem: true
+> allowPrivilegeEscalation: false
+> capabilities:
+>   drop:
+>     - ALL
+> readOnlyRootFilesystem: true
 > ```
 
-Kubernetes container securityContext.  
-For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
-  
-For example:
+Container Security Context to be set on the controller component container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
 
-```yaml
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-    - ALL
-  readOnlyRootFilesystem: true
-```
 
-For more information, see the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy).
 <!-- /AUTO-GENERATED -->
