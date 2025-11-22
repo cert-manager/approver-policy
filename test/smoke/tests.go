@@ -102,7 +102,7 @@ var _ = Describe("Policy", func() {
 		Eventually(func() bool {
 			Expect(cl.Get(ctx, client.ObjectKey{Name: policy.Name}, &policy)).To(Succeed())
 			for _, condition := range policy.Status.Conditions {
-				if condition.Type == policyapi.CertificateRequestPolicyConditionReady {
+				if condition.Type == policyapi.ConditionTypeReady {
 					return condition.Status == metav1.ConditionTrue && condition.ObservedGeneration == policy.Generation
 				}
 			}

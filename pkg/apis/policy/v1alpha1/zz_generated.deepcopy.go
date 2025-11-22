@@ -469,7 +469,7 @@ func (in *CertificateRequestPolicyStatus) DeepCopyInto(out *CertificateRequestPo
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make([]CertificateRequestPolicyCondition, len(*in))
+		*out = make([]metav1.Condition, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

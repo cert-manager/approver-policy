@@ -412,18 +412,14 @@ type CertificateRequestPolicyStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
-	Conditions []CertificateRequestPolicyCondition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
-// CertificateRequestPolicyCondition contains condition information for a
-// CertificateRequestPolicyStatus.
-type CertificateRequestPolicyCondition = metav1.Condition
-
 const (
-	// CertificateRequestPolicyConditionReady indicates that the
+	// ConditionTypeReady indicates that the
 	// CertificateRequestPolicy has successfully loaded the policy, and all
 	// configuration including plugin options are accepted and ready for
 	// evaluating CertificateRequests.
 	// +k8s:deepcopy-gen=false
-	CertificateRequestPolicyConditionReady string = "Ready"
+	ConditionTypeReady string = "Ready"
 )
