@@ -44,7 +44,7 @@ func Ready(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.
 
 	for _, policy := range policies {
 		for _, condition := range policy.Status.Conditions {
-			if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == metav1.ConditionTrue {
+			if condition.Type == policyapi.ConditionTypeReady && condition.Status == metav1.ConditionTrue {
 				readyPolicies = append(readyPolicies, policy)
 			}
 		}

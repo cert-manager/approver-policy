@@ -74,8 +74,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -96,8 +96,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -118,8 +118,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -153,8 +153,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -175,8 +175,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -202,8 +202,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -217,8 +217,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -232,8 +232,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -247,8 +247,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -262,8 +262,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -277,8 +277,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -297,8 +297,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "Ready",
@@ -312,8 +312,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -332,8 +332,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -347,8 +347,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -367,8 +367,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			expResult: ctrl.Result{RequeueAfter: time.Second},
 			expError:  false,
 			expStatusPatch: &policyapi.CertificateRequestPolicyStatus{
-				Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -382,8 +382,8 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 			existingObjects: []runtime.Object{&policyapi.CertificateRequestPolicy{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: policyGeneration, ResourceVersion: "3"},
 				TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequestPolicy", APIVersion: "policy.cert-manager.io/v1alpha1"},
-				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady,
+				Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady,
 						Status:             metav1.ConditionFalse,
 						LastTransitionTime: fixedmetatime,
 						Reason:             "NotReady",
@@ -449,7 +449,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 	}
 }
 
-func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *testing.T) {
+func Test_certificaterequestpolicies_setCondition(t *testing.T) {
 	const policyGeneration int64 = 2
 
 	var (
@@ -459,20 +459,20 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 	)
 
 	tests := map[string]struct {
-		existingConditions []policyapi.CertificateRequestPolicyCondition
-		patchConditions    []policyapi.CertificateRequestPolicyCondition
-		newCondition       policyapi.CertificateRequestPolicyCondition
-		expectedConditions []policyapi.CertificateRequestPolicyCondition
+		existingConditions []metav1.Condition
+		patchConditions    []metav1.Condition
+		newCondition       metav1.Condition
+		expectedConditions []metav1.Condition
 	}{
 		"no existing conditions should add the condition with time and gen to the policy": {
-			existingConditions: []policyapi.CertificateRequestPolicyCondition{},
-			newCondition: policyapi.CertificateRequestPolicyCondition{
+			existingConditions: []metav1.Condition{},
+			newCondition: metav1.Condition{
 				Type:    "A",
 				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
-			expectedConditions: []policyapi.CertificateRequestPolicyCondition{{
+			expectedConditions: []metav1.Condition{{
 				Type:               "A",
 				Status:             metav1.ConditionTrue,
 				Reason:             "B",
@@ -482,14 +482,14 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 			}},
 		},
 		"an existing patch condition of different type should add a different condition with time and gen to the policy": {
-			patchConditions: []policyapi.CertificateRequestPolicyCondition{{Type: "B"}},
-			newCondition: policyapi.CertificateRequestPolicyCondition{
+			patchConditions: []metav1.Condition{{Type: "B"}},
+			newCondition: metav1.Condition{
 				Type:    "A",
 				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
-			expectedConditions: []policyapi.CertificateRequestPolicyCondition{
+			expectedConditions: []metav1.Condition{
 				{Type: "B"},
 				{
 					Type:               "A",
@@ -502,7 +502,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 			},
 		},
 		"an existing patch condition of the same type but different status should be replaced with new time if it has a different status": {
-			patchConditions: []policyapi.CertificateRequestPolicyCondition{
+			patchConditions: []metav1.Condition{
 				{Type: "B"},
 				{
 					Type:               "A",
@@ -513,13 +513,13 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 					ObservedGeneration: policyGeneration - 1,
 				},
 			},
-			newCondition: policyapi.CertificateRequestPolicyCondition{
+			newCondition: metav1.Condition{
 				Type:    "A",
 				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
-			expectedConditions: []policyapi.CertificateRequestPolicyCondition{
+			expectedConditions: []metav1.Condition{
 				{Type: "B"},
 				{
 					Type:               "A",
@@ -532,7 +532,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 			},
 		},
 		"an existing patch condition of the same type and status should be replaced with same time": {
-			patchConditions: []policyapi.CertificateRequestPolicyCondition{
+			patchConditions: []metav1.Condition{
 				{Type: "B"},
 				{
 					Type:               "A",
@@ -543,13 +543,13 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 					ObservedGeneration: policyGeneration - 1,
 				},
 			},
-			newCondition: policyapi.CertificateRequestPolicyCondition{
+			newCondition: metav1.Condition{
 				Type:    "A",
 				Status:  metav1.ConditionTrue,
 				Reason:  "B",
 				Message: "C",
 			},
-			expectedConditions: []policyapi.CertificateRequestPolicyCondition{
+			expectedConditions: []metav1.Condition{
 				{Type: "B"},
 				{
 					Type:               "A",
@@ -566,7 +566,7 @@ func Test_certificaterequestpolicies_setCertificateRequestPolicyCondition(t *tes
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			c := &certificaterequestpolicies{clock: fixedclock}
-			c.setCertificateRequestPolicyCondition(
+			c.setCondition(
 				test.existingConditions,
 				&test.patchConditions, // #nosec G601 -- False positive. See https://github.com/golang/go/discussions/56010
 				policyGeneration,

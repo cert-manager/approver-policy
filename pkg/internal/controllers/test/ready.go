@@ -355,7 +355,7 @@ var _ = Context("Ready", func() {
 				if condition.ObservedGeneration != policy.Generation {
 					return true
 				}
-				if condition.Type == policyapi.CertificateRequestPolicyConditionReady && condition.Status == metav1.ConditionTrue {
+				if condition.Type == policyapi.ConditionTypeReady && condition.Status == metav1.ConditionTrue {
 					return true
 				}
 			}

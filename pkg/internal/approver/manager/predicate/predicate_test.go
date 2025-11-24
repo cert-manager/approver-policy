@@ -425,68 +425,68 @@ func Test_Ready(t *testing.T) {
 		},
 		"single policy with ready condition false should return no policies": {
 			policies: []policyapi.CertificateRequestPolicy{
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionFalse},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionFalse},
 				}}},
 			},
 			expPolicies: nil,
 		},
 		"single policy with ready condition true should return policy": {
 			policies: []policyapi.CertificateRequestPolicy{
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 				}}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 				}}},
 			},
 		},
 		"one policy which is ready another not, return single policy": {
 			policies: []policyapi.CertificateRequestPolicy{
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionFalse},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionFalse},
 				}}},
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 				}}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 				}}},
 			},
 		},
 		"mix of different conditions including ready should return only ready policies": {
 			policies: []policyapi.CertificateRequestPolicy{
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionFalse},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionFalse},
 					{Type: "C", Status: metav1.ConditionTrue},
 				}}},
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 					{Type: "B", Status: metav1.ConditionTrue},
 				}}},
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 					{Type: "A", Status: metav1.ConditionTrue},
 				}}},
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 				}}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 					{Type: "B", Status: metav1.ConditionTrue},
 				}}},
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 					{Type: "A", Status: metav1.ConditionTrue},
 				}}},
-				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []policyapi.CertificateRequestPolicyCondition{
-					{Type: policyapi.CertificateRequestPolicyConditionReady, Status: metav1.ConditionTrue},
+				{Status: policyapi.CertificateRequestPolicyStatus{Conditions: []metav1.Condition{
+					{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue},
 				}}},
 			},
 		},

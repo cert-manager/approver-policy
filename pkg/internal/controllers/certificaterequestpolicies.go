@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -214,12 +215,12 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 		message := fmt.Sprintf("CertificateRequestPolicy is not ready for approval evaluation: %s", el.ToAggregate())
 		c.recorder.Event(policy, corev1.EventTypeWarning, "NotReady", message)
 
-		c.setCertificateRequestPolicyCondition(
+		c.setCondition(
 			policy.Status.Conditions,
 			&policyPatch.Conditions,
 			policy.Generation,
-			policyapi.CertificateRequestPolicyCondition{
-				Type:    policyapi.CertificateRequestPolicyConditionReady,
+			metav1.Condition{
+				Type:    policyapi.ConditionTypeReady,
 				Status:  metav1.ConditionFalse,
 				Reason:  "NotReady",
 				Message: message,
@@ -234,12 +235,12 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 	message := "CertificateRequestPolicy is ready for approval evaluation"
 	c.recorder.Event(policy, corev1.EventTypeNormal, "Ready", message)
 
-	c.setCertificateRequestPolicyCondition(
+	c.setCondition(
 		policy.Status.Conditions,
 		&policyPatch.Conditions,
 		policy.Generation,
-		policyapi.CertificateRequestPolicyCondition{
-			Type:    policyapi.CertificateRequestPolicyConditionReady,
+		metav1.Condition{
+			Type:    policyapi.ConditionTypeReady,
 			Status:  metav1.ConditionTrue,
 			Reason:  "Ready",
 			Message: message,
@@ -249,30 +250,24 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 	return result, policyPatch, nil
 }
 
-// setCertificateRequestPolicyCondition updates the CertificateRequestPolicy
+// setCondition updates the CertificateRequestPolicy
 // object with the given condition.
 // Will overwrite any existing condition of the same type.
 // ObservedGeneration of the condition will be set to the Generation of the
 // CertificateRequestPolicy object.
 // LastTransitionTime will not be updated if an existing condition of the same
 // Type and Status already exists.
-// Returns true if the condition has been updated or an existing condition has
-// been updated. Returns false otherwise.
-func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(
-	existingConditions []policyapi.CertificateRequestPolicyCondition,
-	patchConditions *[]policyapi.CertificateRequestPolicyCondition,
+func (c *certificaterequestpolicies) setCondition(
+	existingConditions []metav1.Condition,
+	patchConditions *[]metav1.Condition,
 	generation int64,
-	newCondition policyapi.CertificateRequestPolicyCondition,
+	newCondition metav1.Condition,
 ) {
 	newCondition.LastTransitionTime = metav1.Time{Time: c.clock.Now()}
 	newCondition.ObservedGeneration = generation
 
-	for _, existingCondition := range existingConditions {
-		// Skip unrelated conditions
-		if existingCondition.Type != newCondition.Type {
-			continue
-		}
-
+	existingCondition := meta.FindStatusCondition(existingConditions, newCondition.Type)
+	if existingCondition != nil {
 		// If this update doesn't contain a state transition, we don't update
 		// the conditions LastTransitionTime to Now()
 		if existingCondition.Status == newCondition.Status {
@@ -280,26 +275,5 @@ func (c *certificaterequestpolicies) setCertificateRequestPolicyCondition(
 		}
 	}
 
-	// Search through existing conditions
-	for idx, patchCondition := range *patchConditions {
-		// Skip unrelated conditions
-		if patchCondition.Type != newCondition.Type {
-			continue
-		}
-
-		// If this update doesn't contain a state transition, we don't update
-		// the conditions LastTransitionTime to Now()
-		if patchCondition.Status == newCondition.Status {
-			newCondition.LastTransitionTime = patchCondition.LastTransitionTime
-		}
-
-		// Overwrite the existing condition
-		(*patchConditions)[idx] = newCondition
-
-		return
-	}
-
-	// If we've not found an existing condition of this type, we simply insert
-	// the new condition into the slice.
-	*patchConditions = append(*patchConditions, newCondition)
+	meta.SetStatusCondition(patchConditions, newCondition)
 }
