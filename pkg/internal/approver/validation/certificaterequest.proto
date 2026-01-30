@@ -8,4 +8,5 @@ message CertificateRequest {
   string name = 1;
   string namespace = 2;
   string username = 3;
+  repeated string groups = 4;
 }

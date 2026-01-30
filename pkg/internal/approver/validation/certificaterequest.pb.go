@@ -26,6 +26,7 @@ type CertificateRequest struct {
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Namespace     string                 `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	Username      string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	Groups        []string               `protobuf:"bytes,4,rep,name=groups,proto3" json:"groups,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -81,15 +82,23 @@ func (x *CertificateRequest) GetUsername() string {
 	return ""
 }
 
+func (x *CertificateRequest) GetGroups() []string {
+	if x != nil {
+		return x.Groups
+	}
+	return nil
+}
+
 var File_pkg_internal_approver_validation_certificaterequest_proto protoreflect.FileDescriptor
 
 const file_pkg_internal_approver_validation_certificaterequest_proto_rawDesc = "" +
 	"\n" +
-	"9pkg/internal/approver/validation/certificaterequest.proto\x12-cm.io.policy.pkg.internal.approver.validation\"b\n" +
+	"9pkg/internal/approver/validation/certificaterequest.proto\x12-cm.io.policy.pkg.internal.approver.validation\"z\n" +
 	"\x12CertificateRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\tnamespace\x18\x02 \x01(\tR\tnamespace\x12\x1a\n" +
-	"\busername\x18\x03 \x01(\tR\busernameBJZHgithub.com/cert-manager/approver-policy/pkg/internal/approver/validationb\x06proto3"
+	"\busername\x18\x03 \x01(\tR\busername\x12\x16\n" +
+	"\x06groups\x18\x04 \x03(\tR\x06groupsBJZHgithub.com/cert-manager/approver-policy/pkg/internal/approver/validationb\x06proto3"
 
 var (
 	file_pkg_internal_approver_validation_certificaterequest_proto_rawDescOnce sync.Once

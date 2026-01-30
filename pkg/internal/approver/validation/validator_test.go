@@ -42,6 +42,7 @@ func Test_Validator_Compile(t *testing.T) {
 		{name: "check-serviceaccount-getname", expr: "self.startsWith(serviceAccount(cr.username).getName())", wantErr: false},
 		{name: "check-serviceaccount-getnamespace", expr: "self.startsWith(serviceAccount(cr.username).getNamespace())", wantErr: false},
 		{name: "check-serviceaccount-isSA", expr: "isServiceAccount(cr.username)", wantErr: false},
+		{name: "check-groups-property", expr: "size(cr.groups) > 0", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -136,6 +137,43 @@ func newCertificateRequestWithUsername(username string) cmapi.CertificateRequest
 	request := cmapi.CertificateRequest{
 		Spec: cmapi.CertificateRequestSpec{
 			Username: username,
+		},
+	}
+	return request
+}
+
+func Test_Validator_Validate_Groups(t *testing.T) {
+	v := &validator{expression: "cr.groups.exists(g, self.matches('tool-%s'.format([g])))"}
+	err := v.compile()
+	assert.NoError(t, err)
+
+	type args struct {
+		val string
+		cr  cmapi.CertificateRequest
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{name: "one-correct-group", args: args{val: "tool-team-a", cr: newCertificateRequestWithGroups([]string{"team-a"})}, want: true},
+		{name: "one-of-many-groups-correct", args: args{val: "tool-team-a", cr: newCertificateRequestWithGroups([]string{"admin", "team-a"})}, want: true},
+		{name: "wrong-group", args: args{val: "tool-team-b", cr: newCertificateRequestWithGroups([]string{"team-a"})}, want: false},
+		{name: "no-groups", args: args{val: "tool-team-b", cr: newCertificateRequestWithGroups([]string{})}, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := v.Validate(tt.args.val, tt.args.cr)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func newCertificateRequestWithGroups(groups []string) cmapi.CertificateRequest {
+	request := cmapi.CertificateRequest{
+		Spec: cmapi.CertificateRequestSpec{
+			Groups: groups,
 		},
 	}
 	return request
