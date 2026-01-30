@@ -92,6 +92,7 @@ func (v *validator) Validate(value string, request cmapi.CertificateRequest) (bo
 			Name:      request.GetName(),
 			Namespace: request.GetNamespace(),
 			Username:  request.Spec.Username,
+			Groups:    request.Spec.Groups,
 		},
 	}
 
