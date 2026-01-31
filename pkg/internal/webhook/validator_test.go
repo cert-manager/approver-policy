@@ -22,9 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2/ktesting"
 	"k8s.io/utils/ptr"
@@ -56,18 +54,13 @@ func Test_validate(t *testing.T) {
 		return approver.WebhookValidationResponse{}, errors.New("some error")
 	})
 	tests := map[string]struct {
-		crp               runtime.Object
+		crp               *policyapi.CertificateRequestPolicy
 		webhooks          []approver.Webhook
 		registeredPlugins []string
 
 		expectedWarnings admission.Warnings
 		expectedError    *string
 	}{
-		"if the object being validated is not a CertificateRequestPolicy return an error": {
-			crp: &corev1.Pod{},
-
-			expectedError: ptr.To("expected a CertificateRequestPolicy, but got a *v1.Pod"),
-		},
 		"if the CertificateRequestPolicy refers to a plugin that is not registered return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
 				TypeMeta:   testTypeMeta,

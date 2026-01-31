@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/klog/v2/ktesting"
 	fakeclock "k8s.io/utils/clock/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -413,7 +413,7 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				WithRuntimeObjects(test.existingObjects...).
 				Build()
 
-			fakerecorder := record.NewFakeRecorder(1)
+			fakerecorder := events.NewFakeRecorder(1)
 
 			c := &certificaterequestpolicies{
 				log:         ktesting.NewLogger(t, ktesting.DefaultConfig),

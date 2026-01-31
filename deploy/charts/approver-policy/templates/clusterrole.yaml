@@ -35,7 +35,7 @@ rules:
   resources: ["roles", "clusterroles", "rolebindings", "clusterrolebindings"]
   verbs: ["list", "watch"]
 
-- apiGroups: [""]
+- apiGroups: ["events.k8s.io"]
   resources: ["events"]
   verbs: ["create", "patch"]
 

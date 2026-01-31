@@ -32,7 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/clock"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -59,7 +59,7 @@ type certificaterequests struct {
 	clock clock.Clock
 
 	// recorder is used for creating Kubernetes events on resources.
-	recorder record.EventRecorder
+	recorder events.EventRecorder
 
 	// client is a Kubernetes REST client to interact with objects in the API
 	// server.
@@ -82,7 +82,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 	c := &certificaterequests{
 		log:      opts.Log.WithName("certificaterequests"),
 		clock:    clock.RealClock{},
-		recorder: opts.Manager.GetEventRecorderFor("policy.cert-manager.io"),
+		recorder: opts.Manager.GetEventRecorder("policy.cert-manager.io"),
 		client:   opts.Manager.GetClient(),
 		lister:   opts.Manager.GetCache(),
 		manager:  internalmanager.New(opts.Manager.GetCache(), opts.Manager.GetClient(), opts.Evaluators),
@@ -196,7 +196,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 		// Here we don't send the error context in the Kubernetes Event to protect
 		// information about the approver configuration being exposed to the
 		// client.
-		c.recorder.Eventf(cr, corev1.EventTypeWarning, "EvaluationError", "approver-policy failed to review the request and will retry")
+		c.recorder.Eventf(cr, nil, corev1.EventTypeWarning, "EvaluationError", "SyncedFailed", "approver-policy failed to review the request and will retry")
 		return ctrl.Result{}, nil, err
 	}
 
@@ -205,7 +205,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 	switch response.Result {
 	case manager.ResultApproved:
 		log.V(2).Info("approving request")
-		c.recorder.Event(cr, corev1.EventTypeNormal, "Approved", response.Message)
+		c.recorder.Eventf(cr, nil, corev1.EventTypeNormal, "Approved", "Synced", "%s", response.Message)
 
 		setCertificateRequestStatusCondition(
 			c.clock,
@@ -221,7 +221,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 
 	case manager.ResultDenied:
 		log.V(2).Info("denying request")
-		c.recorder.Event(cr, corev1.EventTypeWarning, "Denied", response.Message)
+		c.recorder.Eventf(cr, nil, corev1.EventTypeWarning, "Denied", "Synced", "%s", response.Message)
 
 		setCertificateRequestStatusCondition(
 			c.clock,
@@ -237,13 +237,13 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 
 	case manager.ResultUnprocessed:
 		log.V(2).Info("request was unprocessed")
-		c.recorder.Event(cr, corev1.EventTypeNormal, "Unprocessed", "Request is not applicable for any policy so ignoring")
+		c.recorder.Eventf(cr, nil, corev1.EventTypeNormal, "Unprocessed", "Synced", "Request is not applicable for any policy so ignoring")
 
 		return ctrl.Result{}, nil, nil
 
 	default:
 		log.Error(errors.New(response.Message), "manager responded with an unknown result", "result", response.Result)
-		c.recorder.Event(cr, corev1.EventTypeWarning, "UnknownResponse", "Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue")
+		c.recorder.Eventf(cr, nil, corev1.EventTypeWarning, "UnknownResponse", "SyncedFailed", "Policy returned an unknown result. This is a bug. Please check the approver-policy logs and file an issue")
 
 		// We can do nothing but keep retrying the review here.
 		return ctrl.Result{RequeueAfter: time.Second * 5}, nil, nil
