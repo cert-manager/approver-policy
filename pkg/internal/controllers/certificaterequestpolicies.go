@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/clock"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -55,7 +55,7 @@ type certificaterequestpolicies struct {
 	clock clock.Clock
 
 	// recorder is used for creating Kubernetes events on resources.
-	recorder record.EventRecorder
+	recorder events.EventRecorder
 
 	// client is a Kubernetes REST client to interact with objects in the API
 	// server.
@@ -130,7 +130,7 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 		Complete(&certificaterequestpolicies{
 			log:         log,
 			clock:       clock.RealClock{},
-			recorder:    opts.Manager.GetEventRecorderFor("policy.cert-manager.io"),
+			recorder:    opts.Manager.GetEventRecorder("policy.cert-manager.io"),
 			client:      opts.Manager.GetClient(),
 			lister:      opts.Manager.GetCache(),
 			reconcilers: opts.Reconcilers,
@@ -213,7 +213,7 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 		log.V(2).Info("NOT ready for approval evaluation", "errors", el.ToAggregate())
 
 		message := fmt.Sprintf("CertificateRequestPolicy is not ready for approval evaluation: %s", el.ToAggregate())
-		c.recorder.Event(policy, corev1.EventTypeWarning, "NotReady", message)
+		c.recorder.Eventf(policy, nil, corev1.EventTypeWarning, "NotReady", "Synced", "%s", message)
 
 		c.setCondition(
 			policy.Status.Conditions,
@@ -233,7 +233,7 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 	log.V(2).Info("ready for approval evaluation")
 
 	message := "CertificateRequestPolicy is ready for approval evaluation"
-	c.recorder.Event(policy, corev1.EventTypeNormal, "Ready", message)
+	c.recorder.Eventf(policy, nil, corev1.EventTypeNormal, "Ready", "Synced", "%s", message)
 
 	c.setCondition(
 		policy.Status.Conditions,

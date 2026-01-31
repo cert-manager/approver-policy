@@ -19,13 +19,11 @@ package webhook
 import (
 	"context"
 	"errors"
-	"fmt"
 	"slices"
 	"sort"
 
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,28 +43,24 @@ type validator struct {
 	lister client.Reader
 }
 
-var _ admission.CustomValidator = &validator{}
+var _ admission.Validator[*policyapi.CertificateRequestPolicy] = &validator{}
 
-func (v *validator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *validator) ValidateCreate(ctx context.Context, obj *policyapi.CertificateRequestPolicy) (admission.Warnings, error) {
 	return v.validate(ctx, obj)
 }
 
-func (v *validator) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+func (v *validator) ValidateUpdate(ctx context.Context, _, newObj *policyapi.CertificateRequestPolicy) (admission.Warnings, error) {
 	return v.validate(ctx, newObj)
 }
 
-func (v *validator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *validator) ValidateDelete(_ context.Context, _ *policyapi.CertificateRequestPolicy) (admission.Warnings, error) {
 	// always allow deletes
 	return nil, nil
 }
 
 // certificateRequestPolicy validates the given CertificateRequestPolicy with
 // the base validations, along with all webhook validations registered.
-func (v *validator) validate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	policy, ok := obj.(*policyapi.CertificateRequestPolicy)
-	if !ok {
-		return nil, fmt.Errorf("expected a CertificateRequestPolicy, but got a %T", obj)
-	}
+func (v *validator) validate(ctx context.Context, policy *policyapi.CertificateRequestPolicy) (admission.Warnings, error) {
 	var (
 		fieldErrs field.ErrorList
 		warnings  admission.Warnings
