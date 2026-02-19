@@ -36,7 +36,7 @@ spec:
       serviceAccountName: {{ include "cert-manager-approver-policy.name" . }}
       containers:
       - name: {{ include "cert-manager-approver-policy.name" . }}
-        image: "{{ template "image" (tuple .Values.image $.Chart.AppVersion) }}"
+        image: "{{ template "image" (tuple .Values.image $.Chart.AppVersion $) }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - name: webhook

@@ -35,11 +35,39 @@ Any changes to this function should also be made in cert-manager, trust-manager,
 See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linked PRs.
 */}}
 {{- define "image" -}}
+{{- $image := index . 0 -}}
 {{- $defaultTag := index . 1 -}}
-{{- with index . 0 -}}
-{{- if .registry -}}{{ printf "%s/%s" .registry .repository }}{{- else -}}{{- .repository -}}{{- end -}}
-{{- if .digest -}}{{ printf "@%s" .digest }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
-{{- end }}
+{{- $root := index . 2 -}}
+{{- $repo := "" -}}
+{{- if $image.repository -}}
+{{- $repo = $image.repository -}}
+{{- else -}}
+{{- $registry := $root.Values.imageRegistry -}}
+{{- $namespace := $root.Values.imageNamespace -}}
+{{- $name := $image.name -}}
+{{- if $registry -}}
+{{- if $namespace -}}
+{{- $repo = printf "%s/%s/%s" $registry $namespace $name -}}
+{{- else -}}
+{{- $repo = printf "%s/%s" $registry $name -}}
+{{- end -}}
+{{- else -}}
+{{- if $namespace -}}
+{{- $repo = printf "%s/%s" $namespace $name -}}
+{{- else -}}
+{{- $repo = $name -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if $image.registry -}}
+{{- $repo = printf "%s/%s" $image.registry $repo -}}
+{{- end -}}
+{{- $repo -}}
+{{- if $image.digest -}}
+{{ printf "@%s" $image.digest }}
+{{- else -}}
+{{ printf ":%s" (default $defaultTag $image.tag) }}
+{{- end -}}
 {{- end }}
 
 {{/*
