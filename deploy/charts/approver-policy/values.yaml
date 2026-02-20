@@ -101,6 +101,19 @@ app:
   # +docs:property
   approveSignerNames: []
 
+  usePoliciesRbac:
+    # Create RBAC to grant permission to use policies.
+    enabled: true
+    # List of policies that the referenced service account will be given permission to
+    # use. Defaults to an empty array, allowing use of all policies.
+    policyNames: []
+    # The ServiceAccount granted permission to use policies.
+    serviceAccount:
+      # Name of ServiceAccount.
+      name: cert-manager
+      # Namespace of ServiceAccount.
+      namespace: cert-manager
+
   metrics:
     # Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
     port: 9402
