@@ -73,15 +73,16 @@ Examples:
 - jetstack  
 - cert-manager
 
-
-
 #### **image.registry** ~ `string`
 
-Deprecated: per-component registry prefix.
-
-If set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from `imageRegistry` + `imageNamespace` + `image.name`.
-
-This can produce "double registry" style references such as `legacy.example.io/quay.io/jetstack/...`. Prefer using the global `imageRegistry`/`imageNamespace` values.
+Deprecated: per-component registry prefix.  
+  
+If set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from  
+`imageRegistry` + `imageNamespace` + `image.name`.  
+  
+This can produce "double registry" style references such as  
+`legacy.example.io/quay.io/jetstack/...`. Prefer using the global  
+`imageRegistry`/`imageNamespace` values.
 
 #### **image.name** ~ `string`
 > Default value:
@@ -89,7 +90,8 @@ This can produce "double registry" style references such as `legacy.example.io/q
 > cert-manager-approver-policy
 > ```
 
-The image name for approver-policy. This is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.
+The image name for approver-policy.  
+This is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.
 
 #### **image.repository** ~ `string`
 > Default value:
@@ -97,8 +99,10 @@ The image name for approver-policy. This is used (together with `imageRegistry` 
 > ""
 > ```
 
-Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `image.name`).  
+Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and  
+`image.name`).  
 Example: quay.io/jetstack/cert-manager-approver-policy
+
 #### **image.tag** ~ `string`
 
 Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
