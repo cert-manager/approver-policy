@@ -425,23 +425,23 @@
       "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
       "type": "string"
     },
+    "helm-values.image.name": {
+      "default": "cert-manager-approver-policy",
+      "description": "The image name for approver-policy.\nThis is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.",
+      "type": "string"
+    },
     "helm-values.image.pullPolicy": {
       "default": "IfNotPresent",
       "description": "Kubernetes imagePullPolicy on Deployment.",
       "type": "string"
     },
     "helm-values.image.registry": {
-      "description": "Deprecated: per-component registry prefix.\n\nIf set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from `imageRegistry` + `imageNamespace` + `image.name`.\n\nThis can produce \"double registry\" style references such as `legacy.example.io/quay.io/jetstack/...`. Prefer using the global `imageRegistry`/`imageNamespace` values.",
+      "description": "Deprecated: per-component registry prefix.\n\nIf set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from\n`imageRegistry` + `imageNamespace` + `image.name`.\n\nThis can produce \"double registry\" style references such as\n`legacy.example.io/quay.io/jetstack/...`. Prefer using the global\n`imageRegistry`/`imageNamespace` values.",
       "type": "string"
     },
     "helm-values.image.repository": {
       "default": "",
-      "description": "Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `image.name`).\nExample: quay.io/jetstack/cert-manager-approver-policy",
-      "type": "string"
-    },
-    "helm-values.image.name": {
-      "default": "cert-manager-approver-policy",
-      "description": "The image name for approver-policy. This is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.",
+      "description": "Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and\n`image.name`).\nExample: quay.io/jetstack/cert-manager-approver-policy",
       "type": "string"
     },
     "helm-values.image.tag": {
