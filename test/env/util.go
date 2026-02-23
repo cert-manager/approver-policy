@@ -78,7 +78,7 @@ func writeKubeconfig(t *testing.T, restConfig *rest.Config, name string) string 
 		APIServerCA       string
 		APIServerHost     string
 		ClientCertificate string
-		ClientKey         string
+		ClientKey         string // #nosec G117 -- test-only kubeconfig generation
 	}{
 		APIServerCA:       base64.StdEncoding.EncodeToString(restConfig.CAData),
 		APIServerHost:     restConfig.Host,
