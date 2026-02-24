@@ -237,7 +237,7 @@ func Test_Review(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "test-req"},
 				Spec: cmapi.CertificateRequestSpec{
 					Username: "example",
-					IssuerRef: cmmeta.ObjectReference{
+					IssuerRef: cmmeta.IssuerReference{
 						Name:  "test-name",
 						Kind:  "test-kind",
 						Group: "test-group",

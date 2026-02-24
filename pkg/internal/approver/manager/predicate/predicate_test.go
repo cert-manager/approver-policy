@@ -396,7 +396,7 @@ func Test_RBACBound(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
 				Spec: cmapi.CertificateRequestSpec{
 					Username: "example",
-					IssuerRef: cmmeta.ObjectReference{
+					IssuerRef: cmmeta.IssuerReference{
 						Name:  "test-name",
 						Kind:  "test-kind",
 						Group: "test-group",
@@ -506,7 +506,7 @@ func Test_Ready(t *testing.T) {
 func Test_SelectorIssuerRef(t *testing.T) {
 	baseRequest := &cmapi.CertificateRequest{
 		Spec: cmapi.CertificateRequestSpec{
-			IssuerRef: cmmeta.ObjectReference{
+			IssuerRef: cmmeta.IssuerReference{
 				Name:  "test-name",
 				Kind:  "test-kind",
 				Group: "test-group",
@@ -524,7 +524,7 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			expPolicies: nil,
 		},
 		"if policy specifies cert-manager defaults and request omits defaults, return policy": {
-			request: &cmapi.CertificateRequest{Spec: cmapi.CertificateRequestSpec{IssuerRef: cmmeta.ObjectReference{
+			request: &cmapi.CertificateRequest{Spec: cmapi.CertificateRequestSpec{IssuerRef: cmmeta.IssuerReference{
 				Name: "my-issuer",
 			}}},
 			policies: []policyapi.CertificateRequestPolicy{

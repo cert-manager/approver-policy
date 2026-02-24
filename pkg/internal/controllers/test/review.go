@@ -88,7 +88,7 @@ var _ = Context("Review", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -118,7 +118,7 @@ var _ = Context("Review", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -158,7 +158,7 @@ var _ = Context("Review", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -187,7 +187,7 @@ var _ = Context("Review", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -198,7 +198,7 @@ var _ = Context("Review", func() {
 
 		crName = createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -228,7 +228,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny.Name, policyApprove.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -268,7 +268,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name, policyApprove.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -306,7 +306,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny.Name, policyApprove1.Name, policyApprove2.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -338,7 +338,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -379,7 +379,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name, policyDeny3.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -431,7 +431,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyApprove.Name, policyDeny.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("foo.example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForDenial(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -475,7 +475,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyApprove.Name, policyDeny.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -530,7 +530,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyApprove1.Name, policyApprove2.Name, policyDeny.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
@@ -584,7 +584,7 @@ var _ = Context("Review", func() {
 		userUsePolicyRoleName := bindUserToUseCertificateRequestPolicies(ctx, env.AdminClient, namespace.Name, policyDeny1.Name, policyDeny2.Name, policyDeny3.Name)
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name, gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 		waitForNoApproveOrDeny(ctx, env.AdminClient, namespace.Name, crName)
 
