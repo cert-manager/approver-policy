@@ -184,7 +184,7 @@ var _ = Context("RBAC", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 
 		// Prove that the request is not bound to a policy.
@@ -209,7 +209,7 @@ var _ = Context("RBAC", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 
 		// Prove that the request is not bound to a policy.
@@ -234,7 +234,7 @@ var _ = Context("RBAC", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 
 		// Prove that the request is not bound to a policy.
@@ -261,7 +261,7 @@ var _ = Context("RBAC", func() {
 
 		crName := createCertificateRequest(ctx, env.UserClient, namespace.Name,
 			gen.SetCSRDNSNames("example.com"),
-			gen.SetCertificateRequestIssuer(cmmeta.ObjectReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
+			gen.SetCertificateRequestIssuer(cmmeta.IssuerReference{Name: "my-issuer", Kind: "Issuer", Group: "cert-manager.io"}),
 		)
 
 		// Prove that the request is not bound to a policy.

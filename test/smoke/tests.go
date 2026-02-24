@@ -120,7 +120,7 @@ var _ = Describe("Policy", func() {
 					Namespace:    namespace.Name,
 				},
 				Spec: cmapi.CertificateRequestSpec{
-					IssuerRef: cmmeta.ObjectReference{Name: issuer.Name, Kind: "Issuer", Group: "cert-manager.io"},
+					IssuerRef: cmmeta.IssuerReference{Name: issuer.Name, Kind: "Issuer", Group: "cert-manager.io"},
 				},
 			}
 
