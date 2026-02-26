@@ -38,8 +38,5 @@ helm_labels_template_name := cert-manager-approver-policy.labels
 golangci_lint_config := .golangci.yaml
 
 define helm_values_mutation_function
-$(YQ) \
-	'( .image.repository = "$(oci_manager_image_name)" ) | \
-	( .image.tag = "$(oci_manager_image_tag)" )' \
-	$1 --inplace
+echo "OK: nothing to mutate in Helm values"
 endef
