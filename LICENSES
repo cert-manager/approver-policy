@@ -62,6 +62,7 @@ github.com/go-openapi/jsonpointer,Apache-2.0
 github.com/go-openapi/jsonreference,Apache-2.0
 github.com/go-openapi/swag,Apache-2.0
 github.com/go-openapi/swag/jsonname,Apache-2.0
+github.com/gogo/protobuf,BSD-3-Clause
 github.com/google/btree,Apache-2.0
 github.com/google/cel-go,Apache-2.0
 github.com/google/cel-go,BSD-3-Clause
@@ -90,6 +91,7 @@ github.com/prometheus/common,Apache-2.0
 github.com/prometheus/procfs,Apache-2.0
 github.com/spf13/cobra,Apache-2.0
 github.com/spf13/pflag,BSD-3-Clause
+github.com/stoewer/go-strcase,MIT
 github.com/x448/float16,MIT
 github.com/xlab/treeprint,MIT
 go.opentelemetry.io/auto/sdk,Apache-2.0
