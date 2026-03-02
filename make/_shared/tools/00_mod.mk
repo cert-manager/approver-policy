@@ -468,10 +468,10 @@ $(call for_each_kv,go_dependency,$(go_dependencies))
 # File downloads #
 ##################
 
-go_linux_amd64_SHA256SUM=9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b
-go_linux_arm64_SHA256SUM=b00b694903d126c588c378e72d3545549935d3982635ba3f7a964c9fa23fe3b9
-go_darwin_amd64_SHA256SUM=b69d51bce599e5381a94ce15263ae644ec84667a5ce23d58dc2e63e2c12a9f56
-go_darwin_arm64_SHA256SUM=bed8ebe824e3d3b27e8471d1307f803fc6ab8e1d0eb7a4ae196979bd9b801dd3
+go_linux_amd64_SHA256SUM=aac1b08a0fb0c4e0a7c1555beb7b59180b05dfc5a3d62e40e9de90cd42f88235
+go_linux_arm64_SHA256SUM=bd03b743eb6eb4193ea3c3fd3956546bf0e3ca5b7076c8226334afe6b75704cd
+go_darwin_amd64_SHA256SUM=1ca28b7703cbea05a65b2a1d92d6b308610ef92f8824578a0874f2e60c9d5a22
+go_darwin_arm64_SHA256SUM=b1640525dfe68f066d56f200bef7bf4dce955a1a893bd061de6754c211431023
 
 .PRECIOUS: $(DOWNLOAD_DIR)/tools/go@$(VENDORED_GO_VERSION)_$(HOST_OS)_$(HOST_ARCH).tar.gz
 $(DOWNLOAD_DIR)/tools/go@$(VENDORED_GO_VERSION)_$(HOST_OS)_$(HOST_ARCH).tar.gz: | $(DOWNLOAD_DIR)/tools
