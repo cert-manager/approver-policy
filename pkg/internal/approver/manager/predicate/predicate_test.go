@@ -19,10 +19,12 @@ package predicate
 import (
 	"path"
 	"testing"
+	"time"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -403,9 +405,15 @@ func Test_RBACBound(t *testing.T) {
 					},
 				},
 			}
-			policies, err := RBACBound(env.AdminClient)(ctx, req, test.policies)
-			assert.NoError(t, err)
-			assert.Equal(t, test.expPolicies, policies)
+
+			// RBACBound performs SubjectAccessReviews which may get a response based on an out-of-date
+			// RoleBinding/ClusterRoleBinding/... cache in the API server. Therefore we retry the assertion
+			// for a short period of time to allow for eventual consistency.
+			require.EventuallyWithT(t, func(ct *assert.CollectT) {
+				policies, err := RBACBound(env.AdminClient)(ctx, req, test.policies)
+				require.NoError(ct, err)
+				require.Equal(ct, test.expPolicies, policies)
+			}, 10*time.Second, 1*time.Second)
 		})
 	}
 }
