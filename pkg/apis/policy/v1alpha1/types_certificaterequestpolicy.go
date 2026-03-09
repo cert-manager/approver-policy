@@ -283,7 +283,6 @@ type CertificateRequestPolicyConstraints struct {
 	MinDuration *metav1.Duration `json:"minDuration,omitempty"`
 
 	// MaxDuration defines the maximum duration for a certificate request.
-	// for.
 	// Values are inclusive (i.e. a value of `1h` will accept a duration of
 	// `1h`). MinDuration and MaxDuration may be the same value.
 	// If set, a duration _must_ be requested in the CertificateRequest.

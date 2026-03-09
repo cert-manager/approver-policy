@@ -29,7 +29,7 @@ import (
 	"github.com/cert-manager/approver-policy/pkg/registry"
 )
 
-// Options are options for running the wehook.
+// Options are options for running the webhook.
 type Options struct {
 	// Log is a shared logger for the shared webhook.
 	Log logr.Logger

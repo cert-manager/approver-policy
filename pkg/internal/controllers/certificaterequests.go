@@ -184,7 +184,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 	}
 
 	if apiutil.CertificateRequestIsApproved(cr) || apiutil.CertificateRequestIsDenied(cr) {
-		// Return early if already approved/denied as this is decision is final for requests.
+		// Return early if already approved/denied as this decision is final for requests.
 		return ctrl.Result{}, nil, nil
 	}
 

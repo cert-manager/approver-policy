@@ -31,7 +31,7 @@ The release process for this repo is documented below:
 
 This repo will produce the following artifacts each release. For documentation on how those artifacts are produced see the "Process" section.
 
-- *Container Images* - Container images for the are published to `quay.io/jetstack`. 
+- *Container Images* - Container images are published to `quay.io/jetstack`.
 - *Helm chart* - An official Helm chart is maintained within this repo and published to `quay.io/jetstack` on each release.
   *  The chart is also published to the legacy HTTP Helm repository at `https://charts.jetstack.io` (maintained by Venafi).
      Publishing to the legacy repo depends on a PR to be merged in a closed Venafi repo, and might be delayed.
