@@ -18,8 +18,8 @@ github.com/blang/semver/v4 v4.0.0 h1:1PFHFE6yCCTv8C1TeyNNarDzntLi7wMI5i/pzqYIsAM
 github.com/blang/semver/v4 v4.0.0/go.mod h1:IbckMUScFkM3pff0VJDNKRiT6TG/YpiHIM2yvyW5YoQ=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
 github.com/cenkalti/backoff/v5 v5.0.3/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
-github.com/cert-manager/cert-manager v1.20.0-beta.0 h1:+2HG3xeZQmMEKd/qyqae9V2oy+Yl1Ag6PBhMKtIyXpU=
-github.com/cert-manager/cert-manager v1.20.0-beta.0/go.mod h1:JwHs7VjXu1zr4mi/0fCLrh2QNEF/vz0diR+wwOgNRBg=
+github.com/cert-manager/cert-manager v1.20.0 h1:czZamsFJ1YdKPhpv+SopJZN9t3W68vQBnFYUevSHGqY=
+github.com/cert-manager/cert-manager v1.20.0/go.mod h1:3oparI7R5JyJMNXntYod9p6DucIZ84st7y/9kL6cbBE=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
