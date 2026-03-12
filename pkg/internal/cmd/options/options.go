@@ -120,11 +120,11 @@ type Webhook struct {
 	// ServiceName is the service that exposes the Webhook server.
 	ServiceName string
 
-	// CASecretName is the namespace that the approver-policy
+	// CASecretNamespace is the namespace that the approver-policy
 	// webhook CA certificate Secret is stored.
 	CASecretNamespace string
 
-	// CASecretName is the name of the Secret use to store
+	// CASecretName is the name of the Secret used to store
 	// the approver-policy webhook CA certificate.
 	CASecretName string
 
