@@ -400,6 +400,9 @@
     "helm-values.image": {
       "additionalProperties": false,
       "properties": {
+        "_defaultReference": {
+          "$ref": "#/$defs/helm-values.image._defaultReference"
+        },
         "digest": {
           "$ref": "#/$defs/helm-values.image.digest"
         },
@@ -420,6 +423,11 @@
         }
       },
       "type": "object"
+    },
+    "helm-values.image._defaultReference": {
+      "default": ":v0.0.0",
+      "description": "WARNING: For internal use only; overwritten before releasing the chart.",
+      "type": "string"
     },
     "helm-values.image.digest": {
       "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",

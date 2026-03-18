@@ -81,6 +81,10 @@ image:
   # Kubernetes imagePullPolicy on Deployment.
   pullPolicy: IfNotPresent
 
+  # WARNING: For internal use only; overwritten before releasing the chart.
+  # +docs:hidden
+  _defaultReference: :v0.0.0
+
 # Optional secrets used for pulling the approver-policy container image.
 imagePullSecrets: []
 
