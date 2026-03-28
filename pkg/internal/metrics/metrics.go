@@ -49,57 +49,6 @@ var (
 		},
 		nil,
 	)
-
-	// approvedCount counts the number of CertificateRequest currently approved
-	// or denied by looking at the Approved condition. For context, the Approved
-	// condition looks like this:
-	//
-	//  conditions:
-	//  - type: Approved
-	//    status: "True"
-	//    reason: policy.cert-manager.io
-	//    message: 'Approved by CertificateRequestPolicy: "mael"'
-	//
-	// This is a gauge rather than a counter because certificate requests may
-	// get removed over time e.g. with revisionHistoryLimit.
-	approvedCount = prometheus.NewDesc(
-		"approverpolicy_certificaterequest_approved_count",
-		"DEPRECATED: use certmanager_approverpolicy_certificaterequests_approval instead. Number of CertificateRequests that have been approved (Approved=True).",
-		[]string{
-			"namespace",
-		},
-		nil,
-	)
-
-	// deniedCount counts the number of CertificateRequest currently denied by
-	// looking at the Denied condition.
-	//
-	// - type: Denied
-	//   status: "True"
-	//   reason: policy.cert-manager.io
-	//   message: 'No policy approved this request: [issuer-2: spec.allowed.dnsNames.values:
-	//     Invalid value: []string{"forbidden-domain-41.com"}: *.example.com, *.ca-wont-accept.org]'
-	deniedCount = prometheus.NewDesc(
-		"approverpolicy_certificaterequest_denied_count",
-		"DEPRECATED: use certmanager_approverpolicy_certificaterequests_approval instead. Number of CertificateRequests that have been denied (Denied=True).",
-		[]string{
-			"namespace",
-		},
-		nil,
-	)
-
-	// unmatchedCount counts the current number of certificate requests that
-	// have not been matched by any approvers. An unmatched certificate request
-	// is defined as a certificate requests that doesn't have the Approved
-	// condition.
-	unmatchedCount = prometheus.NewDesc(
-		"approverpolicy_certificaterequest_unmatched_count",
-		"DEPRECATED: use certmanager_approverpolicy_certificaterequests_approval instead. Number of CertificateRequests not matched to any policy, i.e., that don't have an Approved or Denied condition set yet.",
-		[]string{
-			"namespace",
-		},
-		nil,
-	)
 )
 
 // You don't need to wait for the cache to be synced before calling this. This
@@ -123,9 +72,6 @@ func (cc collector) Describe(ch chan<- *prometheus.Desc) {
 
 func (cc collector) Collect(ch chan<- prometheus.Metric) {
 	collectCertificateRequestsApproval(cc.ctx, cc.log, cc.reader, ch)
-	collectCRsApproved(cc.ctx, cc.log, cc.reader, ch)
-	collectCRsDenied(cc.ctx, cc.log, cc.reader, ch)
-	collectCRsUnmatched(cc.ctx, cc.log, cc.reader, ch)
 }
 
 func collectCertificateRequestsApproval(ctx context.Context, log logr.Logger, r client.Reader, ch chan<- prometheus.Metric) {
@@ -170,127 +116,6 @@ func collectCertificateRequestsApproval(ctx context.Context, log logr.Logger, r 
 			float64(count[key]),
 			key.namespace,
 			key.status,
-		)
-	}
-}
-
-func collectCRsApproved(ctx context.Context, log logr.Logger, r client.Reader, ch chan<- prometheus.Metric) {
-	list := &cmapi.CertificateRequestList{}
-	err := r.List(ctx, list)
-	if err != nil {
-		log.Error(err, "unable to list CertificateRequests")
-		return
-	}
-
-	type label struct{ namespace string }
-
-	// Let's remember the order of the labels so that we can send the metrics
-	// deterministically. Undeterministic outputs are a pain to test and debug.
-	var labels []label
-	count := make(map[label]int)
-
-	for _, cr := range list.Items {
-		// A certificate request is said to be approved if it has the condition
-		// Approved=True.
-		if !isStatusConditionTrue(cr.Status.Conditions, cmapi.CertificateRequestConditionApproved) {
-			continue
-		}
-
-		k := label{namespace: cr.Namespace}
-		_, exists := count[k]
-		if !exists {
-			labels = append(labels, k)
-		}
-		count[k]++
-	}
-
-	for _, key := range labels {
-		//nolint:promlinter // This metric is deprecated and will eventually be removed, https://github.com/cert-manager/approver-policy/issues/713.
-		ch <- prometheus.MustNewConstMetric(
-			approvedCount,
-			prometheus.GaugeValue,
-			float64(count[key]),
-			key.namespace,
-		)
-	}
-}
-
-func collectCRsDenied(ctx context.Context, log logr.Logger, r client.Reader, ch chan<- prometheus.Metric) {
-	list := &cmapi.CertificateRequestList{}
-	err := r.List(ctx, list)
-	if err != nil {
-		log.Error(err, "unable to list CertificateRequests")
-		return
-	}
-
-	type label struct{ namespace string }
-
-	var labels []label
-	count := make(map[label]int)
-
-	for _, cr := range list.Items {
-		// A certificate request is said to be denied if it has the condition
-		// Denied=True.
-		if !isStatusConditionTrue(cr.Status.Conditions, cmapi.CertificateRequestConditionDenied) {
-			continue
-		}
-
-		k := label{namespace: cr.Namespace}
-		_, exists := count[k]
-		if !exists {
-			labels = append(labels, k)
-		}
-		count[k]++
-	}
-
-	for _, key := range labels {
-		//nolint:promlinter // This metric is deprecated and will eventually be removed, https://github.com/cert-manager/approver-policy/issues/713.
-		ch <- prometheus.MustNewConstMetric(
-			deniedCount,
-			prometheus.GaugeValue,
-			float64(count[key]),
-			key.namespace,
-		)
-	}
-}
-
-func collectCRsUnmatched(ctx context.Context, logger logr.Logger, r client.Reader, ch chan<- prometheus.Metric) {
-	list := &cmapi.CertificateRequestList{}
-	err := r.List(ctx, list)
-	if err != nil {
-		logger.Error(err, "unable to list CertificateRequests")
-		return
-	}
-
-	type label struct {
-		namespace string
-	}
-
-	var labels []label
-	count := make(map[label]int)
-
-	for _, cr := range list.Items {
-		// A certificate request is said to be unmatched if it doesn't have the
-		// Approved and Denied conditions.
-		if isStatusConditionTrue(cr.Status.Conditions, cmapi.CertificateRequestConditionApproved) || isStatusConditionTrue(cr.Status.Conditions, cmapi.CertificateRequestConditionDenied) {
-			continue
-		}
-
-		k := label{namespace: cr.Namespace}
-		_, exists := count[k]
-		if !exists {
-			labels = append(labels, k)
-		}
-		count[k]++
-	}
-
-	for _, key := range labels {
-		//nolint:promlinter // This metric is deprecated and will eventually be removed, ref. https://github.com/cert-manager/approver-policy/issues/713.
-		ch <- prometheus.MustNewConstMetric(
-			unmatchedCount,
-			prometheus.GaugeValue,
-			float64(count[key]),
-			key.namespace,
 		)
 	}
 }
