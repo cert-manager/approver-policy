@@ -167,7 +167,7 @@ func (o *Options) Complete() error {
 	var err error
 	o.RestConfig, err = o.kubeConfigFlags.ToRESTConfig()
 	if err != nil {
-		return fmt.Errorf("failed to build kubernetes rest config: %s", err)
+		return fmt.Errorf("failed to build kubernetes rest config: %w", err)
 	}
 
 	return nil

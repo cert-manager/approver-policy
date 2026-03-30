@@ -68,11 +68,11 @@ func Register(ctx context.Context, opts Options) error {
 		WithValidator(validator).
 		Complete()
 	if err != nil {
-		return fmt.Errorf("error registering webhook: %v", err)
+		return fmt.Errorf("error registering webhook: %w", err)
 	}
 
 	if err := opts.Manager.AddReadyzCheck("validator", opts.Manager.GetWebhookServer().StartedChecker()); err != nil {
-		return fmt.Errorf("error adding readyz check: %v", err)
+		return fmt.Errorf("error adding readyz check: %w", err)
 	}
 
 	return nil
