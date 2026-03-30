@@ -17,7 +17,7 @@ spec:
         - "example.com"
         - "*.example.com"
       validations:
-        - rule: self.size() =< 24
+        - rule: self.size() <= 24
           message: DNSName must be no more than 24 characters
     ipAddresses:
       required: false
@@ -37,7 +37,7 @@ spec:
       values:
         - "*@example.com"
       validations:
-        - rule: self.size() =< 24
+        - rule: self.size() <= 24
           message: EmailAddress must be no more than 24 characters
     isCA: false
     usages:

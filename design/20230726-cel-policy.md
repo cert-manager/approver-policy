@@ -225,7 +225,7 @@ spec:
         - "*.sub.domain.com"
       validations:
         - message: dnsName can be maximum 64 characters.
-          rule: self.size() =< 64
+          rule: self.size() <= 64
 ```
 
 For this example, I would expect the attribute to be checked against the `values` first. If the `DNSName` CSR attribute
