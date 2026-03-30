@@ -119,7 +119,7 @@ app:
         # Create Prometheus ServiceMonitor resource for approver-policy.
         enabled: false
         # The value for the "prometheus" label on the ServiceMonitor. This allows
-        # for multiple Prometheus instances selecting difference ServiceMonitors
+        # for multiple Prometheus instances selecting different ServiceMonitors
         # using label selectors.
         prometheusInstance: default
         # The interval that the Prometheus will scrape for metrics.
