@@ -26,6 +26,7 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/server/tls/authority"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -94,6 +95,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 						},
 					},
 				}),
+				Cache: cache.Options{
+					ReaderFailOnMissingInformer: true,
+				},
 				Logger: mlog,
 			})
 			if err != nil {
