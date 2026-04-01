@@ -38,6 +38,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -115,6 +116,12 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		return requests
 	}
 
+	onlyNonInitialCreateEvents := builder.WithPredicates(predicate.Funcs{
+		CreateFunc: func(tce event.TypedCreateEvent[client.Object]) bool {
+			return !tce.IsInInitialList
+		},
+	})
+
 	return ctrl.NewControllerManagedBy(opts.Manager).
 		For(&cmapi.CertificateRequest{}, builder.WithPredicates(
 			// Only process CertificateRequests which have not yet got an approval
@@ -128,7 +135,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		// Watch CertificateRequestPolicies. If a policy is created or updated,
 		// then we need to process all CertificateRequests that do not yet have an
 		// approved or denied condition since they may be relevant for the policy.
-		Watches(&policyapi.CertificateRequestPolicy{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
+		Watches(&policyapi.CertificateRequestPolicy{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), onlyNonInitialCreateEvents).
 
 		// Watch Roles, RoleBindings, ClusterRoles, and ClusterRoleBindings. If
 		// RBAC changes in the cluster then CertificateRequestPolicies may become
@@ -136,11 +143,11 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		// CertificateRequests that are neither Approved or Denied.
 		// Only need to cache metadata for RBAC resources since we do not need any
 		// information in the spec.
-		WatchesMetadata(&rbacv1.Role{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
-		WatchesMetadata(&rbacv1.RoleBinding{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
-		WatchesMetadata(&rbacv1.ClusterRole{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
-		WatchesMetadata(&rbacv1.ClusterRoleBinding{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
-		WatchesMetadata(&corev1.Namespace{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc)).
+		WatchesMetadata(&rbacv1.Role{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), onlyNonInitialCreateEvents).
+		WatchesMetadata(&rbacv1.RoleBinding{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), onlyNonInitialCreateEvents).
+		WatchesMetadata(&rbacv1.ClusterRole{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), onlyNonInitialCreateEvents).
+		WatchesMetadata(&rbacv1.ClusterRoleBinding{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), onlyNonInitialCreateEvents).
+		WatchesMetadata(&corev1.Namespace{}, handler.EnqueueRequestsFromMapFunc(enqueueRequestFromMapFunc), onlyNonInitialCreateEvents).
 
 		// Complete the controller builder.
 		Complete(c)
