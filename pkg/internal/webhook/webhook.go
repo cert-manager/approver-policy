@@ -64,7 +64,8 @@ func Register(ctx context.Context, opts Options) error {
 		registeredPlugins: registerdPlugins,
 	}
 
-	err := builder.WebhookManagedBy(opts.Manager, &policyapi.CertificateRequestPolicy{}).
+	err := builder.WebhookManagedBy(opts.Manager).
+		For(&policyapi.CertificateRequestPolicy{}).
 		WithValidator(validator).
 		Complete()
 	if err != nil {
