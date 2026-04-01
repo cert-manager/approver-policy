@@ -66,10 +66,6 @@ type certificaterequests struct {
 	// server.
 	client client.Client
 
-	// lister makes requests to the informer cache for getting and listing
-	// objects.
-	lister client.Reader
-
 	// manager is a Manager that is responsible for reviewing whether a
 	// CertificateRequest should be approved or denied. This manager is expected
 	// to manage all approvers which have been registered and active for this
@@ -85,8 +81,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		clock:    clock.RealClock{},
 		recorder: opts.Manager.GetEventRecorder("policy.cert-manager.io"),
 		client:   opts.Manager.GetClient(),
-		lister:   opts.Manager.GetCache(),
-		manager:  internalmanager.New(opts.Manager.GetCache(), opts.Manager.GetClient(), opts.Evaluators),
+		manager:  internalmanager.New(opts.Manager.GetClient(), opts.Evaluators),
 	}
 
 	enqueueRequestFromMapFunc := func(_ context.Context, _ client.Object) []reconcile.Request {
@@ -95,7 +90,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		// Exiting error is the safest option, as it will force a resync on all
 		// CertificateRequests on start.
 		var crList cmapi.CertificateRequestList
-		if err := c.lister.List(ctx, &crList); err != nil {
+		if err := c.client.List(ctx, &crList); err != nil {
 			c.log.Error(err, "failed to list all CertificateRequests, exiting error")
 			os.Exit(-1)
 		}
@@ -186,7 +181,7 @@ func (c *certificaterequests) reconcileStatusPatch(ctx context.Context, req ctrl
 	log.V(2).Info("syncing certificaterequest")
 
 	cr := new(cmapi.CertificateRequest)
-	if err := c.lister.Get(ctx, req.NamespacedName, cr); err != nil {
+	if err := c.client.Get(ctx, req.NamespacedName, cr); err != nil {
 		return ctrl.Result{}, nil, client.IgnoreNotFound(err)
 	}
 

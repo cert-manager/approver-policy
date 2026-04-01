@@ -419,7 +419,6 @@ func Test_certificaterequestpolicies_Reconcile(t *testing.T) {
 				log:         ktesting.NewLogger(t, ktesting.DefaultConfig),
 				clock:       fixedclock,
 				client:      fakeclient,
-				lister:      fakeclient,
 				recorder:    fakerecorder,
 				reconcilers: test.reconcilers,
 			}

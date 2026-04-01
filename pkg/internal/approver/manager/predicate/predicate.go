@@ -98,7 +98,7 @@ func SelectorIssuerRef(_ context.Context, cr *cmapi.CertificateRequest, policies
 // the request. SelectorNamespace will match with `namespace.matchNames` on
 // namespaces using wilcards "*". Empty selector is equivalent to "*" and will
 // match on any Namespace.
-func SelectorNamespace(lister client.Reader) Predicate {
+func SelectorNamespace(reader client.Reader) Predicate {
 	return func(ctx context.Context, request *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 		var matchingPolicies []policyapi.CertificateRequestPolicy
 
@@ -143,7 +143,7 @@ func SelectorNamespace(lister client.Reader) Predicate {
 
 				if namespaceLabels == nil {
 					var namespace corev1.Namespace
-					if err := lister.Get(ctx, client.ObjectKey{Name: request.Namespace}, &namespace); err != nil {
+					if err := reader.Get(ctx, client.ObjectKey{Name: request.Namespace}, &namespace); err != nil {
 						return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
 					}
 					namespaceLabels = &namespace.Labels

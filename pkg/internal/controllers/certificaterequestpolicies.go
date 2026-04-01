@@ -61,10 +61,6 @@ type certificaterequestpolicies struct {
 	// server.
 	client client.Client
 
-	// lister makes requests to the informer cache for getting and listing
-	// objects.
-	lister client.Reader
-
 	// reconcilers is the set of approver Reconcilers that are responsible for
 	// building the Ready status conditions of CertificateRequestPolicies.
 	// CertificateRequestPolicies that are not in a Ready state will not be used
@@ -132,7 +128,6 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 			clock:       clock.RealClock{},
 			recorder:    opts.Manager.GetEventRecorder("policy.cert-manager.io"),
 			client:      opts.Manager.GetClient(),
-			lister:      opts.Manager.GetCache(),
 			reconcilers: opts.Reconcilers,
 		})
 }
@@ -170,7 +165,7 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 	log.V(2).Info("syncing")
 
 	policy := new(policyapi.CertificateRequestPolicy)
-	if err := c.lister.Get(ctx, req.NamespacedName, policy); err != nil {
+	if err := c.client.Get(ctx, req.NamespacedName, policy); err != nil {
 		return reconcile.Result{}, nil, client.IgnoreNotFound(err)
 	}
 
