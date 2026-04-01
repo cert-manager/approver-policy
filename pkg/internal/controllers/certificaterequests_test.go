@@ -187,7 +187,6 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 
 			c := &certificaterequests{
 				client:   fakeclient,
-				lister:   fakeclient,
 				recorder: fakerecorder,
 				manager:  test.manager,
 				log:      ktesting.NewLogger(t, ktesting.DefaultConfig),

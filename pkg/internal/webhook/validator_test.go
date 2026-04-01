@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2/ktesting"
 	"k8s.io/utils/ptr"
-	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -203,11 +202,7 @@ func Test_validate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fakeclient := fakeclient.NewClientBuilder().
-				WithScheme(policyapi.GlobalScheme).
-				Build()
-
-			v := &validator{lister: fakeclient, log: ktesting.NewLogger(t, ktesting.DefaultConfig), webhooks: test.webhooks, registeredPlugins: test.registeredPlugins}
+			v := &validator{log: ktesting.NewLogger(t, ktesting.DefaultConfig), webhooks: test.webhooks, registeredPlugins: test.registeredPlugins}
 			gotWarnings, gotErr := v.validate(t.Context(), test.crp)
 			if test.expectedError == nil && gotErr != nil {
 				t.Errorf("unexpected error: %v", gotErr)

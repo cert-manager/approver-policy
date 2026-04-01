@@ -46,7 +46,7 @@ type Options struct {
 
 // Register the approver-policy Webhook endpoints against the
 // controller-manager Manager.
-func Register(ctx context.Context, opts Options) error {
+func Register(_ context.Context, opts Options) error {
 	log := opts.Log.WithName("webhook")
 
 	var registerdPlugins []string
@@ -59,7 +59,6 @@ func Register(ctx context.Context, opts Options) error {
 	log.Info("registering webhook endpoints")
 	validator := &validator{
 		log:               log.WithName("validation"),
-		lister:            opts.Manager.GetCache(),
 		webhooks:          opts.Webhooks,
 		registeredPlugins: registerdPlugins,
 	}

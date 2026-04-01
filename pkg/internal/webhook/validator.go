@@ -26,7 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -39,8 +38,6 @@ type validator struct {
 
 	registeredPlugins []string
 	webhooks          []approver.Webhook
-
-	lister client.Reader
 }
 
 var _ admission.Validator[*policyapi.CertificateRequestPolicy] = &validator{}

@@ -258,7 +258,7 @@ func Test_Review(t *testing.T) {
 			}
 
 			mngr := &mngr{
-				lister:         env.AdminClient,
+				reader:         env.AdminClient,
 				readyPredicate: predicate.Ready,
 				predicates:     []predicate.Predicate{test.predicate(t)},
 				evaluators:     []approver.Evaluator{test.evaluator(t)},

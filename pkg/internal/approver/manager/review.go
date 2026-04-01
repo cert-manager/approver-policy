@@ -37,7 +37,7 @@ var _ manager.Interface = &mngr{}
 // filtering CertificiateRequestPolicies based on predicates, and evaluating
 // CertificateRequests using the registered evaluators.
 type mngr struct {
-	lister         client.Reader
+	reader         client.Reader
 	readyPredicate predicate.Predicate
 	predicates     []predicate.Predicate
 	evaluators     []approver.Evaluator
@@ -65,13 +65,13 @@ type policyMessage struct {
 // IssuerRef
 //   - CertificateRequestPolicy is bound to the user that appears in the
 //     CertificateRequest
-func New(lister client.Reader, client client.Client, evaluators []approver.Evaluator) manager.Interface {
+func New(client client.Client, evaluators []approver.Evaluator) manager.Interface {
 	return &mngr{
-		lister:         lister,
+		reader:         client,
 		readyPredicate: predicate.Ready,
 		predicates: []predicate.Predicate{
 			predicate.SelectorIssuerRef,
-			predicate.SelectorNamespace(lister),
+			predicate.SelectorNamespace(client),
 			predicate.RBACBound(client),
 		},
 		evaluators: evaluators,
@@ -83,7 +83,7 @@ func New(lister client.Reader, client client.Client, evaluators []approver.Evalu
 // have passed all of the predicates.
 func (m *mngr) Review(ctx context.Context, cr *cmapi.CertificateRequest) (manager.ReviewResponse, error) {
 	policyList := new(policyapi.CertificateRequestPolicyList)
-	if err := m.lister.List(ctx, policyList); err != nil {
+	if err := m.reader.List(ctx, policyList); err != nil {
 		return manager.ReviewResponse{}, err
 	}
 
