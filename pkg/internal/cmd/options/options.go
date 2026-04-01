@@ -58,6 +58,10 @@ type Options struct {
 	// which will be served on the HTTP path '/readyz'.
 	ReadyzAddress string
 
+	// PprofBindAddress is the TCP address for exposing the Go pprof endpoints.
+	// An empty string disables pprof (controller-runtime default).
+	PprofBindAddress string
+
 	// RestConfig is the shared base rest config to connect to the Kubernetes
 	// API.
 	RestConfig *rest.Config
@@ -214,6 +218,9 @@ func (o *Options) addAppFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&o.ReadyzAddress, "readiness-probe-bind-address", ":6060",
 		"TCP address for exposing the HTTP readiness probe which will be served on the HTTP path '/readyz'.")
+
+	fs.StringVar(&o.PprofBindAddress, "pprof-bind-address", "",
+		"TCP address for exposing Go pprof endpoints. An empty string disables pprof.")
 }
 
 func (o *Options) addLoggingFlags(fs *pflag.FlagSet) {

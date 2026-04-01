@@ -82,6 +82,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				LeaderElectionNamespace:       opts.LeaderElectionNamespace,
 				ReadinessEndpointName:         "/readyz",
 				HealthProbeBindAddress:        opts.ReadyzAddress,
+				PprofBindAddress:              opts.PprofBindAddress,
 				Metrics: server.Options{
 					BindAddress: opts.MetricsAddress,
 				},
