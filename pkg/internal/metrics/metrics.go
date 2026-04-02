@@ -18,12 +18,14 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
@@ -51,14 +53,19 @@ var (
 	)
 )
 
-// You don't need to wait for the cache to be synced before calling this. This
-// function is non-blocking.
-func RegisterMetrics(ctx context.Context, log logr.Logger, r client.Reader) {
-	metrics.Registry.MustRegister(collector{ctx, log, r})
+type LeaderAwareCollector interface {
+	prometheus.Collector
+	manager.Runnable
+	manager.LeaderElectionRunnable
+}
+
+// NewCollector initializes a new collector, but it still needs to be started.
+func NewCollector(log logr.Logger, r client.Reader) LeaderAwareCollector {
+	return &collector{log: log, reader: r}
 }
 
 // We use a custom collector instead of prometheus.NewGaugeVec because it is
-// much easier to list all of the certificate requests when the `/metrics`
+// much easier to list all the certificate requests when the `/metrics`
 // endpoint is hit rather than using a controller-runtime reconciler.
 type collector struct {
 	ctx    context.Context
@@ -66,11 +73,28 @@ type collector struct {
 	reader client.Reader
 }
 
-func (cc collector) Describe(ch chan<- *prometheus.Desc) {
+func (cc *collector) Start(ctx context.Context) error {
+	cc.ctx = ctx
+	if err := metrics.Registry.Register(cc); err != nil {
+		return fmt.Errorf("unable to register metrics collector: %w", err)
+	}
+
+	// Block until the context is done.
+	<-ctx.Done()
+	metrics.Registry.Unregister(cc)
+
+	return nil
+}
+
+func (cc *collector) NeedLeaderElection() bool {
+	return true
+}
+
+func (cc *collector) Describe(ch chan<- *prometheus.Desc) {
 	prometheus.DescribeByCollect(cc, ch)
 }
 
-func (cc collector) Collect(ch chan<- prometheus.Metric) {
+func (cc *collector) Collect(ch chan<- prometheus.Metric) {
 	collectCertificateRequestsApproval(cc.ctx, cc.log, cc.reader, ch)
 }
 
