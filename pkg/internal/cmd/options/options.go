@@ -174,6 +174,9 @@ func (o *Options) Complete() error {
 		return fmt.Errorf("failed to build kubernetes rest config: %w", err)
 	}
 
+	// Disable client-side ratelimer, we can rely on API priority and fairness
+	o.RestConfig.QPS = -1
+
 	return nil
 }
 
