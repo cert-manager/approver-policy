@@ -75,7 +75,7 @@ type certificaterequests struct {
 
 // addCertificateRequestController will register the certificaterequests
 // controller with the controller-runtime Manager.
-func addCertificateRequestController(ctx context.Context, opts Options) error {
+func addCertificateRequestController(_ context.Context, opts Options) error {
 	c := &certificaterequests{
 		log:      opts.Log.WithName("certificaterequests"),
 		clock:    clock.RealClock{},
@@ -84,14 +84,21 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		manager:  internalmanager.New(opts.Manager.GetClient(), opts.Evaluators),
 	}
 
-	enqueueRequestFromMapFunc := func(_ context.Context, _ client.Object) []reconcile.Request {
-		// If an error happens here and we do nothing, we run the risk of not
+	enqueueRequestFromMapFunc := func(ctx context.Context, obj client.Object) []reconcile.Request {
+		// For namespace-scoped objects, only list CRs in that namespace.
+		// For cluster-scoped objects (no namespace), list across all namespaces.
+		var listOpts []client.ListOption
+		if ns := obj.GetNamespace(); ns != "" {
+			listOpts = append(listOpts, client.InNamespace(ns))
+		}
+
+		// If an error happens here, and we do nothing, we run the risk of not
 		// processing CertificateRequests.
 		// Exiting error is the safest option, as it will force a resync on all
 		// CertificateRequests on start.
 		var crList cmapi.CertificateRequestList
-		if err := c.client.List(ctx, &crList); err != nil {
-			c.log.Error(err, "failed to list all CertificateRequests, exiting error")
+		if err := c.client.List(ctx, &crList, listOpts...); err != nil {
+			c.log.Error(err, "failed to list CertificateRequests, exiting error")
 			os.Exit(-1)
 		}
 
@@ -111,6 +118,10 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 		return requests
 	}
 
+	// onlyNonInitialCreateEvents guards the event handler above.
+	// On startup, the controller reconciles all CertificateRequests via the
+	// initial list, so Create events from that same initial list of other
+	// watched resources are redundant and can be safely skipped.
 	onlyNonInitialCreateEvents := builder.WithPredicates(predicate.Funcs{
 		CreateFunc: func(tce event.TypedCreateEvent[client.Object]) bool {
 			return !tce.IsInInitialList
