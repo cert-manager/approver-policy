@@ -190,6 +190,9 @@ func (o *Options) Complete() error {
 		return fmt.Errorf("--certificaterequestpolicy-max-concurrent-reconciles must be >= 1, got %d", o.CertificateRequestPolicyMaxConcurrentReconciles)
 	}
 
+	// Disable client-side ratelimer, we can rely on API priority and fairness
+	o.RestConfig.QPS = -1
+
 	return nil
 }
 

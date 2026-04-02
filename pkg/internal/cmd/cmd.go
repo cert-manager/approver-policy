@@ -109,7 +109,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return err
 			}
 
-			metrics.RegisterMetrics(ctx, opts.Logr.WithName("metrics"), mgr.GetClient())
+			if err := mgr.Add(metrics.NewCollector(opts.Logr.WithName("metrics"), mgr.GetClient())); err != nil {
+				return fmt.Errorf("unable to create metrics collector: %w", err)
+			}
 
 			if err := webhook.Register(ctx, webhook.Options{
 				Log:      opts.Logr,
