@@ -38,6 +38,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -118,6 +119,7 @@ func addCertificateRequestController(ctx context.Context, opts Options) error {
 	})
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
+		WithOptions(controller.Options{MaxConcurrentReconciles: opts.CertificateRequestMaxConcurrentReconciles}).
 		For(&cmapi.CertificateRequest{}, builder.WithPredicates(
 			// Only process CertificateRequests which have not yet got an approval
 			// status.

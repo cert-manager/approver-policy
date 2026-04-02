@@ -40,8 +40,16 @@ type Options struct {
 	Evaluators []approver.Evaluator
 
 	// Reconcilers is the list of registered Approver Reconcilers that  will be
-	// used to manager CertificateRequestPolicy Ready conditions.
+	// used to manage CertificateRequestPolicy Ready conditions.
 	Reconcilers []approver.Reconciler
+
+	// CertificateRequestMaxConcurrentReconciles is the maximum number of
+	// concurrent reconciles for the CertificateRequest controller.
+	CertificateRequestMaxConcurrentReconciles int
+
+	// CertificateRequestPolicyMaxConcurrentReconciles is the maximum number of
+	// concurrent reconciles for the CertificateRequestPolicy controller.
+	CertificateRequestPolicyMaxConcurrentReconciles int
 }
 
 // AddControllers adds all internal controllers.

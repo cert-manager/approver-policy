@@ -66,6 +66,14 @@ type Options struct {
 	// API.
 	RestConfig *rest.Config
 
+	// CertificateRequestMaxConcurrentReconciles is the maximum number of
+	// concurrent reconciles for the CertificateRequest controller.
+	CertificateRequestMaxConcurrentReconciles int
+
+	// CertificateRequestPolicyMaxConcurrentReconciles is the maximum number of
+	// concurrent reconciles for the CertificateRequestPolicy controller.
+	CertificateRequestPolicyMaxConcurrentReconciles int
+
 	// log are options controlling logging
 	log logOptions
 
@@ -174,6 +182,14 @@ func (o *Options) Complete() error {
 		return fmt.Errorf("failed to build kubernetes rest config: %w", err)
 	}
 
+	if o.CertificateRequestMaxConcurrentReconciles < 1 {
+		return fmt.Errorf("--certificaterequest-max-concurrent-reconciles must be >= 1, got %d", o.CertificateRequestMaxConcurrentReconciles)
+	}
+
+	if o.CertificateRequestPolicyMaxConcurrentReconciles < 1 {
+		return fmt.Errorf("--certificaterequestpolicy-max-concurrent-reconciles must be >= 1, got %d", o.CertificateRequestPolicyMaxConcurrentReconciles)
+	}
+
 	return nil
 }
 
@@ -218,6 +234,12 @@ func (o *Options) addAppFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&o.ReadyzAddress, "readiness-probe-bind-address", ":6060",
 		"TCP address for exposing the HTTP readiness probe which will be served on the HTTP path '/readyz'.")
+
+	fs.IntVar(&o.CertificateRequestMaxConcurrentReconciles, "certificaterequest-max-concurrent-reconciles", 1,
+		"Maximum number of concurrent reconciles for the CertificateRequest controller.")
+
+	fs.IntVar(&o.CertificateRequestPolicyMaxConcurrentReconciles, "certificaterequestpolicy-max-concurrent-reconciles", 1,
+		"Maximum number of concurrent reconciles for the CertificateRequestPolicy controller.")
 
 	fs.StringVar(&o.PprofBindAddress, "pprof-bind-address", "",
 		"TCP address for exposing Go pprof endpoints. An empty string disables pprof.")
