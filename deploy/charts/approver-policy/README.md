@@ -194,7 +194,7 @@ Create Prometheus ServiceMonitor resource for approver-policy.
 > default
 > ```
 
-The value for the "prometheus" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.
+The value for the "prometheus" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting different ServiceMonitors using label selectors.
 #### **app.metrics.service.servicemonitor.interval** ~ `string`
 > Default value:
 > ```yaml
