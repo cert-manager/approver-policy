@@ -33,6 +33,7 @@ import (
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -116,6 +117,7 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 	}
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
+		WithOptions(controller.Options{MaxConcurrentReconciles: opts.CertificateRequestPolicyMaxConcurrentReconciles}).
 		For(new(policyapi.CertificateRequestPolicy)).
 		WatchesRawSource(source.Channel(genericChan, handler.EnqueueRequestsFromMapFunc(
 			func(_ context.Context, obj client.Object) []reconcile.Request {

@@ -135,6 +135,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Manager:     mgr,
 				Evaluators:  registry.Shared.Evaluators(),
 				Reconcilers: registry.Shared.Reconcilers(),
+				CertificateRequestMaxConcurrentReconciles:       opts.CertificateRequestMaxConcurrentReconciles,
+				CertificateRequestPolicyMaxConcurrentReconciles: opts.CertificateRequestPolicyMaxConcurrentReconciles,
 			}); err != nil {
 				return fmt.Errorf("failed to add controllers: %w", err)
 			}

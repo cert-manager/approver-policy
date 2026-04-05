@@ -40,12 +40,29 @@ type Options struct {
 	Evaluators []approver.Evaluator
 
 	// Reconcilers is the list of registered Approver Reconcilers that  will be
-	// used to manager CertificateRequestPolicy Ready conditions.
+	// used to manage CertificateRequestPolicy Ready conditions.
 	Reconcilers []approver.Reconciler
+
+	// CertificateRequestMaxConcurrentReconciles is the maximum number of
+	// concurrent reconciles for the CertificateRequest controller.
+	// Defaults to 1 if <= 0.
+	CertificateRequestMaxConcurrentReconciles int
+
+	// CertificateRequestPolicyMaxConcurrentReconciles is the maximum number of
+	// concurrent reconciles for the CertificateRequestPolicy controller.
+	// Defaults to 1 if <= 0.
+	CertificateRequestPolicyMaxConcurrentReconciles int
 }
 
 // AddControllers adds all internal controllers.
 func AddControllers(ctx context.Context, opts Options) error {
+	if opts.CertificateRequestMaxConcurrentReconciles <= 0 {
+		opts.CertificateRequestMaxConcurrentReconciles = 1
+	}
+	if opts.CertificateRequestPolicyMaxConcurrentReconciles <= 0 {
+		opts.CertificateRequestPolicyMaxConcurrentReconciles = 1
+	}
+
 	if err := addCertificateRequestController(ctx, opts); err != nil {
 		return fmt.Errorf("failed to add certificaterequest controller: %w", err)
 	}
