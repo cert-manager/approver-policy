@@ -34,7 +34,7 @@ IMPORTANT: This function is standardized across all charts in the cert-manager G
 Any changes to this function should also be made in cert-manager, trust-manager, approver-policy, ...
 See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linked PRs.
 */}}
-{{- define "image" -}}
+{{- define "approver-policy.image" -}}
 {{- /*
 Calling convention:
 
