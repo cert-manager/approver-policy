@@ -25,10 +25,6 @@ import (
 	"github.com/cert-manager/approver-policy/pkg/approver/fake"
 )
 
-func newFakeApprover(name string) approver.Interface {
-	return fake.NewFakeApprover().WithReconciler(fake.NewFakeReconciler().WithName(name))
-}
-
 func TestRegistry_Store(t *testing.T) {
 	tests := map[string]struct {
 		preStored    []approver.Interface
@@ -137,4 +133,8 @@ func TestRegistry_Store_IncrementalAdd(t *testing.T) {
 	r.Store(newFakeApprover("second"))
 	assert.Equal(t, 2, len(r.Approvers()))
 	assert.Equal(t, 2, len(r.Reconcilers()))
+}
+
+func newFakeApprover(name string) approver.Interface {
+	return fake.NewFakeApprover().WithReconciler(fake.NewFakeReconciler().WithName(name))
 }
