@@ -46,7 +46,7 @@ usage through tuple/variable indirection.
 */ -}}
 
 {{- if ne (len .) 4 -}}
-  {{- fail (printf "ERROR: template \"image\" expects (tuple <imageValues> <imageRegistry> <imageNamespace> <defaultReference>), got %d arguments" (len .)) -}}
+  {{- fail (printf "ERROR: template \"approver-policy.image\" expects (tuple <imageValues> <imageRegistry> <imageNamespace> <defaultReference>), got %d arguments" (len .)) -}}
 {{- end -}}
 
 {{- $image := index . 0 -}}
