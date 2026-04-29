@@ -140,6 +140,13 @@ type CertificateRequestPolicyAllowed struct {
 	// attributes.
 	// +optional
 	Subject *CertificateRequestPolicyAllowedX509Subject `json:"subject,omitempty"`
+
+	// Annotations defines allowed annotations on a CertificateRequest.
+	// Each key is an annotation name, and the value defines the allowed
+	// values for that annotation. Annotations on the request that are
+	// not listed here are ignored.
+	// +optional
+	Annotations map[string]CertificateRequestPolicyAllowedStringSlice `json:"annotations,omitempty"`
 }
 
 // CertificateRequestPolicyAllowedX509Subject declares allowed X.509 Subject
