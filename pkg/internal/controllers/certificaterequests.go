@@ -34,7 +34,6 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/clock"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -178,7 +177,7 @@ func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (
 		if err := c.client.Status().Patch(ctx, cr, patch, &client.SubResourcePatchOptions{
 			PatchOptions: client.PatchOptions{
 				FieldManager: "approver-policy",
-				Force:        ptr.To(true),
+				Force:        new(true),
 			},
 		}); err != nil {
 			err = fmt.Errorf("failed to apply CertificateRequest.Status patch: %w", err)

@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2/ktesting"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -70,7 +69,7 @@ func Test_validate(t *testing.T) {
 			},
 			registeredPlugins: []string{"foo", "baz"},
 
-			expectedError: ptr.To("[spec.plugins: Unsupported value: \"bar\": supported values: \"foo\", \"baz\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]"),
+			expectedError: new("[spec.plugins: Unsupported value: \"bar\": supported values: \"foo\", \"baz\", spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything]"),
 		},
 		"if neither issuer ref nor namespace are defined, return error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -82,7 +81,7 @@ func Test_validate(t *testing.T) {
 			},
 			registeredPlugins: []string{"foo", "bar"},
 
-			expectedError: ptr.To("spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"),
+			expectedError: new("spec.selector: Required value: one of issuerRef or namespace must be defined, hint: `{}` on either matches everything"),
 		},
 		"if an invalid namespace label selector is defined, return error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -99,7 +98,7 @@ func Test_validate(t *testing.T) {
 			},
 			registeredPlugins: []string{"foo", "bar"},
 
-			expectedError: ptr.To("spec.selector.namespace.matchLabels: Invalid value: {\"$%234\":\"8dsdk\"}: key: Invalid value: \"$%234\": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')"),
+			expectedError: new("spec.selector.namespace.matchLabels: Invalid value: {\"$%234\":\"8dsdk\"}: key: Invalid value: \"$%234\": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')"),
 		},
 		"if a registered webhook does not allow CertificateRequestPolicy, return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -117,7 +116,7 @@ func Test_validate(t *testing.T) {
 			registeredPlugins: []string{"foo", "bar"},
 			webhooks:          []approver.Webhook{passingWebhook, notAllowedWebhook},
 
-			expectedError: ptr.To("spec: Invalid value: \"foo\": some error occurred"),
+			expectedError: new("spec: Invalid value: \"foo\": some error occurred"),
 		},
 		"if a registered webhook errors when validating CertificateRequestPolicy, return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -135,7 +134,7 @@ func Test_validate(t *testing.T) {
 			registeredPlugins: []string{"foo", "bar"},
 			webhooks:          []approver.Webhook{passingWebhook, failingWebhook},
 
-			expectedError: ptr.To("some error"),
+			expectedError: new("some error"),
 		},
 		"if a registered webhook does not allow CertificteRequestPolicy without further detail, return an error": {
 			crp: &policyapi.CertificateRequestPolicy{
@@ -153,7 +152,7 @@ func Test_validate(t *testing.T) {
 			registeredPlugins: []string{"foo", "bar"},
 			webhooks:          []approver.Webhook{passingWebhook, notAllowedWebhookNoDetail},
 
-			expectedError: ptr.To("a plugin did not allow the CertificateRequest for unknown reasons"),
+			expectedError: new("a plugin did not allow the CertificateRequest for unknown reasons"),
 		},
 		"if a webhook validation returns warnings, add return them": {
 			crp: &policyapi.CertificateRequestPolicy{

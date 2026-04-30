@@ -25,7 +25,6 @@ import (
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -108,7 +107,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -144,7 +143,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("*"),
+						Name: new("my-*"), Kind: new("*uer"), Group: new("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -180,7 +179,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("cert-manager.io"),
+						Name: new("my-issuer"), Kind: new("Issuer"), Group: new("cert-manager.io"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -211,7 +210,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("foo"),
+						Name: new("my-*"), Kind: new("*uer"), Group: new("foo"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -242,7 +241,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("cert-manager.io"),
+						Name: new("my-*"), Kind: new("*uer"), Group: new("cert-manager.io"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -273,7 +272,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-*"), Kind: ptr.To("*uer"), Group: ptr.To("cert-manager.io"),
+						Name: new("my-*"), Kind: new("*uer"), Group: new("cert-manager.io"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -303,7 +302,7 @@ var _ = Context("Selector", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -685,7 +684,7 @@ var _ = Context("Selector", func() {
 						MatchNames: []string{"foo", namespace.Name},
 					},
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("foo"), Kind: ptr.To("bar"), Group: ptr.To("*"),
+						Name: new("foo"), Kind: new("bar"), Group: new("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -720,7 +719,7 @@ var _ = Context("Selector", func() {
 						MatchNames: []string{"foo"},
 					},
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("*"),
+						Name: new("my-issuer"), Kind: new("Issuer"), Group: new("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
@@ -755,7 +754,7 @@ var _ = Context("Selector", func() {
 						MatchNames: []string{"foo", namespace.Name},
 					},
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("*"),
+						Name: new("my-issuer"), Kind: new("Issuer"), Group: new("*"),
 					},
 				},
 				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
