@@ -27,7 +27,6 @@ import (
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -78,7 +77,7 @@ var _ = Describe("Policy", func() {
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To(issuer.Name),
+						Name: new(issuer.Name),
 					},
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
 						MatchNames: []string{namespace.Name},
@@ -125,7 +124,7 @@ var _ = Describe("Policy", func() {
 			}
 
 			policy.Spec.Allowed = &policyapi.CertificateRequestPolicyAllowed{
-				CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("*.test.policy")},
+				CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: new("*.test.policy")},
 			}
 		})
 

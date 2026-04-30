@@ -21,7 +21,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -47,20 +46,20 @@ func Test_Validate(t *testing.T) {
 			policy: &policyapi.CertificateRequestPolicy{
 				Spec: policyapi.CertificateRequestPolicySpec{
 					Allowed: &policyapi.CertificateRequestPolicyAllowed{
-						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: nil},
-						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
+						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: nil},
+						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
 						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
-							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: nil},
-							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: nil},
+							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: nil},
+							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: nil},
 						},
 					},
 				},
@@ -88,20 +87,20 @@ func Test_Validate(t *testing.T) {
 			policy: &policyapi.CertificateRequestPolicy{
 				Spec: policyapi.CertificateRequestPolicySpec{
 					Allowed: &policyapi.CertificateRequestPolicyAllowed{
-						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("")},
-						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
+						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("")},
+						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
 						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
-							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(false), Values: &[]string{}},
-							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(false), Values: &[]string{}},
-							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(false), Values: &[]string{}},
-							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(false), Values: &[]string{}},
-							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(false), Values: nil},
-							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(false), Values: &[]string{}},
-							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(false), Values: nil},
-							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("")},
+							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(false), Values: &[]string{}},
+							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(false), Values: &[]string{}},
+							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(false), Values: &[]string{}},
+							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(false), Values: &[]string{}},
+							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(false), Values: nil},
+							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(false), Values: &[]string{}},
+							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(false), Values: nil},
+							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("")},
 						},
 					},
 				},
@@ -115,20 +114,20 @@ func Test_Validate(t *testing.T) {
 			policy: &policyapi.CertificateRequestPolicy{
 				Spec: policyapi.CertificateRequestPolicySpec{
 					Allowed: &policyapi.CertificateRequestPolicyAllowed{
-						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("")},
-						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
+						CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("")},
+						DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+						IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+						URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+						EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
 						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
-							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{}},
-							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("")},
+							Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+							Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+							OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+							Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+							Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+							StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+							PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{}},
+							SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("")},
 						},
 					},
 				},

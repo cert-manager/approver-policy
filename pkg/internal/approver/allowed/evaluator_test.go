@@ -27,7 +27,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -120,12 +119,12 @@ func Test_Evaluate(t *testing.T) {
 			),
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
-					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("hello-world2")},
+					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Value: new("hello-world2")},
 					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com2", "foo.bar2"}},
 					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"1.1.1.12", "2.3.4.52"}},
 					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"spiffe://cluster.local/ns/foo/sa/bar2", "foo.bar.com2"}},
 					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo@example.com2", "bar@example.com2"}},
-					IsCA:           ptr.To(false),
+					IsCA:           new(false),
 					Usages:         &[]cmapi.KeyUsage{cmapi.UsageCRLSign, cmapi.UsageServerAuth},
 					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"company-3", "company-4"}},
@@ -135,7 +134,7 @@ func Test_Evaluate(t *testing.T) {
 						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"prov-3", "prov-4"}},
 						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"street-3", "street-4"}},
 						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"post-3", "post-4"}},
-						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("serial-2")},
+						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Value: new("serial-2")},
 					},
 				},
 			},
@@ -181,12 +180,12 @@ func Test_Evaluate(t *testing.T) {
 			),
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
-					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("hello-world")},
+					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Value: new("hello-world")},
 					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com", "foo.bar", "*.example.com"}},
 					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"1.1.1.1", "2.3.4.5"}},
 					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"spiffe://cluster.local/ns/foo/sa/bar", "foo.bar.com"}},
 					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo@example.com", "bar@example.com"}},
-					IsCA:           ptr.To(true),
+					IsCA:           new(true),
 					Usages:         &[]cmapi.KeyUsage{cmapi.UsageCRLSign, cmapi.UsageClientAuth},
 					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"company-1", "company-2"}},
@@ -196,7 +195,7 @@ func Test_Evaluate(t *testing.T) {
 						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"prov-1", "prov-2"}},
 						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"street-1", "street-2"}},
 						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"post-1", "post-2"}},
-						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("serial-1")},
+						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Value: new("serial-1")},
 					},
 				},
 			},
@@ -226,12 +225,12 @@ func Test_Evaluate(t *testing.T) {
 			),
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
-					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("hello-*")},
+					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Value: new("hello-*")},
 					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.*", "*.bar"}},
 					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"1.1*", "*2.3.4.5"}},
 					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"spiffe://cluster.local/*/foo/sa/bar", "*.bar.com"}},
 					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo@*", "*r@example.com"}},
-					IsCA:           ptr.To(true),
+					IsCA:           new(true),
 					Usages:         &[]cmapi.KeyUsage{cmapi.UsageCRLSign, cmapi.UsageClientAuth},
 					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"company*"}},
@@ -241,7 +240,7 @@ func Test_Evaluate(t *testing.T) {
 						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"prov*"}},
 						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"street-1", "street-*"}},
 						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"post-1", "post-2"}},
-						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("serial-*")},
+						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Value: new("serial-*")},
 					},
 				},
 			},
@@ -254,20 +253,20 @@ func Test_Evaluate(t *testing.T) {
 			request: gen.CertificateRequest("", gen.SetCertificateRequestCSR(csrFrom(t))),
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
-					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("*")},
-					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
+					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("*")},
+					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
 					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
-						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("*")},
+						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("*")},
 					},
 				},
 			},
@@ -308,20 +307,20 @@ func Test_Evaluate(t *testing.T) {
 			))),
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
-					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("*")},
-					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
+					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("*")},
+					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
 					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
-						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: ptr.To(true), Values: &[]string{"*"}},
-						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: ptr.To(true), Value: ptr.To("*")},
+						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						Countries:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						OrganizationalUnits: &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						Localities:          &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						Provinces:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						StreetAddresses:     &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						PostalCodes:         &policyapi.CertificateRequestPolicyAllowedStringSlice{Required: new(true), Values: &[]string{"*"}},
+						SerialNumber:        &policyapi.CertificateRequestPolicyAllowedString{Required: new(true), Value: new("*")},
 					},
 				},
 			},
@@ -349,9 +348,9 @@ func Test_Evaluate(t *testing.T) {
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
 					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Validations: []policyapi.ValidationRule{{Rule: "self.contains('cn-1')"}}},
-					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.endsWith(cr.namespace + '.svc')", Message: ptr.To("only local namespace DNS names are allowed")}}},
+					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.endsWith(cr.namespace + '.svc')", Message: new("only local namespace DNS names are allowed")}}},
 					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.startsWith('10.0.1.')"}}},
-					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.startsWith('spiffe://cluster.local/ns/' + cr.namespace + '/sa/')", Message: ptr.To("must be a namespced SPIFFE ID in local trust domain")}}},
+					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.startsWith('spiffe://cluster.local/ns/' + cr.namespace + '/sa/')", Message: new("must be a namespced SPIFFE ID in local trust domain")}}},
 					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self == cr.namespace + '@example.com'"}}},
 					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self == 'company-1'"}}},
@@ -405,9 +404,9 @@ func Test_Evaluate(t *testing.T) {
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
 					CommonName:     &policyapi.CertificateRequestPolicyAllowedString{Validations: []policyapi.ValidationRule{{Rule: "self.contains('cn-1')"}}},
-					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.endsWith(cr.namespace + '.svc')", Message: ptr.To("only local namespace DNS names are allowed")}}},
+					DNSNames:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.endsWith(cr.namespace + '.svc')", Message: new("only local namespace DNS names are allowed")}}},
 					IPAddresses:    &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.startsWith('10.0.1.')"}}},
-					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.startsWith('spiffe://cluster.local/ns/' + cr.namespace + '/sa/')", Message: ptr.To("must be a namespced SPIFFE ID in local trust domain")}}},
+					URIs:           &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self.startsWith('spiffe://cluster.local/ns/' + cr.namespace + '/sa/')", Message: new("must be a namespced SPIFFE ID in local trust domain")}}},
 					EmailAddresses: &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self == cr.namespace + '@example.com'"}}},
 					Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 						Organizations:       &policyapi.CertificateRequestPolicyAllowedStringSlice{Validations: []policyapi.ValidationRule{{Rule: "self == 'company-1'"}}},
@@ -436,7 +435,7 @@ func Test_Evaluate(t *testing.T) {
 			policy: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{
 					// Denied by value
-					CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: ptr.To("hello-world2"), Validations: []policyapi.ValidationRule{{Rule: "self.contains('hello')", Message: ptr.To("should contain namespace")}}},
+					CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: new("hello-world2"), Validations: []policyapi.ValidationRule{{Rule: "self.contains('hello')", Message: new("should contain namespace")}}},
 					// Allowed by values and validations
 					DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.com"}, Validations: []policyapi.ValidationRule{{Rule: "self.endsWith(cr.namespace + '.com')"}}},
 					// Denied by validation

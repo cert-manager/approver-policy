@@ -30,7 +30,6 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -538,14 +537,14 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("cert-manager.io"),
+						Name: new("my-issuer"), Kind: new("Issuer"), Group: new("cert-manager.io"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("my-issuer"), Kind: ptr.To("Issuer"), Group: ptr.To("cert-manager.io"),
+						Name: new("my-issuer"), Kind: new("Issuer"), Group: new("cert-manager.io"),
 					}},
 				}},
 			},
@@ -554,7 +553,7 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
+						Name: new("name"), Kind: new("kind"), Group: new("group"),
 					}},
 				}},
 			},
@@ -564,12 +563,12 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
+						Name: new("name"), Kind: new("kind"), Group: new("group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("name-2"), Kind: ptr.To("kind-2"), Group: ptr.To("group-2"),
+						Name: new("name-2"), Kind: new("kind-2"), Group: new("group-2"),
 					}},
 				}},
 			},
@@ -582,7 +581,7 @@ func Test_SelectorIssuerRef(t *testing.T) {
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
+						Name: new("name"), Kind: new("kind"), Group: new("group"),
 					}},
 				}},
 			},
@@ -596,19 +595,19 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
+						Name: new("name"), Kind: new("kind"), Group: new("group"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 			},
@@ -635,24 +634,24 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 			},
@@ -661,19 +660,19 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
+						Name: new("test-name"), Kind: new("test-kind"), Group: new("test-group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
+						Name: new("name"), Kind: new("kind"), Group: new("group"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
+						Name: new("test-name"), Kind: new("test-kind"), Group: new("test-group"),
 					}},
 				}},
 			},
@@ -682,39 +681,39 @@ func Test_SelectorIssuerRef(t *testing.T) {
 			policies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
+						Name: new("test-name"), Kind: new("test-kind"), Group: new("test-group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("name"), Kind: ptr.To("kind"), Group: ptr.To("group"),
+						Name: new("name"), Kind: new("kind"), Group: new("group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("test-*"), Kind: ptr.To("*-kind"), Group: ptr.To("*up"),
+						Name: new("test-*"), Kind: new("*-kind"), Group: new("*up"),
 					}},
 				}},
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("test-name"), Kind: ptr.To("test-kind"), Group: ptr.To("test-group"),
+						Name: new("test-name"), Kind: new("test-kind"), Group: new("test-group"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("*"), Kind: ptr.To("*"), Group: ptr.To("*"),
+						Name: new("*"), Kind: new("*"), Group: new("*"),
 					}},
 				}},
 				{Spec: policyapi.CertificateRequestPolicySpec{
 					Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
-						Name: ptr.To("test-*"), Kind: ptr.To("*-kind"), Group: ptr.To("*up"),
+						Name: new("test-*"), Kind: new("*-kind"), Group: new("*up"),
 					}},
 				}},
 			},
