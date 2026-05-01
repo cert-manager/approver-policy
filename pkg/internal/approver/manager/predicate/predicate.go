@@ -22,7 +22,6 @@ import (
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	authzv1 "k8s.io/api/authorization/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -142,8 +141,8 @@ func SelectorNamespace(reader client.Reader) Predicate {
 			if nsSel.MatchLabels != nil {
 
 				if namespaceLabels == nil {
-					var namespace corev1.Namespace
-					if err := reader.Get(ctx, client.ObjectKey{Name: request.Namespace}, &namespace); err != nil {
+					namespace := &metav1.PartialObjectMetadata{TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Namespace"}}
+					if err := reader.Get(ctx, client.ObjectKey{Name: request.Namespace}, namespace); err != nil {
 						return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
 					}
 					namespaceLabels = &namespace.Labels

@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2/ktesting"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -217,6 +218,9 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 			// need to skip unique controller name validation
 			// since all tests need a dedicated controller
 			SkipNameValidation: new(true),
+		},
+		Cache: cache.Options{
+			ReaderFailOnMissingInformer: true,
 		},
 	})
 	Expect(err).NotTo(HaveOccurred())
