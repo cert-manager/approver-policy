@@ -467,6 +467,142 @@ func Test_Evaluate(t *testing.T) {
 	}
 }
 
+func Test_Evaluate_Annotations(t *testing.T) {
+	tests := map[string]struct {
+		policy      policyapi.CertificateRequestPolicySpec
+		request     *cmapi.CertificateRequest
+		expResponse approver.EvaluationResponse
+	}{
+		"if no annotations policy defined, request with annotations, return NotDenied": {
+			request: gen.CertificateRequest("",
+				gen.SetCertificateRequestCSR(csrFrom(t)),
+				gen.SetCertificateRequestAnnotations(map[string]string{"foo": "bar"}),
+			),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{},
+			},
+			expResponse: approver.EvaluationResponse{Result: approver.ResultNotDenied},
+		},
+		"if annotation matches allowed values, return NotDenied": {
+			request: gen.CertificateRequest("",
+				gen.SetCertificateRequestCSR(csrFrom(t)),
+				gen.SetCertificateRequestAnnotations(map[string]string{
+					"example.io/template": "template-a",
+				}),
+			),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+						"example.io/template": {
+							Values: &[]string{
+								"template-a",
+								"template-b",
+							},
+						},
+					},
+				},
+			},
+			expResponse: approver.EvaluationResponse{Result: approver.ResultNotDenied},
+		},
+		"if annotation does not match allowed values, return Denied": {
+			request: gen.CertificateRequest("",
+				gen.SetCertificateRequestCSR(csrFrom(t)),
+				gen.SetCertificateRequestAnnotations(map[string]string{
+					"example.io/template": "template-c",
+				}),
+			),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+						"example.io/template": {
+							Values: &[]string{
+								"template-a",
+							},
+						},
+					},
+				},
+			},
+			expResponse: approver.EvaluationResponse{
+				Result: approver.ResultDenied,
+				Message: field.ErrorList{
+					field.Invalid(
+						field.NewPath("spec", "allowed", "annotations").Key("example.io/template").Child("values"),
+						[]string{"template-c"},
+						"template-a",
+					),
+				}.ToAggregate().Error(),
+			},
+		},
+		"if annotation absent and not required, return NotDenied": {
+			request: gen.CertificateRequest("",
+				gen.SetCertificateRequestCSR(csrFrom(t)),
+			),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+						"example.io/template": {
+							Values: &[]string{"template-a"},
+						},
+					},
+				},
+			},
+			expResponse: approver.EvaluationResponse{Result: approver.ResultNotDenied},
+		},
+		"if annotation absent and required, return Denied": {
+			request: gen.CertificateRequest("",
+				gen.SetCertificateRequestCSR(csrFrom(t)),
+			),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+						"example.io/template": {
+							Required: ptr.To(true),
+							Values:   &[]string{"template-a"},
+						},
+					},
+				},
+			},
+			expResponse: approver.EvaluationResponse{
+				Result: approver.ResultDenied,
+				Message: field.ErrorList{
+					field.Required(
+						field.NewPath("spec", "allowed", "annotations").Key("example.io/template"),
+						"annotation is required",
+					),
+				}.ToAggregate().Error(),
+			},
+		},
+		"if annotation matches wildcard, return NotDenied": {
+			request: gen.CertificateRequest("",
+				gen.SetCertificateRequestCSR(csrFrom(t)),
+				gen.SetCertificateRequestAnnotations(map[string]string{
+					"example.io/template": "template-alpha-v1",
+				}),
+			),
+			policy: policyapi.CertificateRequestPolicySpec{
+				Allowed: &policyapi.CertificateRequestPolicyAllowed{
+					Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+						"example.io/template": {
+							Values: &[]string{"template-alpha*"},
+						},
+					},
+				},
+			},
+			expResponse: approver.EvaluationResponse{Result: approver.ResultNotDenied},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			response, err := Approver().Evaluate(t.Context(), &policyapi.CertificateRequestPolicy{Spec: test.policy}, test.request)
+			assert.NoError(t, err)
+			if diff := cmp.Diff(response, test.expResponse); diff != "" {
+				t.Errorf("unexpected evaluation response (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
 func noErrModifier(fn func(*x509.CertificateRequest)) func(*x509.CertificateRequest) error {
 	return func(csr *x509.CertificateRequest) error {
 		fn(csr)

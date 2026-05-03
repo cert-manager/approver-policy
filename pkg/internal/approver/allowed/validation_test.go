@@ -205,6 +205,64 @@ func Test_Validate(t *testing.T) {
 				Errors:  nil,
 			},
 		},
+		"if annotations policy has valid values, expect Allowed=true": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+							"my-annotation": {Values: &[]string{"val1", "val2"}},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{Allowed: true, Errors: nil},
+		},
+		"if annotations policy has required without values or validations, expect Allowed=false": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+							"my-annotation": {Required: ptr.To(true)},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Errors: field.ErrorList{
+					field.Required(field.NewPath("spec", "allowed", "annotations").Key("my-annotation").Child("values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+				},
+			},
+		},
+		"if annotations policy has valid CEL validation, expect Allowed=true": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+							"my-annotation": {Validations: []policyapi.ValidationRule{{Rule: "self.startsWith('prefix-')", Message: ptr.To("must start with prefix-")}}},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{Allowed: true, Errors: nil},
+		},
+		"if annotations policy has invalid CEL validation, expect Allowed=false": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						Annotations: map[string]policyapi.CertificateRequestPolicyAllowedStringSlice{
+							"my-annotation": {Validations: []policyapi.ValidationRule{{Rule: "not a valid cel expression !!!"}}},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Errors: field.ErrorList{
+					field.Invalid(field.NewPath("spec", "allowed", "annotations").Key("my-annotation").Child("validations").Index(0), "not a valid cel expression !!!", "ERROR: <input>:1:5: Syntax error: mismatched input 'a' expecting <EOF>\n | not a valid cel expression !!!\n | ....^"),
+				},
+			},
+		},
 	}
 
 	for name, test := range tests {
