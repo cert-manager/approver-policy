@@ -51,6 +51,14 @@ func TestRegistry_Store(t *testing.T) {
 			expectPanic:  true,
 			panicMessage: "approver already registered with same name: duplicate",
 		},
+		"storing duplicate names in a single call should panic": {
+			approvers: []approver.Interface{
+				newFakeApprover("same-name"),
+				newFakeApprover("same-name"),
+			},
+			expectPanic:  true,
+			panicMessage: "approver already registered with same name: same-name",
+		},
 	}
 
 	for name, test := range tests {
