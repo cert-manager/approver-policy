@@ -46,6 +46,13 @@ func (r *Registry) Store(approvers ...approver.Interface) *Registry {
 			}
 		}
 	}
+	for i, a := range approvers {
+		for j, b := range approvers {
+			if i != j && a.Name() == b.Name() {
+				panic("approver already registered with same name: " + a.Name())
+			}
+		}
+	}
 	r.approvers = append(r.approvers, approvers...)
 	return r
 }
