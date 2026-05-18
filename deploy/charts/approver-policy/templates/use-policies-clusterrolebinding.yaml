@@ -1,0 +1,16 @@
+{{ if .Values.app.usePoliciesRbac.enabled }}
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
+  name: {{ printf "%s:%s" (include "cert-manager-approver-policy.name" .) "use" }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ printf "%s:%s" (include "cert-manager-approver-policy.name" .) "use" }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.app.usePoliciesRbac.serviceAccount.name }}
+  namespace: {{ .Values.app.usePoliciesRbac.serviceAccount.namespace }}
+{{ end }}
