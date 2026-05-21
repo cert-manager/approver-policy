@@ -40,7 +40,7 @@ webhooks:
           - CREATE
           - UPDATE
         resources:
-          - "*/*"
+          - certificaterequestpolicies
     admissionReviewVersions: ["v1", "v1beta1"]
     timeoutSeconds: {{ .Values.app.webhook.timeoutSeconds }}
     failurePolicy: Fail
