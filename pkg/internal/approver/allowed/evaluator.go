@@ -481,14 +481,37 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 	var oidOrder []string
 	presentByOID := make(map[string]bool)
 
+	var el field.ErrorList
+
 	for _, rdn := range e.subjectRDNs {
 		for _, atv := range rdn {
+			s, isString := atv.Value.(string)
+
 			if isNamedSubjectOID(atv.Type) {
+				// Named OIDs (CN/SN/O/OU/C/L/ST/StreetAddress/
+				// PostalCode) are evaluated by the dedicated
+				// allowed.commonName / allowed.subject.* fields,
+				// which read from csr.Subject (a pkix.Name).
+				// pkix.Name.FillFromRDNSequence populates those
+				// slices ONLY from string-typed ATVs; a non-string
+				// ATV under a named OID drops out of the parsed
+				// projection while still being signed verbatim
+				// via csr.RawSubject. Fail closed so the gate and
+				// the signer see the same data — there is no
+				// realistic legitimate use case for a non-string
+				// value under one of these OIDs (RFC 5280 / X.520
+				// specifies DirectoryString / PrintableString).
+				if !isString {
+					el = append(el, field.Invalid(
+						e.fldPath.Key(atv.Type.String()),
+						fmt.Sprintf("<non-string %T>", atv.Value),
+						"non-string value under named Subject OID is not evaluable by allowed.subject.*"))
+				}
 				continue
 			}
 			key := atv.Type.String()
 			var value string
-			if s, ok := atv.Value.(string); ok {
+			if isString {
 				value = s
 			} else {
 				value = fmt.Sprintf("<non-string %T>", atv.Value)
@@ -507,7 +530,6 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 		allowedByOID[entry.OID] = entry
 	}
 
-	var el field.ErrorList
 	for _, key := range oidOrder {
 		values := byOID[key]
 		entry, ok := allowedByOID[key]

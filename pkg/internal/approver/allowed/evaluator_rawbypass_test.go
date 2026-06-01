@@ -155,6 +155,16 @@ func rdn(oid asn1.ObjectIdentifier, value string) pkix.RelativeDistinguishedName
 	}
 }
 
+// rawATVRDN returns a single-ATV RDN whose value is an arbitrary Go type
+// (e.g. []byte for OctetString). When marshaled into RawSubject this lets a
+// test smuggle non-string values under named OIDs — the exact case
+// pkix.Name.FillFromRDNSequence silently drops from its named slices.
+func rawATVRDN(oid asn1.ObjectIdentifier, value any) pkix.RelativeDistinguishedNameSET {
+	return pkix.RelativeDistinguishedNameSET{
+		{Type: oid, Value: value},
+	}
+}
+
 // TestEvaluate_VC53794_DualCNDenied — a CSR whose Subject RawSubject DER
 // contains two CN RDNs (kubernetes-admin THEN app.tenant.example.com) must
 // be denied even when the policy permits the second value. The lossy
@@ -340,6 +350,76 @@ func TestEvaluate_VC53794_OtherAttributesRequired(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, approver.ResultDenied, resp.Result,
 		"missing required otherAttribute must be denied; got Result=%v Message=%q", resp.Result, resp.Message)
+}
+
+// TestEvaluate_VC53794_NonStringNamedOIDDenied — VC-53794 adjacent: a CSR
+// whose Subject RawSubject contains a named-OID ATV (e.g. O=, OU=, L=, …)
+// whose ASN.1 value is NOT a string (here, an OctetString) must be denied.
+// pkix.Name.FillFromRDNSequence skips non-string ATVs, so without the
+// integrity check the value is invisible to BOTH the named-field
+// evaluators (which read pkix.Name.Organization etc.) AND the
+// OtherAttributes walker (which `continue`s on named OIDs) — but the
+// signer still emits it via csr.RawSubject.
+func TestEvaluate_VC53794_NonStringNamedOIDDenied(t *testing.T) {
+	// Subject = { CN=app.tenant.example.com, O=<OctetString "evil-corp"> }.
+	csr := csrFrom(t, withRawSubject(t, pkix.RDNSequence{
+		rdn(testOIDCommonName, "app.tenant.example.com"),
+		rawATVRDN(oidOrganization, []byte("evil-corp")),
+	}))
+	policy := &policyapi.CertificateRequestPolicy{
+		Spec: policyapi.CertificateRequestPolicySpec{
+			Allowed: &policyapi.CertificateRequestPolicyAllowed{
+				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
+					Value: ptr.To("*.tenant.example.com"),
+				},
+				// allowed.subject is nil — Organization is implicitly
+				// not allowed. Even without that, a non-string O=
+				// value would bypass the existing slice check; the
+				// fix denies it explicitly.
+			},
+		},
+	}
+	resp, err := Approver().Evaluate(t.Context(), policy,
+		gen.CertificateRequest("", gen.SetCertificateRequestCSR(csr)))
+	assert.NoError(t, err)
+	assert.Equal(t, approver.ResultDenied, resp.Result,
+		"non-string named-OID value must be denied; got Result=%v Message=%q", resp.Result, resp.Message)
+	assert.Contains(t, resp.Message, oidOrganization.String(),
+		"denial message should call out the offending named OID")
+	assert.Contains(t, resp.Message, "non-string",
+		"denial message should explain why the value was rejected")
+}
+
+// TestEvaluate_VC53794_MultiStringOrganizationStillWorks — regression guard
+// for the named-OID consistency check: a CSR carrying two string-valued O=
+// ATVs (a legitimate, common pattern) must still be approved when the
+// policy permits both values. The integrity backstop must only fire on
+// genuinely non-string values.
+func TestEvaluate_VC53794_MultiStringOrganizationStillWorks(t *testing.T) {
+	csr := csrFrom(t, withRawSubject(t, pkix.RDNSequence{
+		rdn(testOIDCommonName, "app.tenant.example.com"),
+		rdn(oidOrganization, "tenant-a"),
+		rdn(oidOrganization, "tenant-platform"),
+	}))
+	policy := &policyapi.CertificateRequestPolicy{
+		Spec: policyapi.CertificateRequestPolicySpec{
+			Allowed: &policyapi.CertificateRequestPolicyAllowed{
+				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
+					Value: ptr.To("*.tenant.example.com"),
+				},
+				Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+					Organizations: &policyapi.CertificateRequestPolicyAllowedStringSlice{
+						Values: ptr.To([]string{"tenant-a", "tenant-platform"}),
+					},
+				},
+			},
+		},
+	}
+	resp, err := Approver().Evaluate(t.Context(), policy,
+		gen.CertificateRequest("", gen.SetCertificateRequestCSR(csr)))
+	assert.NoError(t, err)
+	assert.Equal(t, approver.ResultNotDenied, resp.Result,
+		"multi-string O= matching the policy must be approved; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
 // TestEvaluate_VC53795_OtherNameDeniedByDefault — a SAN containing an
