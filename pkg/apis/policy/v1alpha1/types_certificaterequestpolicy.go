@@ -140,6 +140,21 @@ type CertificateRequestPolicyAllowed struct {
 	// attributes.
 	// +optional
 	Subject *CertificateRequestPolicyAllowedX509Subject `json:"subject,omitempty"`
+
+	// OtherNames defines the additional SAN GeneralName otherName entries
+	// (context tag 0) that may be present in a CertificateRequest. Each
+	// entry pins a dotted ASN.1 OID (e.g. "1.3.6.1.4.1.311.20.2.3" for the
+	// Microsoft User Principal Name) and constrains the allowed values for
+	// that OID.
+	// Any otherName entry whose OID is not listed here is denied. SAN
+	// GeneralName types other than rfc822Name/dNSName/uniformResourceIdentifier/
+	// iPAddress/otherName (i.e. x400Address, directoryName, ediPartyName,
+	// registeredID) are always denied.
+	// An omitted or empty field denies any otherName SAN entry.
+	// +listType=map
+	// +listMapKey=oid
+	// +optional
+	OtherNames []CertificateRequestPolicyAllowedOtherName `json:"otherNames,omitempty"`
 }
 
 // CertificateRequestPolicyAllowedX509Subject declares allowed X.509 Subject
@@ -182,6 +197,85 @@ type CertificateRequestPolicyAllowedX509Subject struct {
 	// requested.
 	// +optional
 	SerialNumber *CertificateRequestPolicyAllowedString `json:"serialNumber,omitempty"`
+
+	// OtherAttributes defines additional Subject RDN attribute OIDs that
+	// may be present in a CertificateRequest beyond the named fields above.
+	// Each entry pins a dotted ASN.1 OID (e.g. "1.2.840.113549.1.9.1" for
+	// emailAddress, "0.9.2342.19200300.100.1.25" for domainComponent) and
+	// constrains the allowed values for that OID.
+	// Subject RDN attributes whose OID is neither covered by one of the
+	// named fields above nor listed here are denied.
+	// An omitted or empty field denies any unrecognised Subject RDN
+	// attribute.
+	// +listType=map
+	// +listMapKey=oid
+	// +optional
+	OtherAttributes []CertificateRequestPolicyAllowedSubjectOtherAttribute `json:"otherAttributes,omitempty"`
+}
+
+// CertificateRequestPolicyAllowedOtherName declares the allowed values for a
+// single SAN otherName GeneralName OID.
+// If neither Values nor Validations are specified, the related otherName
+// entry must be absent from the request.
+type CertificateRequestPolicyAllowedOtherName struct {
+	// OID is the dotted ASN.1 object identifier that the otherName entry
+	// must carry, e.g. "1.3.6.1.4.1.311.20.2.3" for the Microsoft User
+	// Principal Name.
+	OID string `json:"oid"`
+
+	// Values defines the allowed values for otherName entries with this
+	// OID. Accepts wildcards "*".
+	// If set, every otherName entry with the matching OID present in the
+	// request must be a member of this list.
+	// +optional
+	Values *[]string `json:"values,omitempty"`
+
+	// Required marks that at least one otherName entry with this OID must
+	// be present on the request.
+	// Defaults to `false`.
+	// +optional
+	Required *bool `json:"required,omitempty"`
+
+	// Validations applies rules using Common Expression Language (CEL) to
+	// validate every otherName value with the matching OID present on the
+	// request beyond what is possible to express using values/required.
+	// +listType=map
+	// +listMapKey=rule
+	// +optional
+	Validations []ValidationRule `json:"validations,omitempty"`
+}
+
+// CertificateRequestPolicyAllowedSubjectOtherAttribute declares the allowed
+// values for a single Subject RDN attribute OID not covered by the named
+// fields of CertificateRequestPolicyAllowedX509Subject.
+// If neither Values nor Validations are specified, the related Subject RDN
+// attribute must be absent from the request.
+type CertificateRequestPolicyAllowedSubjectOtherAttribute struct {
+	// OID is the dotted ASN.1 object identifier of the Subject RDN
+	// attribute, e.g. "1.2.840.113549.1.9.1" for emailAddress.
+	OID string `json:"oid"`
+
+	// Values defines the allowed values for Subject RDN attributes with
+	// this OID. Accepts wildcards "*".
+	// If set, every Subject RDN attribute with the matching OID present in
+	// the request must be a member of this list.
+	// +optional
+	Values *[]string `json:"values,omitempty"`
+
+	// Required marks that at least one Subject RDN attribute with this OID
+	// must be present on the request.
+	// Defaults to `false`.
+	// +optional
+	Required *bool `json:"required,omitempty"`
+
+	// Validations applies rules using Common Expression Language (CEL) to
+	// validate every Subject RDN attribute value with the matching OID
+	// present on the request beyond what is possible to express using
+	// values/required.
+	// +listType=map
+	// +listMapKey=rule
+	// +optional
+	Validations []ValidationRule `json:"validations,omitempty"`
 }
 
 // CertificateRequestPolicyAllowedStringSlice represents allowed string values
