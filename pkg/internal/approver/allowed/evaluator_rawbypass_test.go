@@ -20,13 +20,13 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"slices"
 	"strings"
 	"testing"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/ptr"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -110,7 +110,7 @@ func otherNameGN(t *testing.T, oid asn1.ObjectIdentifier, value string) asn1.Raw
 	if err != nil {
 		t.Fatalf("marshal otherName OID: %v", err)
 	}
-	seqContent := append(oidDER, explicitWrap...)
+	seqContent := slices.Concat(oidDER, explicitWrap)
 	return asn1.RawValue{
 		Class:      asn1.ClassContextSpecific,
 		Tag:        0,
@@ -180,7 +180,7 @@ func TestEvaluate_VC53794_DualCNDenied(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 			},
 		},
@@ -208,7 +208,7 @@ func TestEvaluate_VC53794_DualCNBothAllowed(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 			},
 		},
@@ -235,7 +235,7 @@ func TestEvaluate_VC53794_UnknownOIDDeniedByDefault(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 				// No Subject.OtherAttributes: emailAddress must be denied.
 			},
@@ -265,13 +265,13 @@ func TestEvaluate_VC53794_UnknownOIDAllowedByOtherAttributes(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 				Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 					OtherAttributes: []policyapi.CertificateRequestPolicyAllowedSubjectOtherAttribute{
 						{
 							OID:    testOIDEmailAddress.String(),
-							Values: ptr.To([]string{"*@tenant.example.com"}),
+							Values: new([]string{"*@tenant.example.com"}),
 						},
 					},
 				},
@@ -298,13 +298,13 @@ func TestEvaluate_VC53794_UnknownOIDValueMismatch(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 				Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 					OtherAttributes: []policyapi.CertificateRequestPolicyAllowedSubjectOtherAttribute{
 						{
 							OID:    testOIDEmailAddress.String(),
-							Values: ptr.To([]string{"*@tenant.example.com"}),
+							Values: new([]string{"*@tenant.example.com"}),
 						},
 					},
 				},
@@ -331,14 +331,14 @@ func TestEvaluate_VC53794_OtherAttributesRequired(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 				Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 					OtherAttributes: []policyapi.CertificateRequestPolicyAllowedSubjectOtherAttribute{
 						{
 							OID:      testOIDEmailAddress.String(),
-							Values:   ptr.To([]string{"*@tenant.example.com"}),
-							Required: ptr.To(true),
+							Values:   new([]string{"*@tenant.example.com"}),
+							Required: new(true),
 						},
 					},
 				},
@@ -370,7 +370,7 @@ func TestEvaluate_VC53794_NonStringNamedOIDDenied(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 				// allowed.subject is nil — Organization is implicitly
 				// not allowed. Even without that, a non-string O=
@@ -405,11 +405,11 @@ func TestEvaluate_VC53794_MultiStringOrganizationStillWorks(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
-					Value: ptr.To("*.tenant.example.com"),
+					Value: new("*.tenant.example.com"),
 				},
 				Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
 					Organizations: &policyapi.CertificateRequestPolicyAllowedStringSlice{
-						Values: ptr.To([]string{"tenant-a", "tenant-platform"}),
+						Values: new([]string{"tenant-a", "tenant-platform"}),
 					},
 				},
 			},
@@ -434,7 +434,7 @@ func TestEvaluate_VC53795_OtherNameDeniedByDefault(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{
-					Values: ptr.To([]string{"allowed.example.com"}),
+					Values: new([]string{"allowed.example.com"}),
 				},
 				// No OtherNames: the UPN must be denied.
 			},
@@ -462,12 +462,12 @@ func TestEvaluate_VC53795_OtherNameAllowedByOtherNames(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{
-					Values: ptr.To([]string{"allowed.example.com"}),
+					Values: new([]string{"allowed.example.com"}),
 				},
 				OtherNames: []policyapi.CertificateRequestPolicyAllowedOtherName{
 					{
 						OID:    testOIDUPN.String(),
-						Values: ptr.To([]string{"*@tenant.example.com"}),
+						Values: new([]string{"*@tenant.example.com"}),
 					},
 				},
 			},
@@ -491,12 +491,12 @@ func TestEvaluate_VC53795_OtherNameValueMismatch(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{
-					Values: ptr.To([]string{"allowed.example.com"}),
+					Values: new([]string{"allowed.example.com"}),
 				},
 				OtherNames: []policyapi.CertificateRequestPolicyAllowedOtherName{
 					{
 						OID:    testOIDUPN.String(),
-						Values: ptr.To([]string{"*@tenant.example.com"}),
+						Values: new([]string{"*@tenant.example.com"}),
 					},
 				},
 			},
@@ -518,13 +518,13 @@ func TestEvaluate_VC53795_OtherNamesRequired(t *testing.T) {
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{
-					Values: ptr.To([]string{"allowed.example.com"}),
+					Values: new([]string{"allowed.example.com"}),
 				},
 				OtherNames: []policyapi.CertificateRequestPolicyAllowedOtherName{
 					{
 						OID:      testOIDUPN.String(),
-						Values:   ptr.To([]string{"*@tenant.example.com"}),
-						Required: ptr.To(true),
+						Values:   new([]string{"*@tenant.example.com"}),
+						Required: new(true),
 					},
 				},
 			},
@@ -564,7 +564,7 @@ func TestEvaluate_VC53795_ForbiddenSANTagsAlwaysDenied(t *testing.T) {
 				Spec: policyapi.CertificateRequestPolicySpec{
 					Allowed: &policyapi.CertificateRequestPolicyAllowed{
 						DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{
-							Values: ptr.To([]string{"allowed.example.com"}),
+							Values: new([]string{"allowed.example.com"}),
 						},
 					},
 				},
@@ -583,14 +583,18 @@ func TestEvaluate_VC53795_ForbiddenSANTagsAlwaysDenied(t *testing.T) {
 // allowed dNSName entries continues to be approved; the new SAN walker
 // must not regress the existing DNS-only path.
 func TestEvaluate_VC53795_SANUnaffectedByExistingFlow(t *testing.T) {
+	// Two distinct DNS entries — exercises the regression-guard path
+	// (multi-DNS SAN with a wildcard policy still approves) and confirms
+	// the new SAN walker doesn't trip on legitimate stacked dNSName tags.
 	csr := csrFrom(t, withRawSAN(t,
 		dnsGN("allowed.example.com"),
+		dnsGN("api.allowed.example.com"),
 	))
 	policy := &policyapi.CertificateRequestPolicy{
 		Spec: policyapi.CertificateRequestPolicySpec{
 			Allowed: &policyapi.CertificateRequestPolicyAllowed{
 				DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{
-					Values: ptr.To([]string{"allowed.example.com"}),
+					Values: new([]string{"*.example.com", "allowed.example.com"}),
 				},
 			},
 		},
@@ -599,7 +603,7 @@ func TestEvaluate_VC53795_SANUnaffectedByExistingFlow(t *testing.T) {
 		gen.CertificateRequest("", gen.SetCertificateRequestCSR(csr)))
 	assert.NoError(t, err)
 	assert.Equal(t, approver.ResultNotDenied, resp.Result,
-		"DNS-only SAN must remain approved; got Result=%v Message=%q", resp.Result, resp.Message)
+		"multi-DNS SAN matching the policy must remain approved; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
 // Used to silence an "unused" linter complaint when only some helpers are

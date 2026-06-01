@@ -23,6 +23,7 @@ import (
 	"encoding/asn1"
 	"encoding/hex"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -61,12 +62,7 @@ var namedSubjectOIDs = []asn1.ObjectIdentifier{
 }
 
 func isNamedSubjectOID(oid asn1.ObjectIdentifier) bool {
-	for _, named := range namedSubjectOIDs {
-		if oid.Equal(named) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(namedSubjectOIDs, oid.Equal)
 }
 
 // Evaluate evaluates whether the given CertificateRequest conforms to the
