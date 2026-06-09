@@ -70,6 +70,12 @@ func (a allowed) Ready(_ context.Context, _ *policyapi.CertificateRequestPolicy)
 	return approver.ReconcilerReadyResponse{Ready: true}, nil
 }
 
+// CleanupValidators removes all cached compiled validators for the named
+// CertificateRequestPolicy.
+func (a allowed) CleanupValidators(policyName string) {
+	a.validators.Remove(policyName)
+}
+
 // allowed never needs to manually enqueue policies.
 func (a allowed) EnqueueChan() <-chan string {
 	return nil

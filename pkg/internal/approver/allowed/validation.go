@@ -36,6 +36,17 @@ func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateReques
 		}, nil
 	}
 
+	// On CREATE/UPDATE, discard any validators cached under this policy name by
+	// a previous generation so an updated CRP does not retain compiled programs
+	// for expressions it no longer declares. The expressions below are checked
+	// with Compile (not Get) so this admission path never repopulates the
+	// lifecycle cache: a dry-run or subsequently-rejected request must not leave
+	// entries behind. The cache is repopulated lazily during evaluation of the
+	// persisted policy. Remove is best-effort per replica (see the cache docs).
+	if policy.Name != "" {
+		a.validators.Remove(policy.Name)
+	}
+
 	var (
 		el      field.ErrorList
 		allowed = policy.Spec.Allowed
@@ -83,7 +94,7 @@ func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateReques
 				}
 			}
 			for i, validation := range stringSlice.slice.Validations {
-				if _, err := a.validators.Get(validation.Rule); err != nil {
+				if _, err := a.validators.Compile(validation.Rule); err != nil {
 					el = append(el, field.Invalid(stringSlice.path.Child("validations").Index(i), validation.Rule, err.Error()))
 				}
 			}
@@ -98,7 +109,7 @@ func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateReques
 				}
 			}
 			for i, validation := range stringI.string.Validations {
-				if _, err := a.validators.Get(validation.Rule); err != nil {
+				if _, err := a.validators.Compile(validation.Rule); err != nil {
 					el = append(el, field.Invalid(stringI.path.Child("validations").Index(i), validation.Rule, err.Error()))
 				}
 			}

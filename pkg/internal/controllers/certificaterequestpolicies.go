@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -167,7 +168,21 @@ func (c *certificaterequestpolicies) reconcileStatusPatch(ctx context.Context, r
 
 	policy := new(policyapi.CertificateRequestPolicy)
 	if err := c.client.Get(ctx, req.NamespacedName, policy); err != nil {
-		return reconcile.Result{}, nil, client.IgnoreNotFound(err)
+		if apierrors.IsNotFound(err) {
+			// The policy has been deleted: drop any compiled validators cached
+			// under its name. This reconciler runs only on the elected leader,
+			// so this cleanup is best-effort per replica — other replicas may
+			// retain the entries until restart. That is acceptable because the
+			// expression is part of the cache key, so a stale entry is never
+			// returned for the wrong input; eviction only bounds memory.
+			for _, reconciler := range c.reconcilers {
+				if cleaner, ok := reconciler.(approver.ValidatorCleaner); ok {
+					cleaner.CleanupValidators(req.Name)
+				}
+			}
+			return reconcile.Result{}, nil, nil
+		}
+		return reconcile.Result{}, nil, err
 	}
 
 	var (

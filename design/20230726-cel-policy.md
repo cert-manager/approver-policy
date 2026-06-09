@@ -479,7 +479,46 @@ generous for the simple expressions typical of `CertificateRequestPolicy`
 rules.
 
 The original design also noted that "we should probably consider adding some
-cache expiration logic to avoid appearing like a memory leak." The current
-implementation uses a global `sync.Map` with no eviction or expiry — every
-unique expression compiled during the lifetime of the controller remains in
-memory permanently. Cache lifecycle management is tracked separately.
+cache expiration logic to avoid appearing like a memory leak." The initial
+implementation used a global `sync.Map` keyed by expression string with no
+eviction or expiry — every unique expression compiled during the lifetime of
+the controller remained in memory permanently.
+
+## Addendum: per-CRP lifecycle-bound validator cache (June 2026)
+
+[#924](https://github.com/cert-manager/approver-policy/pull/924) replaced the
+global expression-keyed cache with a two-level cache keyed by
+`(CertificateRequestPolicy name, expression)`. This ties compiled CEL
+programs to the lifecycle of their owning CRP, mirroring how the Kubernetes
+apiextensions-apiserver stores compiled validators on the
+[`customResourceStrategy`](https://github.com/kubernetes/kubernetes/blob/9e570c412469/staging/src/k8s.io/apiextensions-apiserver/pkg/registry/customresource/strategy.go#L63)
+struct per CRD version.
+
+Cache entries are managed as follows:
+
+- **During evaluation**: `Get(policyName, expression)` compiles on first use and
+  caches the program under the persisted policy's name. This is the only path
+  that populates the cache.
+- **At admission (create/update)**: the webhook `Validate()` calls `Compile`,
+  which checks that each expression compiles **without** caching it, then calls
+  `Remove(policyName)` to drop entries left by the previous generation. Because
+  admission never populates the cache, dry-run and subsequently-rejected
+  requests — which are never persisted and so never receive a delete event —
+  cannot leak entries.
+- **On CRP deletion**: the controller calls `ValidatorCleaner.CleanupValidators`,
+  which removes all cached entries for that policy.
+
+Eviction is **best-effort**. The expression string is part of the cache key, so
+a stale entry can never be returned for the wrong input — correctness never
+depends on eviction; it only bounds memory. In a multi-replica deployment each
+admission request is served by a single replica and the delete reconciler runs
+only on the elected leader, so old entries for an updated or deleted policy may
+linger on other replicas until the process restarts. Steady-state memory is
+therefore bounded by the live policies plus a bounded tail of not-yet-evicted
+entries, rather than growing with every unique expression ever seen as the
+previous global cache did.
+
+A fully replica-complete eviction would require evicting on the delete webhook
+path (which runs on every replica) rather than in the leader-only controller;
+this was judged unnecessary given eviction is correctness-irrelevant and the
+remaining growth is bounded.

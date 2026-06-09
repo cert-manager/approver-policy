@@ -45,6 +45,20 @@ type ReconcilerReadyResponse struct {
 	ctrl.Result
 }
 
+// ValidatorCleaner is an optional extension that Reconcilers may implement to
+// clean up compiled CEL validators when a CertificateRequestPolicy is deleted.
+// This mirrors the Kubernetes pattern where compiled CEL programs on a
+// customResourceStrategy are torn down when the owning CRD is deleted.
+// See the validation package doc for upstream links.
+//
+// Cleanup is best-effort: the controller invokes it only on the elected leader,
+// so other replicas may retain a deleted policy's entries until restart. This
+// is safe because the compiled-validator cache is keyed by expression as well
+// as policy name, so a stale entry is never returned for the wrong input.
+type ValidatorCleaner interface {
+	CleanupValidators(policyName string)
+}
+
 // Reconciler is responsible for reconciling CertificateRequestPolicies and
 // declaring what state they should be in.
 type Reconciler interface {

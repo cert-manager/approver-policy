@@ -16,24 +16,49 @@ limitations under the License.
 
 package validation
 
-import "sync"
+import (
+	"sync"
+)
 
-// Cache maintains a cache of compiled validators.
-// The current implementation is a simple lazy cache meaning:
+// Cache maintains compiled CEL validators keyed by CertificateRequestPolicy
+// name and expression string, analogous to how the Kubernetes
+// apiextensions-apiserver ties compiled validators to the CRD
+// customResourceStrategy (see package doc for details and upstream links).
 //
-// 1. Whenever a validator is requested, it first checks the cache.
-// 2. If a compiled validator exists for the supplied CEL expression, it is returned.
-// 3. If the validator doesn't exist in the cache, a new validator is created, compiled, added to the cache, and returned.
+// Compiled programs are tied to the CRP lifecycle: populated on demand during
+// evaluation via [Cache.Get] and discarded via [Cache.Remove] when the CRP is
+// updated or deleted. Eviction is best-effort: because the expression string
+// is part of the cache key, a stale entry can never be returned for the wrong
+// input, so correctness never depends on it — Remove only bounds memory.
+//
+// CertificateRequestPolicy is cluster-scoped so the name is globally unique.
 type Cache interface {
-	// Get returns a compiled validator for the supplied CEL expression.
-	// Any compilation errors will be returned to the caller.
-	//
-	// The supplied CEL expression must output a bool.
-	Get(expr string) (Validator, error)
+	// Get returns a compiled validator for the given CEL expression, cached
+	// for the lifetime of the named CertificateRequestPolicy. policyName must
+	// be non-empty; callers that only need to check whether an expression
+	// compiles, without retaining it, should use [Cache.Compile] instead.
+	Get(policyName string, expr string) (Validator, error)
+
+	// Compile compiles the CEL expression and returns the validator without
+	// caching it. It is used for admission-time validity checks, where the
+	// result is transient and must not grow the lifecycle cache — for example
+	// dry-run or rejected CREATE requests, which are never persisted and so
+	// would otherwise leak entries that no delete event ever cleans up.
+	Compile(expr string) (Validator, error)
+
+	// Remove discards all compiled validators for the named
+	// CertificateRequestPolicy. It is best-effort memory cleanup (see the type
+	// documentation); correctness does not depend on it.
+	Remove(policyName string)
 }
 
 type cache struct {
-	m sync.Map
+	m sync.Map // string (CRP name) -> *crpEntry
+}
+
+type crpEntry struct {
+	mu         sync.Mutex
+	validators map[string]*cacheEntry
 }
 
 type cacheEntry struct {
@@ -41,26 +66,43 @@ type cacheEntry struct {
 	err       error
 }
 
-func (c *cache) Get(expr string) (Validator, error) {
-	// First check if cache contains validator for expression
-	o, ok := c.m.Load(expr)
-	if ok {
-		ce := o.(*cacheEntry)
-		return ce.validator, ce.err
+func (c *cache) Compile(expr string) (Validator, error) {
+	v := &validator{expression: expr}
+	if err := v.compile(); err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
+func (c *cache) Get(policyName string, expr string) (Validator, error) {
+	// Load before LoadOrStore so the common cache-hit path does not allocate a
+	// throwaway crpEntry (and its map) on every call.
+	entry, ok := c.m.Load(policyName)
+	if !ok {
+		entry, _ = c.m.LoadOrStore(policyName, &crpEntry{
+			validators: make(map[string]*cacheEntry),
+		})
+	}
+	ce := entry.(*crpEntry)
+
+	ce.mu.Lock()
+	defer ce.mu.Unlock()
+
+	if cached, ok := ce.validators[expr]; ok {
+		return cached.validator, cached.err
 	}
 
-	// Expression did not exist in cache. Create a new validator, compile it
-	// and add the result to cache.
-	// Theoretically this could lead to the same expression being compiled multiple times,
-	// but guarding against that would require locking and increase complexity.
 	v := &validator{expression: expr}
 	err := v.compile()
 	if err != nil {
 		v = nil
 	}
-	o, _ = c.m.LoadOrStore(expr, &cacheEntry{validator: v, err: err})
-	ce := o.(*cacheEntry)
-	return ce.validator, ce.err
+	ce.validators[expr] = &cacheEntry{validator: v, err: err}
+	return v, err
+}
+
+func (c *cache) Remove(policyName string) {
+	c.m.Delete(policyName)
 }
 
 // NewCache is a constructor for cache of compiled CEL expression validators.
