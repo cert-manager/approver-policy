@@ -457,3 +457,29 @@ Let me start with a quote from the
 The last sentence describes the requirement that could need custom CEL function(s) to allow the user to specify allowed
 CSR attributes. We cannot expect the user to include validations for **all** CSR attributes in the expression(s). So I
 think we at least need a function to list allowed CSR attribute usage.
+
+## Addendum: CEL runtime cost limit (June 2025)
+
+A security review identified that a deeply nested comprehension (e.g. 8-deep
+`[0..9].all(...)` — 10^8 iterations) can hang the single reconcile worker
+indefinitely, blocking all certificate approvals cluster-wide. Even though
+`CertificateRequestPolicy` is cluster-scoped and restricted to admins,
+accidental complexity in a rule can trigger this.
+
+As a mitigation, **`cel.CostLimit(1000000)`** and
+**`cel.InterruptCheckFrequency(100)`** are now passed to `env.Program()`
+([#923](https://github.com/cert-manager/approver-policy/pull/923)). These
+match the Kubernetes apiextensions-apiserver `PerCallLimit` and
+`CheckFrequency` constants
+([`k8s.io/apiserver/pkg/apis/cel/config.go`](https://github.com/kubernetes/kubernetes/blob/9e570c412469/staging/src/k8s.io/apiserver/pkg/apis/cel/config.go)),
+which are the de facto standard across the ecosystem (also used by Gatekeeper,
+Cluster API, Istio, Cilium, Flux, and Pinniped). The budget of 1,000,000
+abstract cost units corresponds to roughly 0.1 seconds of evaluation time —
+generous for the simple expressions typical of `CertificateRequestPolicy`
+rules.
+
+The original design also noted that "we should probably consider adding some
+cache expiration logic to avoid appearing like a memory leak." The current
+implementation uses a global `sync.Map` with no eviction or expiry — every
+unique expression compiled during the lifetime of the controller remains in
+memory permanently. Cache lifecycle management is tracked separately.

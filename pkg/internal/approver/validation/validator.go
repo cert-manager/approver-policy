@@ -29,6 +29,24 @@ import (
 const (
 	varSelf    = "self"
 	varRequest = "cr"
+
+	// celCostLimit mirrors the Kubernetes apiextensions-apiserver PerCallLimit,
+	// measured in abstract cost units defined by the CEL cost model (e.g.,
+	// comparisons cost 1, list iteration costs 1 per element, string
+	// operations scale with length). Expressions exceeding this limit are
+	// terminated at runtime with an "actual cost limit exceeded" error
+	// instead of running to completion, preventing a malicious
+	// CertificateRequestPolicy from blocking the single reconcile worker
+	// indefinitely. See CWE-770.
+	// Upstream: https://github.com/kubernetes/kubernetes/blob/9e570c412469/staging/src/k8s.io/apiserver/pkg/apis/cel/config.go#L21
+	celCostLimit = 1000000
+
+	// celInterruptCheckFrequency controls how many comprehension iterations
+	// (.all(), .exists(), .map(), .filter()) elapse between cost-limit
+	// checks. Lower values catch breaches sooner but add overhead; higher
+	// values let the program overshoot the limit before being stopped.
+	// Upstream: https://github.com/kubernetes/kubernetes/blob/9e570c412469/staging/src/k8s.io/apiserver/pkg/apis/cel/config.go#L34
+	celInterruptCheckFrequency = 100
 )
 
 // Validator knows how to validate CSR attribute values in CertificateRequests
@@ -77,7 +95,10 @@ func (v *validator) compile() error {
 			"got %v, wanted %v result type", ast.OutputType(), cel.BoolType)
 	}
 
-	v.program, err = env.Program(ast)
+	v.program, err = env.Program(ast,
+		cel.CostLimit(celCostLimit),
+		cel.InterruptCheckFrequency(celInterruptCheckFrequency),
+	)
 	return err
 }
 

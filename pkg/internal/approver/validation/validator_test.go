@@ -91,6 +91,32 @@ func Test_Validator_Validate(t *testing.T) {
 	}
 }
 
+// Test_Validator_Validate_CostLimitExceeded verifies that the CEL runtime
+// cost limit terminates expensive expressions before they hang the reconcile
+// worker. The expression uses 8-deep nested comprehensions (~10^8 iterations).
+//
+// If cel.CostLimit is accidentally removed, this test will hang rather than
+// fail cleanly — that is deliberate: the CI test timeout will catch it, and
+// the resulting stack trace pointing at program.Eval is more diagnostic than
+// a synthetic deadline error.
+func Test_Validator_Validate_CostLimitExceeded(t *testing.T) {
+	v := &validator{expression: `
+		[0,1,2,3,4,5,6,7,8,9].all(a,
+		[0,1,2,3,4,5,6,7,8,9].all(b,
+		[0,1,2,3,4,5,6,7,8,9].all(c,
+		[0,1,2,3,4,5,6,7,8,9].all(d,
+		[0,1,2,3,4,5,6,7,8,9].all(e,
+		[0,1,2,3,4,5,6,7,8,9].all(f,
+		[0,1,2,3,4,5,6,7,8,9].all(g,
+		[0,1,2,3,4,5,6,7,8,9].all(h, self != ""))))))))`}
+	err := v.compile()
+	assert.NoError(t, err, "expression must compile successfully")
+
+	_, err = v.Validate("anything", cmapi.CertificateRequest{})
+	assert.Error(t, err, "evaluation must be terminated by the cost limit")
+	assert.Contains(t, err.Error(), "cost limit exceeded")
+}
+
 func newCertificateRequest(namespace string) cmapi.CertificateRequest {
 	request := cmapi.CertificateRequest{}
 	request.SetNamespace(namespace)
