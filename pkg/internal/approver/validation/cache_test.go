@@ -54,3 +54,55 @@ func Test_Cache_Get(t *testing.T) {
 		})
 	}
 }
+
+// Test_Cache_Get_Evicts verifies that the cache is bounded: once more than
+// `size` distinct expressions have been compiled, the least-recently-used entry
+// is evicted, so a later Get for it compiles a fresh validator. This is the
+// mechanism that bounds memory under adversarial input (CWE-770).
+func Test_Cache_Get_Evicts(t *testing.T) {
+	c := newCache(2)
+
+	a1, err := c.Get("self == 'a'")
+	assert.NoError(t, err)
+	_, err = c.Get("self == 'b'")
+	assert.NoError(t, err)
+
+	// Compiling a third expression overflows the size-2 cache and evicts the
+	// least-recently-used entry, "self == 'a'".
+	_, err = c.Get("self == 'c'")
+	assert.NoError(t, err)
+
+	a2, err := c.Get("self == 'a'")
+	assert.NoError(t, err)
+	assert.NotSame(t, a1, a2, "evicted expression must be recompiled, not served from cache")
+}
+
+// Test_Cache_Get_KeepsRecentlyUsed verifies the eviction order is by recency:
+// touching an entry via Get protects it from eviction, while a colder entry is
+// evicted instead.
+func Test_Cache_Get_KeepsRecentlyUsed(t *testing.T) {
+	c := newCache(2)
+
+	a1, err := c.Get("self == 'a'")
+	assert.NoError(t, err)
+	b1, err := c.Get("self == 'b'")
+	assert.NoError(t, err)
+
+	// Touch "self == 'a'" so it becomes the most-recently-used; "self == 'b'"
+	// is now the eviction candidate.
+	a2, err := c.Get("self == 'a'")
+	assert.NoError(t, err)
+	assert.Same(t, a1, a2, "recently-used entry must remain cached")
+
+	// Overflow the cache: "self == 'b'" should be evicted, "self == 'a'" kept.
+	_, err = c.Get("self == 'c'")
+	assert.NoError(t, err)
+
+	a3, err := c.Get("self == 'a'")
+	assert.NoError(t, err)
+	assert.Same(t, a1, a3, "most-recently-used entry must survive eviction")
+
+	b2, err := c.Get("self == 'b'")
+	assert.NoError(t, err)
+	assert.NotSame(t, b1, b2, "least-recently-used entry must be evicted")
+}
