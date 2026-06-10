@@ -16,14 +16,30 @@ limitations under the License.
 
 package validation
 
-import "sync"
+import "k8s.io/utils/lru"
 
-// Cache maintains a cache of compiled validators.
-// The current implementation is a simple lazy cache meaning:
+// DefaultCacheSize is the maximum number of compiled CEL validators held by a
+// Cache before the least-recently-used entry is evicted.
 //
-// 1. Whenever a validator is requested, it first checks the cache.
-// 2. If a compiled validator exists for the supplied CEL expression, it is returned.
-// 3. If the validator doesn't exist in the cache, a new validator is created, compiled, added to the cache, and returned.
+// CertificateRequestPolicy resources are admin-managed and low-churn, so the
+// number of distinct expressions in any real cluster is small; this bound
+// exists only to cap memory under adversarial input (CWE-770), where a
+// principal able to author policies — including via dry-run requests that are
+// never persisted — could otherwise submit unbounded unique expressions.
+const DefaultCacheSize = 1024
+
+// Cache maintains a bounded, lazily-populated cache of compiled validators.
+// The implementation is a simple LRU cache meaning:
+//
+//  1. Whenever a validator is requested, it first checks the cache.
+//  2. If a compiled validator exists for the supplied CEL expression, it is returned.
+//  3. Otherwise a new validator is created, compiled, added to the cache, and returned.
+//
+// The cache holds at most [DefaultCacheSize] entries; the least-recently-used
+// entry is evicted when that limit is exceeded. Bounding the size — rather than
+// tying entries to policy lifecycle — keeps the cache a self-contained concern:
+// it needs no knowledge of CertificateRequestPolicy creation, update or
+// deletion, and an entry for a deleted or rewritten policy simply ages out.
 type Cache interface {
 	// Get returns a compiled validator for the supplied CEL expression.
 	// Any compilation errors will be returned to the caller.
@@ -33,7 +49,8 @@ type Cache interface {
 }
 
 type cache struct {
-	m sync.Map
+	// lru is safe for concurrent use; it guards its own state with a mutex.
+	lru *lru.Cache
 }
 
 type cacheEntry struct {
@@ -42,28 +59,36 @@ type cacheEntry struct {
 }
 
 func (c *cache) Get(expr string) (Validator, error) {
-	// First check if cache contains validator for expression
-	o, ok := c.m.Load(expr)
-	if ok {
+	// First check if cache contains a validator for the expression.
+	if o, ok := c.lru.Get(expr); ok {
 		ce := o.(*cacheEntry)
 		return ce.validator, ce.err
 	}
 
 	// Expression did not exist in cache. Create a new validator, compile it
-	// and add the result to cache.
-	// Theoretically this could lead to the same expression being compiled multiple times,
-	// but guarding against that would require locking and increase complexity.
+	// and add the result to the cache (including a compilation error, so
+	// invalid expressions are not recompiled on every request).
+	// Theoretically this could lead to the same expression being compiled
+	// multiple times, but guarding against that would require locking and
+	// increase complexity.
 	v := &validator{expression: expr}
 	err := v.compile()
 	if err != nil {
 		v = nil
 	}
-	o, _ = c.m.LoadOrStore(expr, &cacheEntry{validator: v, err: err})
-	ce := o.(*cacheEntry)
-	return ce.validator, ce.err
+	c.lru.Add(expr, &cacheEntry{validator: v, err: err})
+	return v, err
 }
 
-// NewCache is a constructor for cache of compiled CEL expression validators.
+// NewCache is a constructor for a bounded cache of compiled CEL expression
+// validators, holding at most [DefaultCacheSize] entries.
 func NewCache() Cache {
-	return &cache{}
+	return newCache(DefaultCacheSize)
+}
+
+// newCache constructs a cache bounded to size entries. Exposed separately from
+// NewCache so tests can exercise eviction without compiling DefaultCacheSize
+// expressions.
+func newCache(size int) *cache {
+	return &cache{lru: lru.New(size)}
 }

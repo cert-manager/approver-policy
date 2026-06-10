@@ -479,7 +479,31 @@ generous for the simple expressions typical of `CertificateRequestPolicy`
 rules.
 
 The original design also noted that "we should probably consider adding some
-cache expiration logic to avoid appearing like a memory leak." The current
-implementation uses a global `sync.Map` with no eviction or expiry — every
-unique expression compiled during the lifetime of the controller remains in
-memory permanently. Cache lifecycle management is tracked separately.
+cache expiration logic to avoid appearing like a memory leak." The initial
+implementation used a global `sync.Map` keyed by expression string with no
+eviction or expiry — every unique expression compiled during the lifetime of
+the controller remained in memory permanently.
+
+## Addendum: bounded (LRU) validator cache (June 2026)
+
+[#926](https://github.com/cert-manager/approver-policy/pull/926) replaced the
+unbounded global `sync.Map` with a fixed-size least-recently-used cache
+(`k8s.io/utils/lru`, already in the dependency tree), holding at most
+`DefaultCacheSize` (1024) compiled programs. When the limit is exceeded the
+least-recently-used entry is evicted.
+
+This directly closes the memory-exhaustion variant of
+[VC-53793](https://venafi.atlassian.net/browse/VC-53793) (CWE-770): a principal
+able to author policies — including via dry-run CREATEs that are never
+persisted — can no longer grow controller memory without bound by submitting
+unique large expressions, because the cache size is capped regardless of input.
+
+A bounded cache was chosen over tying entries to the CertificateRequestPolicy
+lifecycle because it keeps the cache a self-contained concern. It needs no
+knowledge of policy creation, update or deletion, no controller or webhook
+plumbing, and no per-replica eviction coordination; an entry for a deleted or
+rewritten policy simply ages out. The only trade-off is that, under a flood of
+unique expressions, a legitimate policy's compiled program may be evicted and
+recompiled on next use — a bounded, low cost, and one already capped per
+compilation by the CEL cost limit added in
+[#923](https://github.com/cert-manager/approver-policy/pull/923).
