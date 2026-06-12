@@ -15,7 +15,14 @@ limitations under the License.
 */
 
 // !!
-// Modified from https://github.com/minio/minio/blob/RELEASE.2020-06-22T03-12-50Z.hotfix/pkg/wildcard/match.go
+// Originally adapted from minio's wildcard matcher (minio/minio, now archived):
+// https://github.com/minio/minio/blob/RELEASE.2020-06-22T03-12-50Z/pkg/wildcard/match.go
+//
+// matchRunes (below) has since been rewritten to an iterative algorithm and is
+// intentionally not a drop-in copy of the version now maintained at
+// https://github.com/minio/pkg/blob/main/wildcard/match.go: that one is still
+// recursive, and unlike minio we support only '*' (not '?') and match on runes
+// rather than bytes. Prefer not to re-sync from upstream.
 
 package util
 
@@ -65,27 +72,47 @@ func WildcardMatches(pattern, str string) bool {
 	return matchRunes([]rune(pattern), []rune(str))
 }
 
-// matchRunes will return whether the given rune slice matches the given
-// pattern using wildcards ('*').
+// matchRunes returns whether str matches pattern using '*' wildcards.
+// It uses an iterative backtrack-checkpoint algorithm that runs in O(n*m)
+// time, replacing the original recursive implementation which was O(2^n)
+// with multiple wildcards. See CWE-770.
+//
+// This is the standard greedy wildcard matcher: on each '*' we record a single
+// checkpoint (starPx/starSx) and, on a later mismatch, rewind str one past that
+// checkpoint rather than forking into two recursive calls. Only the most recent
+// '*' needs remembering. The same technique backs Go's path/filepath.Match,
+// glibc's glob(3) and many other production matchers. References:
+//   - Russ Cox, "Glob Matching Can Be Simple And Fast Too" https://research.swtch.com/glob
+//   - https://en.wikipedia.org/wiki/Matching_wildcards (non-recursive section)
 func matchRunes(pattern, str []rune) bool {
-	for len(pattern) > 0 {
-		switch pattern[0] {
+	px, sx := 0, 0
+	starPx, starSx := -1, -1
 
-		// If '*' then branch with recursive check for before and after '*'
-		case '*':
-			return matchRunes(pattern[1:], str) || (len(str) > 0 && matchRunes(pattern, str[1:]))
-
-		// If still strings to match or patter and string don't match at index, no match.
+	for sx < len(str) {
+		switch {
+		case px < len(pattern) && pattern[px] == '*':
+			// Record a checkpoint at the '*' and try to match it against the
+			// empty string first.
+			starPx, starSx = px, sx
+			px++
+		case px < len(pattern) && pattern[px] == str[sx]:
+			// Literal match; advance both positions.
+			px++
+			sx++
+		case starPx >= 0:
+			// Mismatch, but a '*' is still open: backtrack to it and let it
+			// consume one more character of str.
+			starSx++
+			sx = starSx
+			px = starPx + 1
 		default:
-			if len(str) == 0 || str[0] != pattern[0] {
-				return false
-			}
+			// Mismatch with no '*' to fall back on.
+			return false
 		}
-
-		str = str[1:]
-		pattern = pattern[1:]
 	}
 
-	// If both empty, then match
-	return len(str) == 0 && len(pattern) == 0
+	for px < len(pattern) && pattern[px] == '*' {
+		px++
+	}
+	return px == len(pattern)
 }
