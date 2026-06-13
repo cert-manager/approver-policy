@@ -39,12 +39,15 @@ type Registry struct {
 func (r *Registry) Store(approvers ...approver.Interface) *Registry {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+	names := make(map[string]struct{}, len(r.approvers)+len(approvers))
 	for _, existing := range r.approvers {
-		for _, toStore := range approvers {
-			if existing.Name() == toStore.Name() {
-				panic("approver already registered with same name: " + toStore.Name())
-			}
+		names[existing.Name()] = struct{}{}
+	}
+	for _, toStore := range approvers {
+		if _, ok := names[toStore.Name()]; ok {
+			panic("approver already registered with same name: " + toStore.Name())
 		}
+		names[toStore.Name()] = struct{}{}
 	}
 	r.approvers = append(r.approvers, approvers...)
 	return r
