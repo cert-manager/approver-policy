@@ -76,6 +76,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		evaluate.EmailAddresses,
 		evaluate.IsCA,
 		evaluate.Usages,
+		evaluate.Annotations,
 		evaluateSubject.Organization,
 		evaluateSubject.Country,
 		evaluateSubject.OrganizationalUnit,
@@ -138,6 +139,27 @@ func (e evaluator) EmailAddresses() field.ErrorList {
 
 func (e evaluator) IsCA() field.ErrorList {
 	return e.a.evaluateBool(e.request.Spec.IsCA, e.allowed.IsCA, e.fldPath.Child("isCA"))
+}
+
+func (e evaluator) Annotations() field.ErrorList {
+	if len(e.allowed.Annotations) == 0 {
+		return nil
+	}
+	var el field.ErrorList
+	fldPath := e.fldPath.Child("annotations")
+	annotations := e.request.GetAnnotations()
+	for key, allowedValues := range e.allowed.Annotations {
+		val, exists := annotations[key]
+		if exists {
+			av := allowedValues
+			el = append(el, e.a.evaluateSlice(e.request, []string{val}, &av, fldPath.Key(key))...)
+			continue
+		}
+		if allowedValues.Required != nil && *allowedValues.Required {
+			el = append(el, field.Required(fldPath.Key(key), "annotation is required"))
+		}
+	}
+	return el
 }
 
 func (e evaluator) Usages() field.ErrorList {

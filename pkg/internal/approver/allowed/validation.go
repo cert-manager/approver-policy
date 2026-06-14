@@ -105,6 +105,22 @@ func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateReques
 		}
 	}
 
+	if allowed.Annotations != nil {
+		fldPathAnnotations := fldPath.Child("annotations")
+		for key, av := range allowed.Annotations {
+			if av.Required != nil && *av.Required {
+				if av.Values == nil && len(av.Validations) == 0 {
+					el = append(el, field.Required(fldPathAnnotations.Key(key).Child("values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"))
+				}
+			}
+			for i, validation := range av.Validations {
+				if _, err := a.validators.Get(validation.Rule); err != nil {
+					el = append(el, field.Invalid(fldPathAnnotations.Key(key).Child("validations").Index(i), validation.Rule, err.Error()))
+				}
+			}
+		}
+	}
+
 	return approver.WebhookValidationResponse{
 		Allowed: len(el) == 0,
 		Errors:  el,
