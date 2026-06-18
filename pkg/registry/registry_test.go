@@ -73,6 +73,8 @@ func TestRegistry_Store(t *testing.T) {
 				assert.PanicsWithValue(t, test.panicMessage, func() {
 					r.Store(test.approvers...)
 				})
+				assert.Equal(t, len(test.preStored), len(r.Approvers()),
+					"registry must not be modified when Store panics")
 				return
 			}
 
