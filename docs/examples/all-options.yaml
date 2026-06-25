@@ -76,6 +76,15 @@ spec:
         required: false
         value: "*"
         validations: []
+      # otherAttributes opts specific non-standard Subject RDN attribute OIDs
+      # back in. Any Subject attribute whose OID is outside the named fields
+      # above (e.g. emailAddress, domainComponent, userID) is DENIED unless
+      # listed here.
+      otherAttributes:
+        - oid: "1.2.840.113549.1.9.1" # emailAddress
+          required: false
+          values: ["*@example.com"]
+          validations: []
     # otherNames opts specific SAN otherName OIDs (GeneralName tag 0) back in.
     # Any otherName whose OID is not listed here is DENIED; directoryName,
     # x400Address, ediPartyName and registeredID SANs are always denied.
