@@ -76,6 +76,15 @@ spec:
         required: false
         value: "*"
         validations: []
+      # otherAttributes opts specific non-standard Subject RDN attribute OIDs
+      # back in. Any Subject attribute whose OID is outside the named fields
+      # above (e.g. emailAddress, domainComponent, userID) is DENIED unless
+      # listed here.
+      otherAttributes:
+        - oid: "1.2.840.113549.1.9.1" # emailAddress
+          required: false
+          values: ["*@example.com"]
+          validations: []
   constraints:
     minDuration: 1h
     maxDuration: 24h
