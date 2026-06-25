@@ -19,11 +19,25 @@ package allowed
 import (
 	"context"
 
+	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
 )
+
+// validateOID returns a field error (or nil) for a policy-supplied dotted OID
+// string. It must be a valid, canonical ASN.1 OID — evaluation matches it by
+// exact string against the request's parsed OID (always canonical), so a
+// malformed or non-canonical form would silently never match. Canonical means
+// asn1.ObjectIdentifier round-trips to the same string.
+func validateOID(path *field.Path, oid string) *field.Error {
+	parsed, err := utilpki.ParseObjectIdentifier(oid)
+	if err != nil || parsed.String() != oid {
+		return field.Invalid(path, oid, "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.3.6.1.4.1.311.20.2.3\")")
+	}
+	return nil
+}
 
 // Validate validates that the processed CertificateRequestPolicy has valid
 // allowed fields defined and there are no parsing errors in the values.
@@ -101,6 +115,30 @@ func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateReques
 				if _, err := a.validators.Get(validation.Rule); err != nil {
 					el = append(el, field.Invalid(stringI.path.Child("validations").Index(i), validation.Rule, err.Error()))
 				}
+			}
+		}
+	}
+
+	// allowed.otherNames mirrors the values/required/validations semantics of
+	// the named slice fields, so apply the same admission checks: a 'required'
+	// entry must declare values or validations, and every CEL rule must
+	// compile. Without this, an invalid CEL rule would be admitted and only
+	// surface as a confusing runtime error at request-evaluation time.
+	otherNamesPath := fldPath.Child("otherNames")
+	for i := range allowed.OtherNames {
+		entry := allowed.OtherNames[i]
+		path := otherNamesPath.Index(i)
+		if e := validateOID(path.Child("oid"), entry.OID); e != nil {
+			el = append(el, e)
+		}
+		if entry.Required != nil && *entry.Required {
+			if entry.Values == nil && len(entry.Validations) == 0 {
+				el = append(el, field.Required(path.Child("values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"))
+			}
+		}
+		for j, validation := range entry.Validations {
+			if _, err := a.validators.Get(validation.Rule); err != nil {
+				el = append(el, field.Invalid(path.Child("validations").Index(j), validation.Rule, err.Error()))
 			}
 		}
 	}
