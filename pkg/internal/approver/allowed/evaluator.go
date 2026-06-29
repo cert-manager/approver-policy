@@ -82,7 +82,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 			// be approved, since cert-manager would still sign its raw bytes.
 			return approver.EvaluationResponse{
 				Result:  approver.ResultDenied,
-				Message: fmt.Sprintf("%s: SAN extension could not be decoded: %v", fldPath.Child("otherNames"), err),
+				Message: fmt.Sprintf("subjectAltName (SAN) extension could not be decoded: %v", err),
 			}, nil
 		}
 		sans = parsed
@@ -251,7 +251,7 @@ func (e evaluator) OtherNames() field.ErrorList {
 		entry, ok := allowedByOID[key]
 		entryFld := fldPath.Key(key)
 		if !ok {
-			el = append(el, field.Invalid(entryFld, values, "no allowed value"))
+			el = append(el, field.Invalid(entryFld, values, "no allowed values"))
 			continue
 		}
 		el = append(el, e.a.evaluateSlice(e.request, values, &policyapi.CertificateRequestPolicyAllowedStringSlice{
