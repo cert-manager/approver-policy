@@ -64,19 +64,30 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		return approver.EvaluationResponse{}, err
 	}
 
-	// Decode the raw SAN extension directly so GeneralName entries with
-	// context tags outside {1,2,6,7} (otherName, x400Address, directoryName,
-	// ediPartyName, registeredID) — which crypto/x509 silently drops from
-	// the parsed slices but which cert-manager copies into the issued
-	// certificate verbatim — are visible to policy.
-	var sanGNs []asn1.RawValue
+	// Decode the raw SAN extension with cert-manager's own SAN parser so the
+	// approver evaluates the exact GeneralName entries the signer will emit.
+	// crypto/x509 silently drops GeneralName tags outside {1,2,6,7}
+	// (otherName, x400Address, directoryName, ediPartyName, registeredID)
+	// from its parsed slices, but cert-manager copies the raw SAN extension
+	// into the issued certificate verbatim — so those entries must be made
+	// visible to policy here.
+	var sans utilpki.GeneralNames
 	for _, ext := range csr.Extensions {
 		if !ext.Id.Equal(oidSubjectAltName) {
 			continue
 		}
-		if _, err := asn1.Unmarshal(ext.Value, &sanGNs); err != nil {
-			return approver.EvaluationResponse{}, fmt.Errorf("decode SAN extension: %w", err)
+		parsed, err := utilpki.UnmarshalSANs(ext.Value)
+		if err != nil {
+			// Fail closed: a SAN extension we cannot fully decode must never
+			// be approved, since cert-manager would still sign its raw bytes.
+			return approver.EvaluationResponse{
+				Result:  approver.ResultDenied,
+				Message: fmt.Sprintf("%s: SAN extension could not be decoded: %v", fldPath.Child("otherNames"), err),
+			}, nil
 		}
+		sans = parsed
+		// crypto/x509 rejects CSRs carrying duplicate extensions, so the
+		// first SAN extension is guaranteed to be the only one.
 		break
 	}
 
@@ -84,7 +95,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		a:       a,
 		request: request,
 		csr:     csr,
-		sanGNs:  sanGNs,
+		sans:    sans,
 		allowed: allowed,
 		fldPath: fldPath,
 	}
@@ -127,11 +138,11 @@ type evaluator struct {
 	a       allowed
 	request *cmapi.CertificateRequest
 	csr     *x509.CertificateRequest
-	// sanGNs is the raw list of GeneralName entries from the SAN
-	// extension — preserves otherName/directoryName/x400Address/
-	// ediPartyName/registeredID entries that the lossy parsed slices
-	// drop.
-	sanGNs  []asn1.RawValue
+	// sans holds every SAN GeneralName entry decoded from the raw SAN
+	// extension (via cert-manager's UnmarshalSANs) — including the
+	// otherName/directoryName/x400Address/ediPartyName/registeredID entries
+	// that crypto/x509's parsed slices drop.
+	sans    utilpki.GeneralNames
 	allowed *policyapi.CertificateRequestPolicyAllowed
 	fldPath *field.Path
 }
@@ -190,57 +201,40 @@ func (e evaluator) Usages() field.ErrorList {
 	return el
 }
 
-// OtherNames evaluates every SAN GeneralName entry whose context tag is
-// outside {1,2,6,7} (rfc822Name/dNSName/uniformResourceIdentifier/iPAddress —
-// already covered by EmailAddresses/DNSNames/URIs/IPAddresses above).
-// Tag 0 (otherName) is allowed only if its OID appears in
-// allowed.otherNames; tags 3 (x400Address), 4 (directoryName), 5
-// (ediPartyName) and 8 (registeredID) are always denied — there is no
-// opt-in mechanism for these.
+// OtherNames evaluates the SAN GeneralName entries that the parsed-slice
+// evaluators above (DNSNames/IPAddresses/URIs/EmailAddresses) do not cover.
+// otherName entries (tag 0) are permitted only when their OID is listed in
+// allowed.otherNames; directoryName, x400Address, ediPartyName and
+// registeredID entries are always denied — there is no opt-in for these.
 func (e evaluator) OtherNames() field.ErrorList {
 	fldPath := e.fldPath.Child("otherNames")
+	var el field.ErrorList
 
-	// Collect otherName entries by OID so a duplicate-OID smuggling
-	// attempt is policed in one pass per OID and the operator sees the
-	// full value list in the error message.
+	// SAN GeneralName types with no opt-in mechanism — always denied.
+	for range e.sans.DirectoryNames {
+		el = append(el, field.Invalid(fldPath, "directoryName", "directoryName SAN entries are not permitted"))
+	}
+	for range e.sans.X400Addresses {
+		el = append(el, field.Invalid(fldPath, "x400Address", "x400Address SAN entries are not permitted"))
+	}
+	for range e.sans.EDIPartyNames {
+		el = append(el, field.Invalid(fldPath, "ediPartyName", "ediPartyName SAN entries are not permitted"))
+	}
+	for range e.sans.RegisteredIDs {
+		el = append(el, field.Invalid(fldPath, "registeredID", "registeredID SAN entries are not permitted"))
+	}
+
+	// Collect otherName values grouped by OID, preserving first-seen order so
+	// a duplicate-OID smuggling attempt is policed in one pass and evaluation
+	// (and any error messages) is deterministic.
 	byOID := make(map[string][]string)
 	var oidOrder []string
-	var presentByOID = make(map[string]bool)
-
-	var el field.ErrorList
-	for _, gn := range e.sanGNs {
-		if gn.Class != asn1.ClassContextSpecific {
-			el = append(el, field.Invalid(fldPath, fmt.Sprintf("class=%d tag=%d", gn.Class, gn.Tag), "unexpected SAN GeneralName class"))
-			continue
+	for _, on := range e.sans.OtherNames {
+		key := on.TypeID.String()
+		if _, seen := byOID[key]; !seen {
+			oidOrder = append(oidOrder, key)
 		}
-		switch gn.Tag {
-		case 1, 2, 6, 7:
-			// rfc822Name / dNSName / URI / IP — covered by the
-			// parsed-slice evaluators above.
-			continue
-		case 0:
-			oid, value, ok := parseOtherName(gn)
-			if !ok {
-				el = append(el, field.Invalid(fldPath, hex.EncodeToString(gn.FullBytes), "otherName SAN entry could not be decoded"))
-				continue
-			}
-			key := oid.String()
-			if _, seen := presentByOID[key]; !seen {
-				presentByOID[key] = true
-				oidOrder = append(oidOrder, key)
-			}
-			byOID[key] = append(byOID[key], value)
-		case 3:
-			el = append(el, field.Invalid(fldPath, hex.EncodeToString(gn.FullBytes), "x400Address SAN entries are not permitted"))
-		case 4:
-			el = append(el, field.Invalid(fldPath, hex.EncodeToString(gn.FullBytes), "directoryName SAN entries are not permitted"))
-		case 5:
-			el = append(el, field.Invalid(fldPath, hex.EncodeToString(gn.FullBytes), "ediPartyName SAN entries are not permitted"))
-		case 8:
-			el = append(el, field.Invalid(fldPath, hex.EncodeToString(gn.FullBytes), "registeredID SAN entries are not permitted"))
-		default:
-			el = append(el, field.Invalid(fldPath, fmt.Sprintf("tag=%d", gn.Tag), "unknown SAN GeneralName tag"))
-		}
+		byOID[key] = append(byOID[key], otherNameValueString(on.Value))
 	}
 
 	// Index allowed.otherNames by OID for lookup.
@@ -260,12 +254,11 @@ func (e evaluator) OtherNames() field.ErrorList {
 			el = append(el, field.Invalid(entryFld, values, "no allowed value"))
 			continue
 		}
-		slice := &policyapi.CertificateRequestPolicyAllowedStringSlice{
+		el = append(el, e.a.evaluateSlice(e.request, values, &policyapi.CertificateRequestPolicyAllowedStringSlice{
 			Values:      entry.Values,
 			Required:    entry.Required,
 			Validations: entry.Validations,
-		}
-		el = append(el, e.a.evaluateSlice(e.request, values, slice, entryFld)...)
+		}, entryFld)...)
 	}
 
 	// Required: any allowed.otherNames entry with required=true must have
@@ -274,7 +267,7 @@ func (e evaluator) OtherNames() field.ErrorList {
 		if entry.Required == nil || !*entry.Required {
 			continue
 		}
-		if presentByOID[entry.OID] {
+		if _, ok := byOID[entry.OID]; ok {
 			continue
 		}
 		el = append(el, field.Required(fldPath.Key(entry.OID).Child("required"), strconv.FormatBool(true)))
@@ -337,53 +330,21 @@ func (e subjectEvaluator) SerialNumber() field.ErrorList {
 	return e.a.evaluateString(e.request, e.sub.SerialNumber, e.allowed.SerialNumber, e.fldPath.Child("serialNumber"))
 }
 
-// parseOtherName decodes a SAN otherName GeneralName entry (context tag 0)
-// into (OID, stringValue). The value bytes are extracted from the inner
-// [0] EXPLICIT wrapper and decoded as a UTF-8/Printable/IA5/T61 string —
-// the encodings used in practice for otherName values (notably the Microsoft
-// UPN UTF8String). For other inner ASN.1 types the hex-encoded DER is
-// returned so that wildcard/CEL rules can still pin a specific blob; the
-// caller will treat any opaque value as a string match.
-//
-// ok is false only when the outer SEQUENCE itself is malformed.
-func parseOtherName(gn asn1.RawValue) (asn1.ObjectIdentifier, string, bool) {
-	// otherName ::= [0] IMPLICIT SEQUENCE {
-	//     type-id OBJECT IDENTIFIER,
-	//     value   [0] EXPLICIT ANY DEFINED BY type-id }
-	//
-	// asn1.UnmarshalWithParams("tag:0", &struct{...}) does not reliably
-	// strip the inner [0] EXPLICIT wrapper around the ANY field, so walk
-	// gn.Bytes (the SEQUENCE content, IMPLICIT-stripped by the outer
-	// SAN list decode) by hand.
-	var oid asn1.ObjectIdentifier
-	rest, err := asn1.Unmarshal(gn.Bytes, &oid)
-	if err != nil {
-		return nil, "", false
-	}
-	var explicit asn1.RawValue
-	rest2, err := asn1.Unmarshal(rest, &explicit)
-	if err != nil || explicit.Class != asn1.ClassContextSpecific || explicit.Tag != 0 {
-		return nil, "", false
-	}
-	if len(rest2) != 0 {
-		return nil, "", false
-	}
-	var inner asn1.RawValue
-	if _, err := asn1.Unmarshal(explicit.Bytes, &inner); err != nil {
-		// Could not decode the wrapped value at all; fall back to the
-		// hex-encoded wrapper bytes so the value can still be policed.
-		return oid, hex.EncodeToString(explicit.Bytes), true
-	}
-	return oid, otherNameValueString(inner), true
-}
-
-// otherNameValueString renders the inner value of a SAN otherName entry as
-// a string. UTF8String / PrintableString / IA5String / T61String values
-// (the encodings used in practice for otherName payloads such as the
-// Microsoft UPN) are decoded as text; any other ASN.1 type is rendered as
-// its hex-encoded full-bytes DER so that a wildcard/CEL rule can still pin
-// an exact blob.
+// otherNameValueString renders the value of a SAN otherName entry as a
+// string. utilpki.UnmarshalSANs returns the value still wrapped in its
+// [0] EXPLICIT tag (otherName ::= SEQUENCE { type-id OID, value [0] EXPLICIT
+// ANY }), so unwrap it to reach the inner ANY value. UTF8String /
+// PrintableString / IA5String / T61String values (the encodings used in
+// practice for otherName payloads such as the Microsoft UPN) are decoded as
+// text; any other ASN.1 type is rendered as its hex-encoded full-bytes DER so
+// that a wildcard/CEL rule can still pin an exact blob.
 func otherNameValueString(v asn1.RawValue) string {
+	if v.Class == asn1.ClassContextSpecific && v.Tag == 0 {
+		var inner asn1.RawValue
+		if _, err := asn1.Unmarshal(v.Bytes, &inner); err == nil {
+			v = inner
+		}
+	}
 	if v.Class == asn1.ClassUniversal {
 		switch v.Tag {
 		case asn1.TagUTF8String, asn1.TagPrintableString, asn1.TagIA5String, asn1.TagT61String:
