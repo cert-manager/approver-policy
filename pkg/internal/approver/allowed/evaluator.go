@@ -130,7 +130,8 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	// certificate, so the approver and signer must see the same bytes.
 	var subjectRDNs pkix.RDNSequence
 	if len(csr.RawSubject) > 0 {
-		if _, err := asn1.Unmarshal(csr.RawSubject, &subjectRDNs); err != nil {
+		subjectRDNs, err = utilpki.UnmarshalRawDerBytesToRDNSequence(csr.RawSubject)
+		if err != nil {
 			return approver.EvaluationResponse{}, fmt.Errorf("decode csr.RawSubject: %w", err)
 		}
 	}
@@ -204,9 +205,9 @@ type evaluator struct {
 // used UniversalString/GeneralString encodings) are skipped here — they are
 // denied with an actionable message by the OtherAttributes backstop, so they
 // can never reach this slice unvalidated.
-func (e evaluator) subjectValuesForOID(oid asn1.ObjectIdentifier) []string {
+func subjectValuesForOID(rdns pkix.RDNSequence, oid asn1.ObjectIdentifier) []string {
 	var values []string
-	for _, rdn := range e.subjectRDNs {
+	for _, rdn := range rdns {
 		for _, atv := range rdn {
 			if !atv.Type.Equal(oid) {
 				continue
@@ -224,7 +225,7 @@ func (e evaluator) subjectValuesForOID(oid asn1.ObjectIdentifier) []string {
 // trigger a separate error per value so the operator sees the full set.
 // A non-string-encoded CN is denied by the OtherAttributes backstop.
 func (e evaluator) CommonName() field.ErrorList {
-	values := e.subjectValuesForOID(oidCommonName)
+	values := subjectValuesForOID(e.subjectRDNs, oidCommonName)
 	fldPath := e.fldPath.Child("commonName")
 	switch len(values) {
 	case 0:
@@ -425,7 +426,7 @@ func (e subjectEvaluator) PostalCode() field.ErrorList {
 // csr.RawSubject. As with CommonName the lossy pkix.Name projection keeps
 // only the last value; a duplicate-SN smuggling attempt is policed here.
 func (e subjectEvaluator) SerialNumber() field.ErrorList {
-	values := serialNumberValues(e.subjectRDNs)
+	values := subjectValuesForOID(e.subjectRDNs, oidSerialNumber)
 	fldPath := e.fldPath.Child("serialNumber")
 	switch len(values) {
 	case 0:
@@ -439,21 +440,6 @@ func (e subjectEvaluator) SerialNumber() field.ErrorList {
 		}
 		return el
 	}
-}
-
-func serialNumberValues(rdns pkix.RDNSequence) []string {
-	var values []string
-	for _, rdn := range rdns {
-		for _, atv := range rdn {
-			if !atv.Type.Equal(oidSerialNumber) {
-				continue
-			}
-			if s, ok := atv.Value.(string); ok {
-				values = append(values, s)
-			}
-		}
-	}
-	return values
 }
 
 // OtherAttributes evaluates every Subject RDN attribute whose OID is not
