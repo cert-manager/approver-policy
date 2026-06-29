@@ -67,6 +67,77 @@ spec:
                   field _must_ be omitted or have an empty value for the request to be
                   permitted.
                 properties:
+                  annotations:
+                    additionalProperties:
+                      description: |-
+                        CertificateRequestPolicyAllowedStringSlice represents allowed string values
+                        and/or validations paired with whether the field is a required value on the request.
+                        If neither allowed values nor validations are specified, the related field must be empty.
+                      properties:
+                        required:
+                          description: |-
+                            Required controls whether the related field must have at least one value.
+                            Defaults to `false`.
+                          type: boolean
+                        validations:
+                          description: |-
+                            Validations applies rules using Common Expression Language (CEL) to
+                            validate attribute values present on request beyond what is possible
+                            to express using values/required.
+                            ALL attribute values on the related CertificateRequest field must pass
+                            ALL validations for the request to be granted by this policy.
+                          items:
+                            description: ValidationRule describes a validation rule
+                              expressed in CEL.
+                            properties:
+                              message:
+                                description: |-
+                                  Message is the message to display when validation fails.
+                                  Message is required if the Rule contains line breaks. Note that Message
+                                  must not contain line breaks.
+                                  If unset, a fallback message is used: "failed rule: `<rule>`".
+                                  e.g. "must be a URL with the host matching spec.host"
+                                type: string
+                              rule:
+                                description: |-
+                                  Rule represents the expression which will be evaluated by CEL.
+                                  ref: https://github.com/google/cel-spec
+                                  The Rule is scoped to the location of the validations in the schema.
+                                  The `self` variable in the CEL expression is bound to the scoped value.
+                                  To enable more advanced validation rules, approver-policy provides the
+                                  `cr` (map) variable to the CEL expression containing `namespace` and
+                                  `name` of the `CertificateRequest` resource.
+
+                                  Example (rule for namespaced DNSNames):
+                                  ```
+                                  rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                  ```
+                                type: string
+                            required:
+                            - rule
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - rule
+                          x-kubernetes-list-type: map
+                        values:
+                          description: |-
+                            Values defines allowed attribute values on the related CertificateRequest field.
+                            Accepts wildcards "*".
+                            If set, the related field can only include items contained in the allowed values.
+
+                            NOTE:`values: []` paired with `required: true` establishes a policy that
+                            will never grant a `CertificateRequest`, but other policies may.
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    description: |-
+                      Annotations defines allowed annotations on a CertificateRequest.
+                      Each key is an annotation name, and the value defines the allowed
+                      values for that annotation. Annotations on the request that are
+                      not listed here are ignored.
+                    type: object
                   commonName:
                     description: CommonName defines the X.509 Common Name that may
                       be requested.
