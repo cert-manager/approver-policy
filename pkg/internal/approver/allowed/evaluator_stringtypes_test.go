@@ -138,7 +138,7 @@ func TestEvaluate_CN_UnsupportedEncodingsDenied(t *testing.T) {
 			resp := evalSubject(t, pkix.RDNSequence{rawATVRDN(oidCommonName, val)}, cnWildcardPolicy())
 			assert.Equal(t, approver.ResultDenied, resp.Result,
 				"%s CN must be denied fail-closed; got %v %q", name, resp.Result, resp.Message)
-			assert.Contains(t, resp.Message, "unsupported string encoding",
+			assert.Contains(t, resp.Message, "unsupported ASN.1 type or string encoding",
 				"denial must be actionable (tell the operator to re-issue): %s", resp.Message)
 		})
 	}
@@ -186,7 +186,7 @@ func TestEvaluate_NamedOID_TrulyNonStringStillDenied(t *testing.T) {
 			}, cnWildcardPolicy())
 			assert.Equal(t, approver.ResultDenied, resp.Result,
 				"%s under named OID must be denied; got %v %q", name, resp.Result, resp.Message)
-			assert.Contains(t, resp.Message, "unsupported string encoding",
+			assert.Contains(t, resp.Message, "unsupported ASN.1 type or string encoding",
 				"denial should be actionable: %s", resp.Message)
 		})
 	}

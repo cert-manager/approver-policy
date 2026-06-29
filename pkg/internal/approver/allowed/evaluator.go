@@ -478,7 +478,7 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 				el = append(el, field.Invalid(
 					fldPath.Key(atv.Type.String()),
 					"<non-string value>",
-					"Subject attribute uses an unsupported string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
+					"Subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
 				continue
 			}
 
@@ -507,7 +507,7 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 		entry, ok := allowedByOID[key]
 		entryFld := fldPath.Key(key)
 		if !ok {
-			el = append(el, field.Invalid(entryFld, values, "no allowed value"))
+			el = append(el, field.Invalid(entryFld, values, "no allowed values"))
 			continue
 		}
 		slice := &policyapi.CertificateRequestPolicyAllowedStringSlice{
