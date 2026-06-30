@@ -41,7 +41,7 @@ var (
 )
 
 // ---------------------------------------------------------------------------
-// SAN bypass helpers (VC-53795)
+// SAN bypass helpers
 // ---------------------------------------------------------------------------
 
 // withRawSAN injects a raw SAN extension whose GeneralName entries are
@@ -136,7 +136,7 @@ func registeredIDGN(t *testing.T, oid asn1.ObjectIdentifier) asn1.RawValue {
 }
 
 // ---------------------------------------------------------------------------
-// RawSubject bypass helpers (VC-53794)
+// RawSubject bypass helpers
 // ---------------------------------------------------------------------------
 
 // withRawSubject overrides the CSR's Subject DER. x509.CreateCertificateRequest
@@ -174,7 +174,7 @@ func rawATVRDN(oid asn1.ObjectIdentifier, value any) pkix.RelativeDistinguishedN
 }
 
 // ---------------------------------------------------------------------------
-// SAN bypass tests (VC-53795)
+// SAN bypass tests
 // ---------------------------------------------------------------------------
 
 // TestEvaluate_SANOtherNameDeniedByDefault — a SAN containing an
@@ -410,14 +410,14 @@ func TestCryptoX509_DropsNonStandardSANTags(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// RawSubject bypass tests (VC-53794)
+// RawSubject bypass tests
 // ---------------------------------------------------------------------------
 
-// TestEvaluate_VC53794_DualCNDenied — a CSR whose Subject RawSubject DER
+// TestEvaluate_SubjectDualCNDenied — a CSR whose Subject RawSubject DER
 // contains two CN RDNs (kubernetes-admin THEN app.tenant.example.com) must
 // be denied even when the policy permits the second value. The lossy
 // pkix.Name projection used to keep only the last CN and approve.
-func TestEvaluate_VC53794_DualCNDenied(t *testing.T) {
+func TestEvaluate_SubjectDualCNDenied(t *testing.T) {
 	csr := csrFrom(t,
 		withRawSubject(t, pkix.RDNSequence{
 			rdn(testOIDCommonName, "kubernetes-admin"),
@@ -442,10 +442,10 @@ func TestEvaluate_VC53794_DualCNDenied(t *testing.T) {
 		"denial message should call out the forbidden CN")
 }
 
-// TestEvaluate_VC53794_DualCNBothAllowed — when the policy's commonName
+// TestEvaluate_SubjectDualCNBothAllowed — when the policy's commonName
 // wildcard matches BOTH CN values, the CSR is approved. Confirms the gate
 // is per-value rather than blanket-rejecting duplicates.
-func TestEvaluate_VC53794_DualCNBothAllowed(t *testing.T) {
+func TestEvaluate_SubjectDualCNBothAllowed(t *testing.T) {
 	csr := csrFrom(t,
 		withRawSubject(t, pkix.RDNSequence{
 			rdn(testOIDCommonName, "a.tenant.example.com"),
@@ -468,11 +468,11 @@ func TestEvaluate_VC53794_DualCNBothAllowed(t *testing.T) {
 		"two CNs that both match the wildcard must be approved; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
-// TestEvaluate_VC53794_UnknownOIDDeniedByDefault — emailAddress, DC, UID,
+// TestEvaluate_SubjectUnknownOIDDeniedByDefault — emailAddress, DC, UID,
 // or any other Subject RDN OID outside the named allowed.subject.* set
 // must be denied when there is no allowed.subject.otherAttributes entry
 // covering it.
-func TestEvaluate_VC53794_UnknownOIDDeniedByDefault(t *testing.T) {
+func TestEvaluate_SubjectUnknownOIDDeniedByDefault(t *testing.T) {
 	csr := csrFrom(t,
 		withRawSubject(t, pkix.RDNSequence{
 			rdn(testOIDCommonName, "app.tenant.example.com"),
@@ -498,11 +498,11 @@ func TestEvaluate_VC53794_UnknownOIDDeniedByDefault(t *testing.T) {
 		"denial message should mention the offending OID: %s", resp.Message)
 }
 
-// TestEvaluate_VC53794_UnknownOIDAllowedByOtherAttributes — operators that
+// TestEvaluate_SubjectUnknownOIDAllowedByPolicy — operators that
 // genuinely need emailAddress (or any unmapped OID) in the Subject can
 // opt in via allowed.subject.otherAttributes. With a matching Values entry,
 // the request is approved.
-func TestEvaluate_VC53794_UnknownOIDAllowedByOtherAttributes(t *testing.T) {
+func TestEvaluate_SubjectUnknownOIDAllowedByPolicy(t *testing.T) {
 	csr := csrFrom(t,
 		withRawSubject(t, pkix.RDNSequence{
 			rdn(testOIDCommonName, "app.tenant.example.com"),
@@ -533,9 +533,9 @@ func TestEvaluate_VC53794_UnknownOIDAllowedByOtherAttributes(t *testing.T) {
 		"emailAddress matching otherAttributes wildcard must be approved; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
-// TestEvaluate_VC53794_UnknownOIDValueMismatch — opted-in OIDs still get
+// TestEvaluate_SubjectUnknownOIDValueMismatch — opted-in OIDs still get
 // their values policed: a value outside Values must be denied.
-func TestEvaluate_VC53794_UnknownOIDValueMismatch(t *testing.T) {
+func TestEvaluate_SubjectUnknownOIDValueMismatch(t *testing.T) {
 	csr := csrFrom(t,
 		withRawSubject(t, pkix.RDNSequence{
 			rdn(testOIDCommonName, "app.tenant.example.com"),
@@ -566,9 +566,9 @@ func TestEvaluate_VC53794_UnknownOIDValueMismatch(t *testing.T) {
 		"emailAddress with mismatching value must be denied; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
-// TestEvaluate_VC53794_OtherAttributesRequired — an otherAttributes entry
+// TestEvaluate_SubjectOtherAttributesRequired — an otherAttributes entry
 // with required=true forces the OID to be present on the request.
-func TestEvaluate_VC53794_OtherAttributesRequired(t *testing.T) {
+func TestEvaluate_SubjectOtherAttributesRequired(t *testing.T) {
 	// Subject DOES NOT carry emailAddress, despite the policy requiring it.
 	csr := csrFrom(t,
 		withRawSubject(t, pkix.RDNSequence{
@@ -600,7 +600,7 @@ func TestEvaluate_VC53794_OtherAttributesRequired(t *testing.T) {
 		"missing required otherAttribute must be denied; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
-// TestEvaluate_VC53794_NonStringNamedOIDDenied — VC-53794 adjacent: a CSR
+// TestEvaluate_SubjectNonStringNamedOIDDenied — a subtler variant of the same root cause: a CSR
 // whose Subject RawSubject contains a named-OID ATV (e.g. O=, OU=, L=, …)
 // whose ASN.1 value is NOT a string (here, an OctetString) must be denied.
 // pkix.Name.FillFromRDNSequence skips non-string ATVs, so without the
@@ -608,7 +608,7 @@ func TestEvaluate_VC53794_OtherAttributesRequired(t *testing.T) {
 // evaluators (which read pkix.Name.Organization etc.) AND the
 // OtherAttributes walker (which `continue`s on named OIDs) — but the
 // signer still emits it via csr.RawSubject.
-func TestEvaluate_VC53794_NonStringNamedOIDDenied(t *testing.T) {
+func TestEvaluate_SubjectNonStringNamedOIDDenied(t *testing.T) {
 	// Subject = { CN=app.tenant.example.com, O=<OctetString "evil-corp"> }.
 	csr := csrFrom(t, withRawSubject(t, pkix.RDNSequence{
 		rdn(testOIDCommonName, "app.tenant.example.com"),
@@ -638,12 +638,12 @@ func TestEvaluate_VC53794_NonStringNamedOIDDenied(t *testing.T) {
 		"denial message should explain why the value was rejected")
 }
 
-// TestEvaluate_VC53794_MultiStringOrganizationStillWorks — regression guard
+// TestEvaluate_SubjectMultiStringOrganizationStillWorks — regression guard
 // for the named-OID consistency check: a CSR carrying two string-valued O=
 // ATVs (a legitimate, common pattern) must still be approved when the
 // policy permits both values. The integrity backstop must only fire on
 // genuinely non-string values.
-func TestEvaluate_VC53794_MultiStringOrganizationStillWorks(t *testing.T) {
+func TestEvaluate_SubjectMultiStringOrganizationStillWorks(t *testing.T) {
 	csr := csrFrom(t, withRawSubject(t, pkix.RDNSequence{
 		rdn(testOIDCommonName, "app.tenant.example.com"),
 		rdn(oidOrganization, "tenant-a"),
