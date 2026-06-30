@@ -205,6 +205,67 @@ func Test_Validate(t *testing.T) {
 				Errors:  nil,
 			},
 		},
+		"if policy contains invalid allowed.subject.otherAttributes entries, expect an Allowed=false response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+							OtherAttributes: []policyapi.CertificateRequestPolicyAllowedSubjectOtherAttribute{
+								{OID: "1.2.840.113549.1.9.1", Required: new(true)},
+								{OID: "0.9.2342.19200300.100.1.25", Validations: []policyapi.ValidationRule{{Rule: "cel"}}},
+							},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Errors: field.ErrorList{
+					field.Required(field.NewPath("spec.allowed.subject.otherAttributes[0].values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[1].validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
+				},
+			},
+		},
+		"if policy contains valid allowed.subject.otherAttributes entries, expect a Allowed=true response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+							OtherAttributes: []policyapi.CertificateRequestPolicyAllowedSubjectOtherAttribute{
+								{OID: "1.2.840.113549.1.9.1", Required: new(true), Values: &[]string{"*@example.com"}, Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+							},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: true,
+				Errors:  nil,
+			},
+		},
+		"if allowed.subject.otherAttributes has a named or malformed OID, expect an Allowed=false response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+							OtherAttributes: []policyapi.CertificateRequestPolicyAllowedSubjectOtherAttribute{
+								{OID: "2.5.4.3", Values: &[]string{"*"}},    // commonName — a named OID
+								{OID: "1.2.3.04", Values: &[]string{"*"}},   // non-canonical
+								{OID: "not-an-oid", Values: &[]string{"*"}}, // malformed
+							},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Errors: field.ErrorList{
+					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[0].oid"), "2.5.4.3", "this OID is covered by a dedicated allowed.commonName / allowed.subject.* field; configure it there instead of otherAttributes"),
+					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[1].oid"), "1.2.3.04", "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.2.840.113549.1.9.1\")"),
+					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[2].oid"), "not-an-oid", "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.2.840.113549.1.9.1\")"),
+				},
+			},
+		},
 	}
 
 	for name, test := range tests {

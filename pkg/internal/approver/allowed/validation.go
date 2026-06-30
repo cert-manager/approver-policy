@@ -19,11 +19,25 @@ package allowed
 import (
 	"context"
 
+	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
 )
+
+// validateOID returns a field error (or nil) for a policy-supplied dotted OID
+// string. It must be a valid, canonical ASN.1 OID — evaluation matches it by
+// exact string against the request's parsed OID (always canonical), so a
+// malformed or non-canonical form would silently never match. Canonical means
+// asn1.ObjectIdentifier round-trips to the same string.
+func validateOID(path *field.Path, oid string) *field.Error {
+	parsed, err := utilpki.ParseObjectIdentifier(oid)
+	if err != nil || parsed.String() != oid {
+		return field.Invalid(path, oid, "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.2.840.113549.1.9.1\")")
+	}
+	return nil
+}
 
 // Validate validates that the processed CertificateRequestPolicy has valid
 // allowed fields defined and there are no parsing errors in the values.
@@ -100,6 +114,42 @@ func (a allowed) Validate(_ context.Context, policy *policyapi.CertificateReques
 			for i, validation := range stringI.string.Validations {
 				if _, err := a.validators.Get(validation.Rule); err != nil {
 					el = append(el, field.Invalid(stringI.path.Child("validations").Index(i), validation.Rule, err.Error()))
+				}
+			}
+		}
+	}
+
+	// allowed.subject.otherAttributes mirrors the values/required/validations
+	// semantics of the named slice fields, so apply the same admission checks:
+	// a 'required' entry must declare values or validations, and every CEL rule
+	// must compile. Without this, an invalid CEL rule would be admitted and only
+	// surface as a confusing runtime error at request-evaluation time.
+	if allowed.Subject != nil {
+		otherAttrsPath := fldPath.Child("subject").Child("otherAttributes")
+		for i := range allowed.Subject.OtherAttributes {
+			entry := allowed.Subject.OtherAttributes[i]
+			path := otherAttrsPath.Index(i)
+			// The OID must be valid/canonical, and must not duplicate a named
+			// Subject field: the evaluator routes named OIDs to the dedicated
+			// allowed.subject.* / allowed.commonName fields and never marks
+			// them present here, so a named OID in otherAttributes is a dead
+			// entry (with values) or an impossible-to-satisfy policy (with
+			// required). Reject it at admission so the author uses the right
+			// field.
+			if e := validateOID(path.Child("oid"), entry.OID); e != nil {
+				el = append(el, e)
+			} else if parsed, _ := utilpki.ParseObjectIdentifier(entry.OID); isNamedSubjectOID(parsed) {
+				el = append(el, field.Invalid(path.Child("oid"), entry.OID,
+					"this OID is covered by a dedicated allowed.commonName / allowed.subject.* field; configure it there instead of otherAttributes"))
+			}
+			if entry.Required != nil && *entry.Required {
+				if entry.Values == nil && len(entry.Validations) == 0 {
+					el = append(el, field.Required(path.Child("values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"))
+				}
+			}
+			for j, validation := range entry.Validations {
+				if _, err := a.validators.Get(validation.Rule); err != nil {
+					el = append(el, field.Invalid(path.Child("validations").Index(j), validation.Rule, err.Error()))
 				}
 			}
 		}

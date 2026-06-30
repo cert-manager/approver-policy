@@ -20,7 +20,9 @@ import (
 	"context"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -33,6 +35,32 @@ import (
 	"github.com/cert-manager/approver-policy/pkg/approver"
 	"github.com/cert-manager/approver-policy/pkg/internal/util"
 )
+
+// Subject RDN attribute OIDs that are covered by a dedicated allowed.commonName
+// or allowed.subject.* field. Any RDN attribute OID outside this set requires
+// an explicit entry in allowed.subject.otherAttributes.
+var (
+	oidCommonName         = asn1.ObjectIdentifier{2, 5, 4, 3}
+	oidSerialNumber       = asn1.ObjectIdentifier{2, 5, 4, 5}
+	oidCountry            = asn1.ObjectIdentifier{2, 5, 4, 6}
+	oidLocality           = asn1.ObjectIdentifier{2, 5, 4, 7}
+	oidProvince           = asn1.ObjectIdentifier{2, 5, 4, 8}
+	oidStreetAddress      = asn1.ObjectIdentifier{2, 5, 4, 9}
+	oidOrganization       = asn1.ObjectIdentifier{2, 5, 4, 10}
+	oidOrganizationalUnit = asn1.ObjectIdentifier{2, 5, 4, 11}
+	oidPostalCode         = asn1.ObjectIdentifier{2, 5, 4, 17}
+)
+
+// namedSubjectOIDs is the set of Subject RDN OIDs that correspond to a named
+// allowed.commonName / allowed.subject.* field.
+var namedSubjectOIDs = []asn1.ObjectIdentifier{
+	oidCommonName, oidSerialNumber, oidCountry, oidLocality, oidProvince,
+	oidStreetAddress, oidOrganization, oidOrganizationalUnit, oidPostalCode,
+}
+
+func isNamedSubjectOID(oid asn1.ObjectIdentifier) bool {
+	return slices.ContainsFunc(namedSubjectOIDs, oid.Equal)
+}
 
 // Evaluate evaluates whether the given CertificateRequest conforms to the
 // allowed attributes defined in the policy. The request _must_ conform to
@@ -59,12 +87,26 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		return approver.EvaluationResponse{}, err
 	}
 
+	// Decode the raw Subject DER directly so duplicate CN/SerialNumber RDNs
+	// and unmapped attribute OIDs (e.g. emailAddress, DC, UID) — which the
+	// lossy pkix.Name projection drops or silently overwrites — are visible
+	// to policy. cert-manager copies csr.RawSubject verbatim into the issued
+	// certificate, so the approver and signer must see the same bytes.
+	var subjectRDNs pkix.RDNSequence
+	if len(csr.RawSubject) > 0 {
+		subjectRDNs, err = utilpki.UnmarshalRawDerBytesToRDNSequence(csr.RawSubject)
+		if err != nil {
+			return approver.EvaluationResponse{}, fmt.Errorf("decode csr.RawSubject: %w", err)
+		}
+	}
+
 	evaluate := evaluator{
-		a:       a,
-		request: request,
-		csr:     csr,
-		allowed: allowed,
-		fldPath: fldPath,
+		a:           a,
+		request:     request,
+		csr:         csr,
+		subjectRDNs: subjectRDNs,
+		allowed:     allowed,
+		fldPath:     fldPath,
 	}
 	evaluateSubject := evaluate.Subject()
 
@@ -84,6 +126,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		evaluateSubject.StreetAddress,
 		evaluateSubject.PostalCode,
 		evaluateSubject.SerialNumber,
+		evaluateSubject.OtherAttributes,
 	}
 	for _, fn := range evaluateFns {
 		if e := fn(); e != nil {
@@ -104,12 +147,56 @@ type evaluator struct {
 	a       allowed
 	request *cmapi.CertificateRequest
 	csr     *x509.CertificateRequest
-	allowed *policyapi.CertificateRequestPolicyAllowed
-	fldPath *field.Path
+	// subjectRDNs is the full RDNSequence decoded directly from
+	// csr.RawSubject — preserves duplicate CN/SerialNumber RDNs and
+	// unmapped attribute OIDs that the lossy pkix.Name projection drops.
+	subjectRDNs pkix.RDNSequence
+	allowed     *policyapi.CertificateRequestPolicyAllowed
+	fldPath     *field.Path
 }
 
+// subjectValuesForOID returns the string values for every Subject RDN
+// attribute with the given OID across the full RDNSequence (duplicates
+// preserved, unlike the lossy pkix.Name projection). Values whose ASN.1 type
+// does not decode to a Go string (genuinely non-string types, and the rarely
+// used UniversalString/GeneralString encodings) are skipped here — they are
+// denied with an actionable message by the OtherAttributes backstop, so they
+// can never reach this slice unvalidated.
+func subjectValuesForOID(rdns pkix.RDNSequence, oid asn1.ObjectIdentifier) []string {
+	var values []string
+	for _, rdn := range rdns {
+		for _, atv := range rdn {
+			if !atv.Type.Equal(oid) {
+				continue
+			}
+			if s, ok := atv.Value.(string); ok {
+				values = append(values, s)
+			}
+		}
+	}
+	return values
+}
+
+// CommonName evaluates every CN RDN value present in csr.RawSubject against
+// allowed.commonName. Multiple CN RDNs (a duplicate-CN smuggling attempt)
+// trigger a separate error per value so the operator sees the full set.
+// A non-string-encoded CN is denied by the OtherAttributes backstop.
 func (e evaluator) CommonName() field.ErrorList {
-	return e.a.evaluateString(e.request, e.csr.Subject.CommonName, e.allowed.CommonName, e.fldPath.Child("commonName"))
+	values := subjectValuesForOID(e.subjectRDNs, oidCommonName)
+	fldPath := e.fldPath.Child("commonName")
+	switch len(values) {
+	case 0:
+		// Preserve the existing "required" semantics for the empty case.
+		return e.a.evaluateString(e.request, "", e.allowed.CommonName, fldPath)
+	case 1:
+		return e.a.evaluateString(e.request, values[0], e.allowed.CommonName, fldPath)
+	default:
+		var el field.ErrorList
+		for _, v := range values {
+			el = append(el, e.a.evaluateString(e.request, v, e.allowed.CommonName, fldPath)...)
+		}
+		return el
+	}
 }
 
 func (e evaluator) DNSNames() field.ErrorList {
@@ -168,20 +255,22 @@ func (e evaluator) Subject() subjectEvaluator {
 		allowed = new(policyapi.CertificateRequestPolicyAllowedX509Subject)
 	}
 	return subjectEvaluator{
-		a:       e.a,
-		request: e.request,
-		sub:     e.csr.Subject,
-		allowed: allowed,
-		fldPath: e.fldPath.Child("subject"),
+		a:           e.a,
+		request:     e.request,
+		sub:         e.csr.Subject,
+		subjectRDNs: e.subjectRDNs,
+		allowed:     allowed,
+		fldPath:     e.fldPath.Child("subject"),
 	}
 }
 
 type subjectEvaluator struct {
-	a       allowed
-	request *cmapi.CertificateRequest
-	sub     pkix.Name
-	allowed *policyapi.CertificateRequestPolicyAllowedX509Subject
-	fldPath *field.Path
+	a           allowed
+	request     *cmapi.CertificateRequest
+	sub         pkix.Name
+	subjectRDNs pkix.RDNSequence
+	allowed     *policyapi.CertificateRequestPolicyAllowedX509Subject
+	fldPath     *field.Path
 }
 
 func (e subjectEvaluator) Organization() field.ErrorList {
@@ -212,8 +301,113 @@ func (e subjectEvaluator) PostalCode() field.ErrorList {
 	return e.a.evaluateSlice(e.request, e.sub.PostalCode, e.allowed.PostalCodes, e.fldPath.Child("postalCodes"))
 }
 
+// SerialNumber evaluates every Subject SerialNumber RDN value present in
+// csr.RawSubject. As with CommonName the lossy pkix.Name projection keeps
+// only the last value; a duplicate-SN smuggling attempt is policed here.
 func (e subjectEvaluator) SerialNumber() field.ErrorList {
-	return e.a.evaluateString(e.request, e.sub.SerialNumber, e.allowed.SerialNumber, e.fldPath.Child("serialNumber"))
+	values := subjectValuesForOID(e.subjectRDNs, oidSerialNumber)
+	fldPath := e.fldPath.Child("serialNumber")
+	switch len(values) {
+	case 0:
+		return e.a.evaluateString(e.request, "", e.allowed.SerialNumber, fldPath)
+	case 1:
+		return e.a.evaluateString(e.request, values[0], e.allowed.SerialNumber, fldPath)
+	default:
+		var el field.ErrorList
+		for _, v := range values {
+			el = append(el, e.a.evaluateString(e.request, v, e.allowed.SerialNumber, fldPath)...)
+		}
+		return el
+	}
+}
+
+// OtherAttributes evaluates every Subject RDN attribute whose OID is not
+// covered by one of the named allowed.commonName / allowed.subject.* fields.
+// Such attributes are denied unless an entry with the matching OID is listed
+// in allowed.subject.otherAttributes; an entry's Values/Validations then
+// constrain the attribute values as for the named slice fields.
+func (e subjectEvaluator) OtherAttributes() field.ErrorList {
+	fldPath := e.fldPath.Child("otherAttributes")
+
+	// Collect every unmapped-OID attribute, grouped by OID, preserving
+	// the order in which OIDs first appeared in the RDN sequence so
+	// error messages are stable.
+	byOID := make(map[string][]string)
+	var oidOrder []string
+	presentByOID := make(map[string]bool)
+
+	var el field.ErrorList
+
+	for _, rdn := range e.subjectRDNs {
+		for _, atv := range rdn {
+			s, isString := atv.Value.(string)
+
+			// Any Subject attribute value that does not decode to a Go
+			// string cannot be matched against policy and would still be
+			// signed verbatim via csr.RawSubject. This covers genuinely
+			// non-string ASN.1 types (OctetString, INTEGER, …) and the
+			// rarely-used UniversalString/GeneralString encodings, which
+			// Go's ASN.1 decoder leaves as a nil interface. The common
+			// string encodings (UTF8String/PrintableString/IA5String/
+			// TeletexString/BMPString) decode to a Go string and are
+			// handled by the named / otherAttributes evaluators. Fail
+			// closed here with actionable guidance so the gate and the
+			// signer agree on what is being issued.
+			if !isString {
+				el = append(el, field.Invalid(
+					fldPath.Key(atv.Type.String()),
+					"<non-string value>",
+					"Subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
+				continue
+			}
+
+			if isNamedSubjectOID(atv.Type) {
+				// Evaluated by the dedicated allowed.commonName /
+				// allowed.subject.* fields.
+				continue
+			}
+			key := atv.Type.String()
+			if _, seen := presentByOID[key]; !seen {
+				presentByOID[key] = true
+				oidOrder = append(oidOrder, key)
+			}
+			byOID[key] = append(byOID[key], s)
+		}
+	}
+
+	allowedByOID := make(map[string]*policyapi.CertificateRequestPolicyAllowedSubjectOtherAttribute)
+	for i := range e.allowed.OtherAttributes {
+		entry := &e.allowed.OtherAttributes[i]
+		allowedByOID[entry.OID] = entry
+	}
+
+	for _, key := range oidOrder {
+		values := byOID[key]
+		entry, ok := allowedByOID[key]
+		entryFld := fldPath.Key(key)
+		if !ok {
+			el = append(el, field.Invalid(entryFld, values, "no allowed values"))
+			continue
+		}
+		slice := &policyapi.CertificateRequestPolicyAllowedStringSlice{
+			Values:      entry.Values,
+			Required:    entry.Required,
+			Validations: entry.Validations,
+		}
+		el = append(el, e.a.evaluateSlice(e.request, values, slice, entryFld)...)
+	}
+
+	for _, entry := range e.allowed.OtherAttributes {
+		if entry.Required == nil || !*entry.Required {
+			continue
+		}
+		if presentByOID[entry.OID] {
+			continue
+		}
+		el = append(el, field.Required(fldPath.Key(entry.OID).Child("required"), strconv.FormatBool(true)))
+	}
+
+	return el
 }
 
 func (a allowed) evaluateString(request *cmapi.CertificateRequest, s string, crp *policyapi.CertificateRequestPolicyAllowedString, fldPath *field.Path) field.ErrorList {
