@@ -128,10 +128,10 @@ func registeredIDGN(t *testing.T, oid asn1.ObjectIdentifier) asn1.RawValue {
 	return asn1.RawValue{Class: asn1.ClassContextSpecific, Tag: 8, Bytes: oidDER[2:]}
 }
 
-// TestEvaluate_VC53795_OtherNameDeniedByDefault — a SAN containing an
+// TestEvaluate_SANOtherNameDeniedByDefault — a SAN containing an
 // otherName UPN entry must be denied when no allowed.otherNames entry
 // covers that OID, even if the DNS portion of the SAN is permitted.
-func TestEvaluate_VC53795_OtherNameDeniedByDefault(t *testing.T) {
+func TestEvaluate_SANOtherNameDeniedByDefault(t *testing.T) {
 	csr := csrFrom(t, withRawSAN(t,
 		dnsGN("allowed.example.com"),
 		otherNameGN(t, testOIDUPN, "administrator@victim.corp"),
@@ -155,11 +155,11 @@ func TestEvaluate_VC53795_OtherNameDeniedByDefault(t *testing.T) {
 		"denial message should include the decoded UPN value: %s", resp.Message)
 }
 
-// TestEvaluate_VC53795_OtherNameAllowedByOtherNames — operators that
+// TestEvaluate_SANOtherNameAllowedByPolicy — operators that
 // genuinely need UPN otherNames (smart-card / EAP-TLS / AD-integrated
 // workloads) can opt in via allowed.otherNames. With a matching Values
 // entry, the request is approved.
-func TestEvaluate_VC53795_OtherNameAllowedByOtherNames(t *testing.T) {
+func TestEvaluate_SANOtherNameAllowedByPolicy(t *testing.T) {
 	csr := csrFrom(t, withRawSAN(t,
 		dnsGN("allowed.example.com"),
 		otherNameGN(t, testOIDUPN, "user@tenant.example.com"),
@@ -186,9 +186,9 @@ func TestEvaluate_VC53795_OtherNameAllowedByOtherNames(t *testing.T) {
 		"otherName UPN matching otherNames wildcard must be approved; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
-// TestEvaluate_VC53795_OtherNameValueMismatch — opted-in otherName OIDs
+// TestEvaluate_SANOtherNameValueMismatch — opted-in otherName OIDs
 // still get their values policed: a value outside Values must be denied.
-func TestEvaluate_VC53795_OtherNameValueMismatch(t *testing.T) {
+func TestEvaluate_SANOtherNameValueMismatch(t *testing.T) {
 	csr := csrFrom(t, withRawSAN(t,
 		dnsGN("allowed.example.com"),
 		otherNameGN(t, testOIDUPN, "administrator@victim.corp"),
@@ -215,9 +215,9 @@ func TestEvaluate_VC53795_OtherNameValueMismatch(t *testing.T) {
 		"otherName UPN with mismatching value must be denied; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
-// TestEvaluate_VC53795_OtherNamesRequired — an otherNames entry with
+// TestEvaluate_SANOtherNameRequired — an otherNames entry with
 // required=true forces the OID to be present on the request.
-func TestEvaluate_VC53795_OtherNamesRequired(t *testing.T) {
+func TestEvaluate_SANOtherNameRequired(t *testing.T) {
 	// SAN does NOT carry UPN, despite the policy requiring it.
 	csr := csrFrom(t, withRawSAN(t, dnsGN("allowed.example.com")))
 	policy := &policyapi.CertificateRequestPolicy{
@@ -243,12 +243,12 @@ func TestEvaluate_VC53795_OtherNamesRequired(t *testing.T) {
 		"missing required otherName must be denied; got Result=%v Message=%q", resp.Result, resp.Message)
 }
 
-// TestEvaluate_VC53795_ForbiddenSANTagsAlwaysDenied — SAN GeneralName
+// TestEvaluate_SANForbiddenTypesAlwaysDenied — SAN GeneralName
 // types other than rfc822Name/dNSName/uniformResourceIdentifier/iPAddress/
 // otherName (i.e. x400Address tag 3, directoryName tag 4, ediPartyName
 // tag 5, registeredID tag 8) are always denied. There is no opt-in
 // mechanism for these.
-func TestEvaluate_VC53795_ForbiddenSANTagsAlwaysDenied(t *testing.T) {
+func TestEvaluate_SANForbiddenTypesAlwaysDenied(t *testing.T) {
 	// A short DER blob that's valid enough to live inside a context-
 	// specific constructed wrapper; the inner content is never inspected.
 	dummyInner, err := asn1.Marshal("dummy")
@@ -285,10 +285,10 @@ func TestEvaluate_VC53795_ForbiddenSANTagsAlwaysDenied(t *testing.T) {
 	}
 }
 
-// TestEvaluate_VC53795_SANUnaffectedByExistingFlow — a SAN containing only
+// TestEvaluate_SANDNSOnlyUnaffected — a SAN containing only
 // allowed dNSName entries continues to be approved; the new SAN walker
 // must not regress the existing DNS-only path.
-func TestEvaluate_VC53795_SANUnaffectedByExistingFlow(t *testing.T) {
+func TestEvaluate_SANDNSOnlyUnaffected(t *testing.T) {
 	// Two distinct DNS entries — exercises the regression-guard path
 	// (multi-DNS SAN with a wildcard policy still approves) and confirms
 	// the new SAN walker doesn't trip on legitimate stacked dNSName tags.
