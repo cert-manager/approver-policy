@@ -205,6 +205,59 @@ func Test_Validate(t *testing.T) {
 				Errors:  nil,
 			},
 		},
+		"if policy contains invalid allowed.otherNames entries, expect an Allowed=false response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						OtherNames: []policyapi.CertificateRequestPolicyAllowedOtherName{
+							{OID: "1.3.6.1.4.1.311.20.2.3", Required: new(true)},
+							{OID: "1.2.840.113549.1.9.1", Validations: []policyapi.ValidationRule{{Rule: "cel"}}},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Errors: field.ErrorList{
+					field.Required(field.NewPath("spec.allowed.otherNames[0].values"), "at least one of 'values' or 'validations' must be defined if field is 'required'"),
+					field.Invalid(field.NewPath("spec.allowed.otherNames[1].validations[0]"), "cel", "ERROR: <input>:1:1: undeclared reference to 'cel' (in container '')\n | cel\n | ^"),
+				},
+			},
+		},
+		"if policy contains valid allowed.otherNames entries, expect a Allowed=true response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						OtherNames: []policyapi.CertificateRequestPolicyAllowedOtherName{
+							{OID: "1.3.6.1.4.1.311.20.2.3", Required: new(true), Values: &[]string{"*@example.com"}, Validations: []policyapi.ValidationRule{{Rule: "self.size() > 2"}}},
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: true,
+				Errors:  nil,
+			},
+		},
+		"if allowed.otherNames has a malformed or non-canonical OID, expect an Allowed=false response": {
+			policy: &policyapi.CertificateRequestPolicy{
+				Spec: policyapi.CertificateRequestPolicySpec{
+					Allowed: &policyapi.CertificateRequestPolicyAllowed{
+						OtherNames: []policyapi.CertificateRequestPolicyAllowedOtherName{
+							{OID: "1.3.6.1.4.1.311.20.02.3", Values: &[]string{"*"}}, // non-canonical (leading zero)
+							{OID: "not-an-oid", Values: &[]string{"*"}},              // malformed
+						},
+					},
+				},
+			},
+			expResponse: approver.WebhookValidationResponse{
+				Allowed: false,
+				Errors: field.ErrorList{
+					field.Invalid(field.NewPath("spec.allowed.otherNames[0].oid"), "1.3.6.1.4.1.311.20.02.3", "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.3.6.1.4.1.311.20.2.3\")"),
+					field.Invalid(field.NewPath("spec.allowed.otherNames[1].oid"), "not-an-oid", "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.3.6.1.4.1.311.20.2.3\")"),
+				},
+			},
+		},
 	}
 
 	for name, test := range tests {
