@@ -20,6 +20,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/pem"
 	"slices"
 	"strings"
 	"testing"
@@ -310,4 +311,52 @@ func TestEvaluate_SANDNSOnlyUnaffected(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, approver.ResultNotDenied, resp.Result,
 		"multi-DNS SAN matching the policy must remain approved; got Result=%v Message=%q", resp.Result, resp.Message)
+}
+
+// TestCryptoX509_DropsNonStandardSANTags is a canary test that asserts
+// crypto/x509 silently drops GeneralName tags outside {1,2,6,7}
+// (rfc822Name, dNSName, uniformResourceIdentifier, iPAddress) from its
+// parsed slices. If a future Go version starts surfacing these tags, this
+// test will fail — alerting us that the threat model for the raw SAN
+// evaluator may need revisiting.
+func TestCryptoX509_DropsNonStandardSANTags(t *testing.T) {
+	dummyInner, err := asn1.Marshal("dummy")
+	if err != nil {
+		t.Fatalf("marshal dummy: %v", err)
+	}
+
+	csrPEM := csrFrom(t, withRawSAN(t,
+		dnsGN("canary.example.com"),
+		otherNameGN(t, testOIDUPN, "user@example.com"),
+		constructedGN(3, dummyInner), // x400Address
+		constructedGN(4, dummyInner), // directoryName
+		constructedGN(5, dummyInner), // ediPartyName
+		registeredIDGN(t, asn1.ObjectIdentifier{1, 2, 3, 4, 5}),
+	))
+
+	block, _ := pem.Decode(csrPEM)
+	if block == nil {
+		t.Fatal("failed to PEM-decode CSR")
+	}
+	csr, err := x509.ParseCertificateRequest(block.Bytes)
+	if err != nil {
+		t.Fatalf("parse CSR: %v", err)
+	}
+
+	assert.Equal(t, []string{"canary.example.com"}, csr.DNSNames,
+		"crypto/x509 should parse dNSName (tag 2)")
+	assert.Empty(t, csr.IPAddresses,
+		"no iPAddress entries were added")
+	assert.Empty(t, csr.URIs,
+		"no URI entries were added")
+	assert.Empty(t, csr.EmailAddresses,
+		"no rfc822Name entries were added")
+
+	// The key assertion: the otherName, x400Address, directoryName,
+	// ediPartyName and registeredID entries we injected must NOT appear
+	// anywhere in the parsed slices. If this fails after a Go upgrade,
+	// the raw SAN evaluator's threat model should be re-evaluated.
+	allParsed := len(csr.DNSNames) + len(csr.IPAddresses) + len(csr.URIs) + len(csr.EmailAddresses)
+	assert.Equal(t, 1, allParsed,
+		"crypto/x509 should only surface the single dNSName; tags {0,3,4,5,8} must be dropped — got %d parsed entries total", allParsed)
 }

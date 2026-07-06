@@ -72,9 +72,17 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 	// into the issued certificate verbatim — so those entries must be made
 	// visible to policy here.
 	var sans utilpki.GeneralNames
+	var sanExtCount int
 	for _, ext := range csr.Extensions {
 		if !ext.Id.Equal(oidSubjectAltName) {
 			continue
+		}
+		sanExtCount++
+		if sanExtCount > 1 {
+			return approver.EvaluationResponse{
+				Result:  approver.ResultDenied,
+				Message: "CSR contains multiple SAN extensions; at most one is permitted",
+			}, nil
 		}
 		parsed, err := utilpki.UnmarshalSANs(ext.Value)
 		if err != nil {
@@ -86,9 +94,6 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 			}, nil
 		}
 		sans = parsed
-		// crypto/x509 rejects CSRs carrying duplicate extensions, so the
-		// first SAN extension is guaranteed to be the only one.
-		break
 	}
 
 	evaluate := evaluator{
@@ -207,21 +212,23 @@ func (e evaluator) Usages() field.ErrorList {
 // allowed.otherNames; directoryName, x400Address, ediPartyName and
 // registeredID entries are always denied — there is no opt-in for these.
 func (e evaluator) OtherNames() field.ErrorList {
-	fldPath := e.fldPath.Child("otherNames")
 	var el field.ErrorList
 
 	// SAN GeneralName types with no opt-in mechanism — always denied.
+	// These are reported under subjectAltName rather than otherNames because
+	// they have nothing to do with the allowed.otherNames policy field.
+	sanPath := e.fldPath.Child("subjectAltName")
 	for range e.sans.DirectoryNames {
-		el = append(el, field.Invalid(fldPath, "directoryName", "directoryName SAN entries are not permitted"))
+		el = append(el, field.Invalid(sanPath.Child("directoryName"), "directoryName", "directoryName SAN entries are not permitted"))
 	}
 	for range e.sans.X400Addresses {
-		el = append(el, field.Invalid(fldPath, "x400Address", "x400Address SAN entries are not permitted"))
+		el = append(el, field.Invalid(sanPath.Child("x400Address"), "x400Address", "x400Address SAN entries are not permitted"))
 	}
 	for range e.sans.EDIPartyNames {
-		el = append(el, field.Invalid(fldPath, "ediPartyName", "ediPartyName SAN entries are not permitted"))
+		el = append(el, field.Invalid(sanPath.Child("ediPartyName"), "ediPartyName", "ediPartyName SAN entries are not permitted"))
 	}
 	for range e.sans.RegisteredIDs {
-		el = append(el, field.Invalid(fldPath, "registeredID", "registeredID SAN entries are not permitted"))
+		el = append(el, field.Invalid(sanPath.Child("registeredID"), "registeredID", "registeredID SAN entries are not permitted"))
 	}
 
 	// Collect otherName values grouped by OID, preserving first-seen order so
@@ -246,10 +253,11 @@ func (e evaluator) OtherNames() field.ErrorList {
 
 	// Per-OID evaluation of values present in the request against the
 	// matching allow-list entry (or "no allowed value" if absent).
+	otherNamesPath := e.fldPath.Child("otherNames")
 	for _, key := range oidOrder {
 		values := byOID[key]
 		entry, ok := allowedByOID[key]
-		entryFld := fldPath.Key(key)
+		entryFld := otherNamesPath.Key(key)
 		if !ok {
 			el = append(el, field.Invalid(entryFld, values, "no allowed values"))
 			continue
@@ -270,7 +278,7 @@ func (e evaluator) OtherNames() field.ErrorList {
 		if _, ok := byOID[entry.OID]; ok {
 			continue
 		}
-		el = append(el, field.Required(fldPath.Key(entry.OID).Child("required"), strconv.FormatBool(true)))
+		el = append(el, field.Required(otherNamesPath.Key(entry.OID).Child("required"), strconv.FormatBool(true)))
 	}
 
 	return el
