@@ -632,9 +632,9 @@ func TestEvaluate_SubjectNonStringNamedOIDDenied(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, approver.ResultDenied, resp.Result,
 		"non-string named-OID value must be denied; got Result=%v Message=%q", resp.Result, resp.Message)
-	assert.Contains(t, resp.Message, oidOrganization.String(),
-		"denial message should call out the offending named OID")
-	assert.Contains(t, resp.Message, "non-string",
+	assert.Contains(t, resp.Message, "organizations",
+		"denial message should reference the named subject field")
+	assert.Contains(t, resp.Message, "unsupported ASN.1 type",
 		"denial message should explain why the value was rejected")
 }
 

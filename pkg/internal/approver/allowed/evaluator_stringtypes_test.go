@@ -166,8 +166,8 @@ func TestEvaluate_NamedSlice_UnsupportedEncodingDenied(t *testing.T) {
 	}, policy)
 	assert.Equal(t, approver.ResultDenied, resp.Result,
 		"UniversalString O must be denied fail-closed; got %v %q", resp.Result, resp.Message)
-	assert.Contains(t, resp.Message, oidOrganization.String(),
-		"denial must name the offending OID: %s", resp.Message)
+	assert.Contains(t, resp.Message, "organizations",
+		"denial must reference the named subject field: %s", resp.Message)
 }
 
 // TestEvaluate_NamedOID_TrulyNonStringStillDenied — genuinely non-string ASN.1

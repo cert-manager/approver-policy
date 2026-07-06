@@ -305,6 +305,7 @@ func Test_Validate(t *testing.T) {
 								{OID: "2.5.4.3", Values: &[]string{"*"}},    // commonName — a named OID
 								{OID: "1.2.3.04", Values: &[]string{"*"}},   // non-canonical
 								{OID: "not-an-oid", Values: &[]string{"*"}}, // malformed
+								{OID: "1.2.3.-4", Values: &[]string{"*"}},   // negative arc
 							},
 						},
 					},
@@ -316,6 +317,7 @@ func Test_Validate(t *testing.T) {
 					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[0].oid"), "2.5.4.3", "this OID is covered by a dedicated allowed.commonName / allowed.subject.* field; configure it there instead of otherAttributes"),
 					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[1].oid"), "1.2.3.04", "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.3.6.1.4.1.311.20.2.3\")"),
 					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[2].oid"), "not-an-oid", "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.3.6.1.4.1.311.20.2.3\")"),
+					field.Invalid(field.NewPath("spec.allowed.subject.otherAttributes[3].oid"), "1.2.3.-4", "OID arcs must be non-negative"),
 				},
 			},
 		},

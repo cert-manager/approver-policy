@@ -66,6 +66,34 @@ func isNamedSubjectOID(oid asn1.ObjectIdentifier) bool {
 	return slices.ContainsFunc(namedSubjectOIDs, oid.Equal)
 }
 
+// namedSubjectFieldPath returns the field.Path for a named Subject OID
+// relative to the given subject base path (spec.allowed.subject). For CN
+// the path is one level up (spec.allowed.commonName).
+func namedSubjectFieldPath(subjectPath *field.Path, oid asn1.ObjectIdentifier) *field.Path {
+	switch {
+	case oid.Equal(oidCommonName):
+		return field.NewPath("spec", "allowed", "commonName")
+	case oid.Equal(oidSerialNumber):
+		return subjectPath.Child("serialNumber")
+	case oid.Equal(oidCountry):
+		return subjectPath.Child("countries")
+	case oid.Equal(oidLocality):
+		return subjectPath.Child("localities")
+	case oid.Equal(oidProvince):
+		return subjectPath.Child("provinces")
+	case oid.Equal(oidStreetAddress):
+		return subjectPath.Child("streetAddresses")
+	case oid.Equal(oidOrganization):
+		return subjectPath.Child("organizations")
+	case oid.Equal(oidOrganizationalUnit):
+		return subjectPath.Child("organizationalUnits")
+	case oid.Equal(oidPostalCode):
+		return subjectPath.Child("postalCodes")
+	default:
+		return subjectPath.Child("otherAttributes").Key(oid.String())
+	}
+}
+
 // Evaluate evaluates whether the given CertificateRequest conforms to the
 // allowed attributes defined in the policy. The request _must_ conform to
 // _all_ allowed attributes in the policy to be permitted by the passed policy.
@@ -200,43 +228,47 @@ type evaluator struct {
 
 // subjectValuesForOID returns the string values for every Subject RDN
 // attribute with the given OID across the full RDNSequence (duplicates
-// preserved, unlike the lossy pkix.Name projection). Values whose ASN.1 type
-// does not decode to a Go string (genuinely non-string types, and the rarely
-// used UniversalString/GeneralString encodings) are skipped here — they are
-// denied with an actionable message by the OtherAttributes backstop, so they
-// can never reach this slice unvalidated.
-func subjectValuesForOID(rdns pkix.RDNSequence, oid asn1.ObjectIdentifier) []string {
+// preserved, unlike the lossy pkix.Name projection). If any matching ATV
+// has a value that does not decode to a Go string (genuinely non-string
+// ASN.1 types, or the rarely-used UniversalString/GeneralString encodings),
+// it returns an error so callers can deny fail-closed without depending on
+// another evaluator to catch it.
+func subjectValuesForOID(rdns pkix.RDNSequence, oid asn1.ObjectIdentifier) ([]string, error) {
 	var values []string
 	for _, rdn := range rdns {
 		for _, atv := range rdn {
 			if !atv.Type.Equal(oid) {
 				continue
 			}
-			if s, ok := atv.Value.(string); ok {
-				values = append(values, s)
+			s, ok := atv.Value.(string)
+			if !ok {
+				return nil, fmt.Errorf("Subject attribute %s uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject", oid)
 			}
+			values = append(values, s)
 		}
 	}
-	return values
+	return values, nil
 }
 
 // CommonName evaluates every CN RDN value present in csr.RawSubject against
 // allowed.commonName. Multiple CN RDNs (a duplicate-CN smuggling attempt)
 // trigger a separate error per value so the operator sees the full set.
-// A non-string-encoded CN is denied by the OtherAttributes backstop.
+// A non-string-encoded CN is denied directly here (fail-closed).
 func (e evaluator) CommonName() field.ErrorList {
-	values := subjectValuesForOID(e.subjectRDNs, oidCommonName)
+	values, err := subjectValuesForOID(e.subjectRDNs, oidCommonName)
 	fldPath := e.fldPath.Child("commonName")
+	if err != nil {
+		return field.ErrorList{field.Invalid(fldPath, "<non-string value>", err.Error())}
+	}
 	switch len(values) {
 	case 0:
-		// Preserve the existing "required" semantics for the empty case.
 		return e.a.evaluateString(e.request, "", e.allowed.CommonName, fldPath)
 	case 1:
 		return e.a.evaluateString(e.request, values[0], e.allowed.CommonName, fldPath)
 	default:
 		var el field.ErrorList
-		for _, v := range values {
-			el = append(el, e.a.evaluateString(e.request, v, e.allowed.CommonName, fldPath)...)
+		for i, v := range values {
+			el = append(el, e.a.evaluateString(e.request, v, e.allowed.CommonName, fldPath.Index(i))...)
 		}
 		return el
 	}
@@ -425,9 +457,13 @@ func (e subjectEvaluator) PostalCode() field.ErrorList {
 // SerialNumber evaluates every Subject SerialNumber RDN value present in
 // csr.RawSubject. As with CommonName the lossy pkix.Name projection keeps
 // only the last value; a duplicate-SN smuggling attempt is policed here.
+// A non-string-encoded SerialNumber is denied directly here (fail-closed).
 func (e subjectEvaluator) SerialNumber() field.ErrorList {
-	values := subjectValuesForOID(e.subjectRDNs, oidSerialNumber)
+	values, err := subjectValuesForOID(e.subjectRDNs, oidSerialNumber)
 	fldPath := e.fldPath.Child("serialNumber")
+	if err != nil {
+		return field.ErrorList{field.Invalid(fldPath, "<non-string value>", err.Error())}
+	}
 	switch len(values) {
 	case 0:
 		return e.a.evaluateString(e.request, "", e.allowed.SerialNumber, fldPath)
@@ -435,8 +471,8 @@ func (e subjectEvaluator) SerialNumber() field.ErrorList {
 		return e.a.evaluateString(e.request, values[0], e.allowed.SerialNumber, fldPath)
 	default:
 		var el field.ErrorList
-		for _, v := range values {
-			el = append(el, e.a.evaluateString(e.request, v, e.allowed.SerialNumber, fldPath)...)
+		for i, v := range values {
+			el = append(el, e.a.evaluateString(e.request, v, e.allowed.SerialNumber, fldPath.Index(i))...)
 		}
 		return el
 	}
@@ -461,19 +497,25 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 
 	for _, rdn := range e.subjectRDNs {
 		for _, atv := range rdn {
-			s, isString := atv.Value.(string)
+			if isNamedSubjectOID(atv.Type) {
+				// Non-string values under named OIDs (CN, SerialNumber)
+				// are denied by their own evaluators via
+				// subjectValuesForOID; the remaining named-slice OIDs
+				// (O, OU, L, …) read from pkix.Name which silently
+				// drops non-strings — but the signer still emits them
+				// via RawSubject. Deny here with a field path pointing
+				// to the named field so the operator knows where to look.
+				if _, ok := atv.Value.(string); !ok {
+					namedPath := namedSubjectFieldPath(e.fldPath, atv.Type)
+					el = append(el, field.Invalid(
+						namedPath,
+						"<non-string value>",
+						"Subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
+				}
+				continue
+			}
 
-			// Any Subject attribute value that does not decode to a Go
-			// string cannot be matched against policy and would still be
-			// signed verbatim via csr.RawSubject. This covers genuinely
-			// non-string ASN.1 types (OctetString, INTEGER, …) and the
-			// rarely-used UniversalString/GeneralString encodings, which
-			// Go's ASN.1 decoder leaves as a nil interface. The common
-			// string encodings (UTF8String/PrintableString/IA5String/
-			// TeletexString/BMPString) decode to a Go string and are
-			// handled by the named / otherAttributes evaluators. Fail
-			// closed here with actionable guidance so the gate and the
-			// signer agree on what is being issued.
+			s, isString := atv.Value.(string)
 			if !isString {
 				el = append(el, field.Invalid(
 					fldPath.Key(atv.Type.String()),
@@ -482,11 +524,6 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 				continue
 			}
 
-			if isNamedSubjectOID(atv.Type) {
-				// Evaluated by the dedicated allowed.commonName /
-				// allowed.subject.* fields.
-				continue
-			}
 			key := atv.Type.String()
 			if _, seen := presentByOID[key]; !seen {
 				presentByOID[key] = true

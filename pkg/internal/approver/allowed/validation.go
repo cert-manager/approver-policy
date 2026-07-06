@@ -36,6 +36,11 @@ func validateOID(path *field.Path, oid string) *field.Error {
 	if err != nil || parsed.String() != oid {
 		return field.Invalid(path, oid, "must be a valid, canonical dotted ASN.1 object identifier (e.g. \"1.3.6.1.4.1.311.20.2.3\")")
 	}
+	for _, arc := range parsed {
+		if arc < 0 {
+			return field.Invalid(path, oid, "OID arcs must be non-negative")
+		}
+	}
 	return nil
 }
 
