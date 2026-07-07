@@ -242,7 +242,7 @@ func subjectValuesForOID(rdns pkix.RDNSequence, oid asn1.ObjectIdentifier) ([]st
 			}
 			s, ok := atv.Value.(string)
 			if !ok {
-				return nil, fmt.Errorf("Subject attribute %s uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject", oid)
+				return nil, fmt.Errorf("subject attribute %s uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject", oid)
 			}
 			values = append(values, s)
 		}
@@ -491,26 +491,29 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 	// error messages are stable.
 	byOID := make(map[string][]string)
 	var oidOrder []string
-	presentByOID := make(map[string]bool)
 
 	var el field.ErrorList
 
 	for _, rdn := range e.subjectRDNs {
 		for _, atv := range rdn {
 			if isNamedSubjectOID(atv.Type) {
-				// Non-string values under named OIDs (CN, SerialNumber)
-				// are denied by their own evaluators via
-				// subjectValuesForOID; the remaining named-slice OIDs
-				// (O, OU, L, …) read from pkix.Name which silently
-				// drops non-strings — but the signer still emits them
-				// via RawSubject. Deny here with a field path pointing
-				// to the named field so the operator knows where to look.
+				// CN and SerialNumber are already covered by their
+				// dedicated evaluators (which read from subjectRDNs
+				// via subjectValuesForOID and handle non-string values
+				// themselves). Only fire the backstop for the remaining
+				// named-slice OIDs (O, OU, L, …) that read from the
+				// lossy pkix.Name projection which silently drops
+				// non-strings — but the signer still emits them via
+				// RawSubject.
+				if atv.Type.Equal(oidCommonName) || atv.Type.Equal(oidSerialNumber) {
+					continue
+				}
 				if _, ok := atv.Value.(string); !ok {
 					namedPath := namedSubjectFieldPath(e.fldPath, atv.Type)
 					el = append(el, field.Invalid(
 						namedPath,
 						"<non-string value>",
-						"Subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
+						"subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
 				}
 				continue
 			}
@@ -520,13 +523,12 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 				el = append(el, field.Invalid(
 					fldPath.Key(atv.Type.String()),
 					"<non-string value>",
-					"Subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
+					"subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
 				continue
 			}
 
 			key := atv.Type.String()
-			if _, seen := presentByOID[key]; !seen {
-				presentByOID[key] = true
+			if _, seen := byOID[key]; !seen {
 				oidOrder = append(oidOrder, key)
 			}
 			byOID[key] = append(byOID[key], s)
@@ -559,7 +561,7 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 		if entry.Required == nil || !*entry.Required {
 			continue
 		}
-		if presentByOID[entry.OID] {
+		if _, ok := byOID[entry.OID]; ok {
 			continue
 		}
 		el = append(el, field.Required(fldPath.Key(entry.OID).Child("required"), strconv.FormatBool(true)))

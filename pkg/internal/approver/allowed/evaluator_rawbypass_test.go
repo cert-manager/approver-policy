@@ -37,6 +37,7 @@ var (
 	testOIDUPN          = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 20, 2, 3}
 	testOIDSAN          = asn1.ObjectIdentifier{2, 5, 29, 17}
 	testOIDCommonName   = asn1.ObjectIdentifier{2, 5, 4, 3}
+	testOIDSerialNumber = asn1.ObjectIdentifier{2, 5, 4, 5}
 	testOIDEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 )
 
@@ -466,6 +467,40 @@ func TestEvaluate_SubjectDualCNBothAllowed(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, approver.ResultNotDenied, resp.Result,
 		"two CNs that both match the wildcard must be approved; got Result=%v Message=%q", resp.Result, resp.Message)
+}
+
+// TestEvaluate_SubjectDualSerialNumberDenied — a CSR whose Subject RawSubject
+// DER contains two SerialNumber RDNs must be denied when one value does not
+// match the policy, mirroring the duplicate-CN smuggling vector.
+func TestEvaluate_SubjectDualSerialNumberDenied(t *testing.T) {
+	csr := csrFrom(t,
+		withRawSubject(t, pkix.RDNSequence{
+			rdn(testOIDCommonName, "app.tenant.example.com"),
+			rdn(testOIDSerialNumber, "legit-001"),
+			rdn(testOIDSerialNumber, "smuggled-002"),
+		}),
+	)
+	policy := &policyapi.CertificateRequestPolicy{
+		Spec: policyapi.CertificateRequestPolicySpec{
+			Allowed: &policyapi.CertificateRequestPolicyAllowed{
+				CommonName: &policyapi.CertificateRequestPolicyAllowedString{
+					Value: new("*.tenant.example.com"),
+				},
+				Subject: &policyapi.CertificateRequestPolicyAllowedX509Subject{
+					SerialNumber: &policyapi.CertificateRequestPolicyAllowedString{
+						Value: new("legit-*"),
+					},
+				},
+			},
+		},
+	}
+	resp, err := Approver().Evaluate(t.Context(), policy,
+		gen.CertificateRequest("", gen.SetCertificateRequestCSR(csr)))
+	assert.NoError(t, err)
+	assert.Equal(t, approver.ResultDenied, resp.Result,
+		"dual-SerialNumber CSR must be denied when one value mismatches; got Result=%v Message=%q", resp.Result, resp.Message)
+	assert.Contains(t, resp.Message, "smuggled-002",
+		"denial message should call out the forbidden SerialNumber")
 }
 
 // TestEvaluate_SubjectUnknownOIDDeniedByDefault — emailAddress, DC, UID,
