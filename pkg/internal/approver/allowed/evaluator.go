@@ -20,6 +20,8 @@ import (
 	"context"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -33,6 +35,9 @@ import (
 	"github.com/cert-manager/approver-policy/pkg/approver"
 	"github.com/cert-manager/approver-policy/pkg/internal/util"
 )
+
+// oidSubjectAltName is the X.509 Subject Alternative Name extension OID.
+var oidSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 
 // Evaluate evaluates whether the given CertificateRequest conforms to the
 // allowed attributes defined in the policy. The request _must_ conform to
@@ -59,10 +64,43 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		return approver.EvaluationResponse{}, err
 	}
 
+	// Decode the raw SAN extension with cert-manager's own SAN parser so the
+	// approver evaluates the exact GeneralName entries the signer will emit.
+	// crypto/x509 silently drops GeneralName tags outside {1,2,6,7}
+	// (otherName, x400Address, directoryName, ediPartyName, registeredID)
+	// from its parsed slices, but cert-manager copies the raw SAN extension
+	// into the issued certificate verbatim — so those entries must be made
+	// visible to policy here.
+	var sans utilpki.GeneralNames
+	var sanExtCount int
+	for _, ext := range csr.Extensions {
+		if !ext.Id.Equal(oidSubjectAltName) {
+			continue
+		}
+		sanExtCount++
+		if sanExtCount > 1 {
+			return approver.EvaluationResponse{
+				Result:  approver.ResultDenied,
+				Message: "CSR contains multiple SAN extensions; at most one is permitted",
+			}, nil
+		}
+		parsed, err := utilpki.UnmarshalSANs(ext.Value)
+		if err != nil {
+			// Fail closed: a SAN extension we cannot fully decode must never
+			// be approved, since cert-manager would still sign its raw bytes.
+			return approver.EvaluationResponse{
+				Result:  approver.ResultDenied,
+				Message: fmt.Sprintf("subjectAltName (SAN) extension could not be decoded: %v", err),
+			}, nil
+		}
+		sans = parsed
+	}
+
 	evaluate := evaluator{
 		a:       a,
 		request: request,
 		csr:     csr,
+		sans:    sans,
 		allowed: allowed,
 		fldPath: fldPath,
 	}
@@ -76,6 +114,7 @@ func (a allowed) Evaluate(_ context.Context, policy *policyapi.CertificateReques
 		evaluate.EmailAddresses,
 		evaluate.IsCA,
 		evaluate.Usages,
+		evaluate.OtherNames,
 		evaluateSubject.Organization,
 		evaluateSubject.Country,
 		evaluateSubject.OrganizationalUnit,
@@ -104,6 +143,11 @@ type evaluator struct {
 	a       allowed
 	request *cmapi.CertificateRequest
 	csr     *x509.CertificateRequest
+	// sans holds every SAN GeneralName entry decoded from the raw SAN
+	// extension (via cert-manager's UnmarshalSANs) — including the
+	// otherName/directoryName/x400Address/ediPartyName/registeredID entries
+	// that crypto/x509's parsed slices drop.
+	sans    utilpki.GeneralNames
 	allowed *policyapi.CertificateRequestPolicyAllowed
 	fldPath *field.Path
 }
@@ -162,6 +206,84 @@ func (e evaluator) Usages() field.ErrorList {
 	return el
 }
 
+// OtherNames evaluates the SAN GeneralName entries that the parsed-slice
+// evaluators above (DNSNames/IPAddresses/URIs/EmailAddresses) do not cover.
+// otherName entries (tag 0) are permitted only when their OID is listed in
+// allowed.otherNames; directoryName, x400Address, ediPartyName and
+// registeredID entries are always denied — there is no opt-in for these.
+func (e evaluator) OtherNames() field.ErrorList {
+	var el field.ErrorList
+
+	// SAN GeneralName types with no opt-in mechanism — always denied.
+	// These are reported under subjectAltName rather than otherNames because
+	// they have nothing to do with the allowed.otherNames policy field.
+	sanPath := e.fldPath.Child("subjectAltName")
+	for range e.sans.DirectoryNames {
+		el = append(el, field.Invalid(sanPath.Child("directoryName"), "directoryName", "directoryName SAN entries are not permitted"))
+	}
+	for range e.sans.X400Addresses {
+		el = append(el, field.Invalid(sanPath.Child("x400Address"), "x400Address", "x400Address SAN entries are not permitted"))
+	}
+	for range e.sans.EDIPartyNames {
+		el = append(el, field.Invalid(sanPath.Child("ediPartyName"), "ediPartyName", "ediPartyName SAN entries are not permitted"))
+	}
+	for range e.sans.RegisteredIDs {
+		el = append(el, field.Invalid(sanPath.Child("registeredID"), "registeredID", "registeredID SAN entries are not permitted"))
+	}
+
+	// Collect otherName values grouped by OID, preserving first-seen order so
+	// a duplicate-OID smuggling attempt is policed in one pass and evaluation
+	// (and any error messages) is deterministic.
+	byOID := make(map[string][]string)
+	var oidOrder []string
+	for _, on := range e.sans.OtherNames {
+		key := on.TypeID.String()
+		if _, seen := byOID[key]; !seen {
+			oidOrder = append(oidOrder, key)
+		}
+		byOID[key] = append(byOID[key], otherNameValueString(on.Value))
+	}
+
+	// Index allowed.otherNames by OID for lookup.
+	allowedByOID := make(map[string]*policyapi.CertificateRequestPolicyAllowedOtherName)
+	for i := range e.allowed.OtherNames {
+		entry := &e.allowed.OtherNames[i]
+		allowedByOID[entry.OID] = entry
+	}
+
+	// Per-OID evaluation of values present in the request against the
+	// matching allow-list entry (or "no allowed value" if absent).
+	otherNamesPath := e.fldPath.Child("otherNames")
+	for _, key := range oidOrder {
+		values := byOID[key]
+		entry, ok := allowedByOID[key]
+		entryFld := otherNamesPath.Key(key)
+		if !ok {
+			el = append(el, field.Invalid(entryFld, values, "no allowed values"))
+			continue
+		}
+		el = append(el, e.a.evaluateSlice(e.request, values, &policyapi.CertificateRequestPolicyAllowedStringSlice{
+			Values:      entry.Values,
+			Required:    entry.Required,
+			Validations: entry.Validations,
+		}, entryFld)...)
+	}
+
+	// Required: any allowed.otherNames entry with required=true must have
+	// been seen in the request.
+	for _, entry := range e.allowed.OtherNames {
+		if entry.Required == nil || !*entry.Required {
+			continue
+		}
+		if _, ok := byOID[entry.OID]; ok {
+			continue
+		}
+		el = append(el, field.Required(otherNamesPath.Key(entry.OID).Child("required"), strconv.FormatBool(true)))
+	}
+
+	return el
+}
+
 func (e evaluator) Subject() subjectEvaluator {
 	allowed := e.allowed.Subject
 	if allowed == nil {
@@ -214,6 +336,30 @@ func (e subjectEvaluator) PostalCode() field.ErrorList {
 
 func (e subjectEvaluator) SerialNumber() field.ErrorList {
 	return e.a.evaluateString(e.request, e.sub.SerialNumber, e.allowed.SerialNumber, e.fldPath.Child("serialNumber"))
+}
+
+// otherNameValueString renders the value of a SAN otherName entry as a
+// string. utilpki.UnmarshalSANs returns the value still wrapped in its
+// [0] EXPLICIT tag (otherName ::= SEQUENCE { type-id OID, value [0] EXPLICIT
+// ANY }), so unwrap it to reach the inner ANY value. UTF8String /
+// PrintableString / IA5String / T61String values (the encodings used in
+// practice for otherName payloads such as the Microsoft UPN) are decoded as
+// text; any other ASN.1 type is rendered as its hex-encoded full-bytes DER so
+// that a wildcard/CEL rule can still pin an exact blob.
+func otherNameValueString(v asn1.RawValue) string {
+	if v.Class == asn1.ClassContextSpecific && v.Tag == 0 {
+		var inner asn1.RawValue
+		if _, err := asn1.Unmarshal(v.Bytes, &inner); err == nil {
+			v = inner
+		}
+	}
+	if v.Class == asn1.ClassUniversal {
+		switch v.Tag {
+		case asn1.TagUTF8String, asn1.TagPrintableString, asn1.TagIA5String, asn1.TagT61String:
+			return string(v.Bytes)
+		}
+	}
+	return hex.EncodeToString(v.FullBytes)
 }
 
 func (a allowed) evaluateString(request *cmapi.CertificateRequest, s string, crp *policyapi.CertificateRequestPolicyAllowedString, fldPath *field.Path) field.ErrorList {
