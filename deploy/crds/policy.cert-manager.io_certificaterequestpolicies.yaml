@@ -664,6 +664,92 @@ spec:
                               type: string
                             type: array
                         type: object
+                      otherAttributes:
+                        description: |-
+                          OtherAttributes defines additional Subject RDN attribute OIDs that
+                          may be present in a CertificateRequest beyond the named fields above.
+                          Each entry pins a dotted ASN.1 OID (e.g. "1.2.840.113549.1.9.1" for
+                          emailAddress, "0.9.2342.19200300.100.1.25" for domainComponent) and
+                          constrains the allowed values for that OID.
+                          Subject RDN attributes whose OID is neither covered by one of the
+                          named fields above nor listed here are denied.
+                          An omitted or empty field denies any unrecognised Subject RDN
+                          attribute.
+                        items:
+                          description: |-
+                            CertificateRequestPolicyAllowedSubjectOtherAttribute declares the allowed
+                            values for a single Subject RDN attribute OID not covered by the named
+                            fields of CertificateRequestPolicyAllowedX509Subject.
+                            If neither Values nor Validations are specified, the related Subject RDN
+                            attribute must be absent from the request.
+                          properties:
+                            oid:
+                              description: |-
+                                OID is the dotted ASN.1 object identifier of the Subject RDN
+                                attribute, e.g. "1.2.840.113549.1.9.1" for emailAddress.
+                              type: string
+                            required:
+                              description: |-
+                                Required marks that at least one Subject RDN attribute with this OID
+                                must be present on the request.
+                                Defaults to `false`.
+                              type: boolean
+                            validations:
+                              description: |-
+                                Validations applies rules using Common Expression Language (CEL) to
+                                validate every Subject RDN attribute value with the matching OID
+                                present on the request beyond what is possible to express using
+                                values/required.
+                              items:
+                                description: ValidationRule describes a validation
+                                  rule expressed in CEL.
+                                properties:
+                                  message:
+                                    description: |-
+                                      Message is the message to display when validation fails.
+                                      Message is required if the Rule contains line breaks. Note that Message
+                                      must not contain line breaks.
+                                      If unset, a fallback message is used: "failed rule: `<rule>`".
+                                      e.g. "must be a URL with the host matching spec.host"
+                                    type: string
+                                  rule:
+                                    description: |-
+                                      Rule represents the expression which will be evaluated by CEL.
+                                      ref: https://github.com/google/cel-spec
+                                      The Rule is scoped to the location of the validations in the schema.
+                                      The `self` variable in the CEL expression is bound to the scoped value.
+                                      To enable more advanced validation rules, approver-policy provides the
+                                      `cr` (map) variable to the CEL expression containing `namespace` and
+                                      `name` of the `CertificateRequest` resource.
+
+                                      Example (rule for namespaced DNSNames):
+                                      ```
+                                      rule: self.endsWith(cr.namespace + '.svc.cluster.local')
+                                      ```
+                                    type: string
+                                required:
+                                - rule
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - rule
+                              x-kubernetes-list-type: map
+                            values:
+                              description: |-
+                                Values defines the allowed values for Subject RDN attributes with
+                                this OID. Accepts wildcards "*".
+                                If set, every Subject RDN attribute with the matching OID present in
+                                the request must be a member of this list.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - oid
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - oid
+                        x-kubernetes-list-type: map
                       postalCodes:
                         description: PostalCodes defines the X.509 Subject Postal
                           Codes that may be requested.
