@@ -491,6 +491,12 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 	// error messages are stable.
 	byOID := make(map[string][]string)
 	var oidOrder []string
+	// seenOID tracks OIDs that appeared in the RDN sequence regardless of
+	// whether the value was a string. This prevents the required-check
+	// below from emitting a spurious "missing" error when the OID is
+	// present but carries a non-string encoding (already reported as
+	// Invalid).
+	seenOID := make(map[string]bool)
 
 	var el field.ErrorList
 
@@ -518,16 +524,18 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 				continue
 			}
 
+			key := atv.Type.String()
+			seenOID[key] = true
+
 			s, isString := atv.Value.(string)
 			if !isString {
 				el = append(el, field.Invalid(
-					fldPath.Key(atv.Type.String()),
+					fldPath.Key(key),
 					"<non-string value>",
 					"subject attribute uses an unsupported ASN.1 type or string encoding; re-issue the certificate with a UTF8String or PrintableString subject"))
 				continue
 			}
 
-			key := atv.Type.String()
 			if _, seen := byOID[key]; !seen {
 				oidOrder = append(oidOrder, key)
 			}
@@ -561,7 +569,7 @@ func (e subjectEvaluator) OtherAttributes() field.ErrorList {
 		if entry.Required == nil || !*entry.Required {
 			continue
 		}
-		if _, ok := byOID[entry.OID]; ok {
+		if seenOID[entry.OID] {
 			continue
 		}
 		el = append(el, field.Required(fldPath.Key(entry.OID).Child("required"), strconv.FormatBool(true)))
