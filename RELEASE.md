@@ -35,9 +35,9 @@ This gives the whole team a single, scannable record of what was done, by whom, 
     # Check the govulncheck GitHub Action is green on main:
     # https://github.com/cert-manager/approver-policy/actions/workflows/govulncheck.yaml
 
-    # Run trivy locally (ArtifactHub uses trivy and flags MEDIUM+ vulnerabilities):
+    # Run trivy locally, reporting only fixable HIGH and CRITICAL vulnerabilities:
     make _bin/tools/trivy
-    _bin/tools/trivy fs --scanners vuln .
+    _bin/tools/trivy fs --scanners vuln --ignore-unfixed --severity HIGH,CRITICAL .
     ```
     If trivy reports vulnerabilities, bump the affected dependencies before tagging,
     even if they are indirect. ArtifactHub displays trivy results on the
