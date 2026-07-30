@@ -38,8 +38,11 @@ This gives the whole team a single, scannable record of what was done, by whom, 
     # Build the manager image locally and scan it with trivy, reporting
     # fixable vulnerabilities of all severities. This matches what ArtifactHub
     # scans (the published image); only fixable vulnerabilities can be
-    # addressed by bumping dependencies:
-    make trivy-scan-manager
+    # addressed by bumping dependencies. vendor-go ensures the image is built
+    # with the same pinned Go version as the release workflow, so Go stdlib
+    # vulnerabilities already fixed by a toolchain bump are not falsely
+    # reported by an older host Go:
+    make vendor-go trivy-scan-manager
     ```
     If trivy reports vulnerabilities, bump the affected dependencies before tagging,
     even if they are indirect. ArtifactHub displays trivy results on the
