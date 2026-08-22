@@ -17,7 +17,7 @@ repo_name := github.com/cert-manager/approver-policy
 kind_cluster_name := approver-policy
 kind_cluster_config := $(bin_dir)/scratch/kind_cluster.yaml
 
-build_names := manager
+build_names := manager startupapicheck
 
 go_manager_main_dir := ./cmd
 go_manager_mod_dir := .
@@ -26,6 +26,14 @@ oci_manager_base_image_flavor := static
 oci_manager_image_name := quay.io/jetstack/cert-manager-approver-policy
 oci_manager_image_tag := $(VERSION)
 oci_manager_image_name_development := cert-manager.local/cert-manager-approver-policy
+
+go_startupapicheck_main_dir := ./cmd/startupapicheck
+go_startupapicheck_mod_dir := .
+go_startupapicheck_ldflags := -X $(repo_name)/pkg/internal/version.AppVersion=$(VERSION) -X $(repo_name)/pkg/internal/version.GitCommit=$(GITCOMMIT)
+oci_startupapicheck_base_image_flavor := static
+oci_startupapicheck_image_name := quay.io/jetstack/cert-manager-approver-policy-startupapicheck
+oci_startupapicheck_image_tag := $(VERSION)
+oci_startupapicheck_image_name_development := cert-manager.local/cert-manager-approver-policy-startupapicheck
 
 deploy_name := approver-policy
 deploy_namespace := cert-manager
@@ -39,6 +47,7 @@ golangci_lint_config := .golangci.yaml
 
 define helm_values_mutation_function
 $(YQ) \
-	'( .image._defaultReference = ":$(oci_manager_image_tag)" )' \
+	'( .image._defaultReference = ":$(oci_manager_image_tag)" ) | \
+	( .startupapicheck.image._defaultReference = ":$(oci_startupapicheck_image_tag)" )' \
 	$1 --inplace
 endef
