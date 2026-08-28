@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"reflect"
 
+	"cel.dev/cel-go/cel"
+	"cel.dev/cel-go/ext"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
-	"github.com/google/cel-go/cel"
-	"github.com/google/cel-go/ext"
 )
 
 const (

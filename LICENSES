@@ -36,6 +36,8 @@ You can retrieve the actual license text by following these steps:
 
 ---
 
+cel.dev/cel-go,Apache-2.0
+cel.dev/cel-go,BSD-3-Clause
 cel.dev/expr,Apache-2.0
 github.com/Azure/go-ntlmssp,MIT
 github.com/Masterminds/semver/v3,MIT
