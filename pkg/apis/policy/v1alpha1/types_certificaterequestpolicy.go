@@ -37,12 +37,15 @@ var CertificateRequestPolicyKind = "CertificateRequestPolicy"
 // or denied.
 type CertificateRequestPolicy struct {
 	metav1.TypeMeta `json:",inline"`
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// +optional
 	metav1.ObjectMeta `json:"metadata"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	Spec CertificateRequestPolicySpec `json:"spec"`
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// +optional
-	Status CertificateRequestPolicyStatus `json:"status,omitzero"`
+	Status CertificateRequestPolicyStatus `json:"status,omitzero"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -58,6 +61,7 @@ type CertificateRequestPolicyList struct {
 // CertificateRequestPolicySpec defines the desired state of
 // CertificateRequestPolicy.
 type CertificateRequestPolicySpec struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Allowed defines the allowed attributes for a CertificateRequest.
 	// A CertificateRequest can request _less_ than what is allowed,
 	// but _not more_, i.e. a CertificateRequest can request a subset of what
@@ -68,6 +72,7 @@ type CertificateRequestPolicySpec struct {
 	// +optional
 	Allowed *CertificateRequestPolicyAllowed `json:"allowed,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Constraints define fields that _must_ be satisfied by a
 	// CertificateRequest for the request to be allowed by this policy.
 	// Omitted fields place no restrictions on the corresponding
@@ -75,18 +80,20 @@ type CertificateRequestPolicySpec struct {
 	// +optional
 	Constraints *CertificateRequestPolicyConstraints `json:"constraints,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Plugins are approvers that are built into approver-policy at
 	// compile-time. This is an advanced feature typically used to extend
 	// approver-policy core features. This field define plugins and their
 	// configuration that should be executed when this policy is evaluated
 	// against a CertificateRequest.
 	// +optional
-	Plugins map[string]CertificateRequestPolicyPluginData `json:"plugins,omitempty"`
+	Plugins map[string]CertificateRequestPolicyPluginData `json:"plugins,omitempty"` //nolint:kubeapilinter // nomaps: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Selector is used for selecting over which CertificateRequests this
 	// CertificateRequestPolicy is appropriate for and so will be used for its
 	// approval evaluation.
-	Selector CertificateRequestPolicySelector `json:"selector"`
+	Selector CertificateRequestPolicySelector `json:"selector"` //nolint:kubeapilinter // nonpointerstructs: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowed defines the allowed attributes for a
@@ -97,26 +104,32 @@ type CertificateRequestPolicySpec struct {
 // Omitted fields declares that the equivalent CertificateRequest field _must_
 // be omitted or have an empty value for the request to be permitted.
 type CertificateRequestPolicyAllowed struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// CommonName defines the X.509 Common Name that may be requested.
 	// +optional
 	CommonName *CertificateRequestPolicyAllowedString `json:"commonName,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// DNSNames defines the X.509 DNS SANs that may be requested.
 	// +optional
 	DNSNames *CertificateRequestPolicyAllowedStringSlice `json:"dnsNames,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// IPAddresses defines the X.509 IP SANs that may be requested.
 	// +optional
 	IPAddresses *CertificateRequestPolicyAllowedStringSlice `json:"ipAddresses,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// URIs defines the X.509 URI SANs that may be requested.
 	// +optional
 	URIs *CertificateRequestPolicyAllowedStringSlice `json:"uris,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// EmailAddresses defines the X.509 Email SANs that may be requested.
 	// +optional
 	EmailAddresses *CertificateRequestPolicyAllowedStringSlice `json:"emailAddresses,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// IsCA defines if a CertificateRequest is allowed to set the `spec.isCA`
 	// field set to `true`.
 	// If `true`, the `spec.isCA` field can be `true` or `false`.
@@ -124,6 +137,7 @@ type CertificateRequestPolicyAllowed struct {
 	// +optional
 	IsCA *bool `json:"isCA,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Usages defines the key usages that may be included in a
 	// CertificateRequest `spec.keyUsages` field.
 	// If set, `spec.keyUsages` in a CertificateRequest must be a subset of the
@@ -131,8 +145,9 @@ type CertificateRequestPolicyAllowed struct {
 	// If `[]` or unset, no `spec.keyUsages` are allowed.
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
-	Usages *[]cmapi.KeyUsage `json:"usages,omitempty"`
+	Usages *[]cmapi.KeyUsage `json:"usages,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Subject declares the X.509 Subject attributes allowed in a
 	// CertificateRequest. An omitted field forbids any Subject attributes
 	// from being requested.
@@ -141,6 +156,7 @@ type CertificateRequestPolicyAllowed struct {
 	// +optional
 	Subject *CertificateRequestPolicyAllowedX509Subject `json:"subject,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// OtherNames defines the additional SAN GeneralName otherName entries
 	// (context tag 0) that may be present in a CertificateRequest. Each
 	// entry pins a dotted ASN.1 OID (e.g. "1.3.6.1.4.1.311.20.2.3" for the
@@ -154,7 +170,7 @@ type CertificateRequestPolicyAllowed struct {
 	// +listType=map
 	// +listMapKey=oid
 	// +optional
-	OtherNames []CertificateRequestPolicyAllowedOtherName `json:"otherNames,omitempty"`
+	OtherNames []CertificateRequestPolicyAllowedOtherName `json:"otherNames,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedOtherName declares the allowed values for a
@@ -162,31 +178,35 @@ type CertificateRequestPolicyAllowed struct {
 // If neither Values nor Validations are specified, the related otherName
 // entry must be absent from the request.
 type CertificateRequestPolicyAllowedOtherName struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// OID is the dotted ASN.1 object identifier that the otherName entry
 	// must carry, e.g. "1.3.6.1.4.1.311.20.2.3" for the Microsoft User
 	// Principal Name.
-	OID string `json:"oid"`
+	OID string `json:"oid"` //nolint:kubeapilinter // optionalorrequired: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Values defines the allowed values for otherName entries with this
 	// OID. Accepts wildcards "*".
 	// If set, every otherName entry with the matching OID present in the
 	// request must be a member of this list.
 	// +optional
-	Values *[]string `json:"values,omitempty"`
+	Values *[]string `json:"values,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Required marks that at least one otherName entry with this OID must
 	// be present on the request.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Validations applies rules using Common Expression Language (CEL) to
 	// validate every otherName value with the matching OID present on the
 	// request beyond what is possible to express using values/required.
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedX509Subject declares allowed X.509 Subject
@@ -194,42 +214,51 @@ type CertificateRequestPolicyAllowedOtherName struct {
 // A CertificateRequest can request a subset of the allowed X.509 Subject
 // attributes.
 type CertificateRequestPolicyAllowedX509Subject struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Organizations define the X.509 Subject Organizations that may be
 	// requested.
 	// +optional
 	Organizations *CertificateRequestPolicyAllowedStringSlice `json:"organizations,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Countries define the X.509 Subject Countries that may be requested.
 	// +optional
 	Countries *CertificateRequestPolicyAllowedStringSlice `json:"countries,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// OrganizationalUnits defines the X.509 Subject Organizational Units that
 	// may be requested.
 	// +optional
 	OrganizationalUnits *CertificateRequestPolicyAllowedStringSlice `json:"organizationalUnits,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Localities defines the X.509 Subject Localities that may be requested.
 	// +optional
 	Localities *CertificateRequestPolicyAllowedStringSlice `json:"localities,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Provinces defines the X.509 Subject Provinces that may be requested.
 	// +optional
 	Provinces *CertificateRequestPolicyAllowedStringSlice `json:"provinces,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// StreetAddresses defines the X.509 Subject Street Addresses that may be
 	// requested.
 	// +optional
 	StreetAddresses *CertificateRequestPolicyAllowedStringSlice `json:"streetAddresses,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// PostalCodes defines the X.509 Subject Postal Codes that may be requested.
 	// +optional
 	PostalCodes *CertificateRequestPolicyAllowedStringSlice `json:"postalCodes,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// SerialNumber defines the X.509 Subject Serial Number that may be
 	// requested.
 	// +optional
 	SerialNumber *CertificateRequestPolicyAllowedString `json:"serialNumber,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// OtherAttributes defines additional Subject RDN attribute OIDs that
 	// may be present in a CertificateRequest beyond the named fields above.
 	// Each entry pins a dotted ASN.1 OID (e.g. "1.2.840.113549.1.9.1" for
@@ -242,7 +271,7 @@ type CertificateRequestPolicyAllowedX509Subject struct {
 	// +listType=map
 	// +listMapKey=oid
 	// +optional
-	OtherAttributes []CertificateRequestPolicyAllowedSubjectOtherAttribute `json:"otherAttributes,omitempty"`
+	OtherAttributes []CertificateRequestPolicyAllowedSubjectOtherAttribute `json:"otherAttributes,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedSubjectOtherAttribute declares the allowed
@@ -251,23 +280,27 @@ type CertificateRequestPolicyAllowedX509Subject struct {
 // If neither Values nor Validations are specified, the related Subject RDN
 // attribute must be absent from the request.
 type CertificateRequestPolicyAllowedSubjectOtherAttribute struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// OID is the dotted ASN.1 object identifier of the Subject RDN
 	// attribute, e.g. "1.2.840.113549.1.9.1" for emailAddress.
-	OID string `json:"oid"`
+	OID string `json:"oid"` //nolint:kubeapilinter // optionalorrequired: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Values defines the allowed values for Subject RDN attributes with
 	// this OID. Accepts wildcards "*".
 	// If set, every Subject RDN attribute with the matching OID present in
 	// the request must be a member of this list.
 	// +optional
-	Values *[]string `json:"values,omitempty"`
+	Values *[]string `json:"values,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Required marks that at least one Subject RDN attribute with this OID
 	// must be present on the request.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Validations applies rules using Common Expression Language (CEL) to
 	// validate every Subject RDN attribute value with the matching OID
 	// present on the request beyond what is possible to express using
@@ -275,13 +308,14 @@ type CertificateRequestPolicyAllowedSubjectOtherAttribute struct {
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedStringSlice represents allowed string values
 // and/or validations paired with whether the field is a required value on the request.
 // If neither allowed values nor validations are specified, the related field must be empty.
 type CertificateRequestPolicyAllowedStringSlice struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Values defines allowed attribute values on the related CertificateRequest field.
 	// Accepts wildcards "*".
 	// If set, the related field can only include items contained in the allowed values.
@@ -290,13 +324,15 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 	// will never grant a `CertificateRequest`, but other policies may.
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
-	Values *[]string `json:"values,omitempty"`
+	Values *[]string `json:"values,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Required controls whether the related field must have at least one value.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Validations applies rules using Common Expression Language (CEL) to
 	// validate attribute values present on request beyond what is possible
 	// to express using values/required.
@@ -305,13 +341,14 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedString represents an allowed string value
 // and/or validations paired with whether the field is a required value on the request.
 // If no allowed value nor validations are specified, the related field must be empty.
 type CertificateRequestPolicyAllowedString struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Value defines the allowed attribute value on the related CertificateRequest field.
 	// Accepts wildcards "*".
 	// If set, the related field must match the specified pattern.
@@ -321,12 +358,14 @@ type CertificateRequestPolicyAllowedString struct {
 	// +optional
 	Value *string `json:"value,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Required marks that the related field must be provided and not be an
 	// empty string.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Validations applies rules using Common Expression Language (CEL) to
 	// validate attribute value present on request beyond what is possible
 	// to express using value/required.
@@ -335,11 +374,12 @@ type CertificateRequestPolicyAllowedString struct {
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // ValidationRule describes a validation rule expressed in CEL.
 type ValidationRule struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Rule represents the expression which will be evaluated by CEL.
 	// ref: https://github.com/google/cel-spec
 	// The Rule is scoped to the location of the validations in the schema.
@@ -352,8 +392,9 @@ type ValidationRule struct {
 	// ```
 	// rule: self.endsWith(cr.namespace + '.svc.cluster.local')
 	// ```
-	Rule string `json:"rule"`
+	Rule string `json:"rule"` //nolint:kubeapilinter // optionalorrequired: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Message is the message to display when validation fails.
 	// Message is required if the Rule contains line breaks. Note that Message
 	// must not contain line breaks.
@@ -368,22 +409,25 @@ type ValidationRule struct {
 // Omitted fields will be satisfied by any value in the corresponding attribute
 // of the request.
 type CertificateRequestPolicyConstraints struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// MinDuration defines the minimum duration for a certificate request.
 	// Values are inclusive (i.e. a value of `1h` will accept a duration of
 	// `1h`). MinDuration and MaxDuration may be the same value.
 	// If set, a duration _must_ be requested in the CertificateRequest.
 	// An omitted field applies no minimum constraint for duration.
 	// +optional
-	MinDuration *metav1.Duration `json:"minDuration,omitempty"`
+	MinDuration *metav1.Duration `json:"minDuration,omitempty"` //nolint:kubeapilinter // nodurations: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// MaxDuration defines the maximum duration for a certificate request.
 	// Values are inclusive (i.e. a value of `1h` will accept a duration of
 	// `1h`). MinDuration and MaxDuration may be the same value.
 	// If set, a duration _must_ be requested in the CertificateRequest.
 	// An omitted field applies no maximum constraint for duration.
 	// +optional
-	MaxDuration *metav1.Duration `json:"maxDuration,omitempty"`
+	MaxDuration *metav1.Duration `json:"maxDuration,omitempty"` //nolint:kubeapilinter // nodurations: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// PrivateKey defines constraints on the shape of private key
 	// allowed for a CertificateRequest.
 	// An omitted field applies no private key shape constraints.
@@ -394,30 +438,34 @@ type CertificateRequestPolicyConstraints struct {
 // CertificateRequestPolicyConstraintsPrivateKey defines constraints on the shape of private key
 // allowed for a CertificateRequest.
 type CertificateRequestPolicyConstraintsPrivateKey struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Algorithm defines the allowed crypto algorithm for the private key
 	// in a request.
 	// An omitted field permits any algorithm.
 	// +optional
 	Algorithm *cmapi.PrivateKeyAlgorithm `json:"algorithm,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// MinSize defines the minimum key size for a private key.
 	// Values are inclusive (i.e. a min value of `2048` will accept a size
 	// of `2048`). MinSize and MaxSize may be the same value.
 	// An omitted field applies no minimum constraint on size.
 	// +optional
-	MinSize *int `json:"minSize,omitempty"`
+	MinSize *int `json:"minSize,omitempty"` //nolint:kubeapilinter // integers: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// MaxSize defines the maximum key size for a private key.
 	// Values are inclusive (i.e. a min value of `2048` will accept a size
 	// of `2048`). MaxSize and MinSize may be the same value.
 	// An omitted field applies no maximum constraint on size.
 	// +optional
-	MaxSize *int `json:"maxSize,omitempty"`
+	MaxSize *int `json:"maxSize,omitempty"` //nolint:kubeapilinter // integers: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyPluginData is configuration needed by the plugin
 // approver to evaluate a CertificateRequest on this policy.
 type CertificateRequestPolicyPluginData struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Values define a set of well-known, to the plugin, key value pairs that
 	// are required for the plugin to successfully evaluate a request based on
 	// this policy.
@@ -432,6 +480,7 @@ type CertificateRequestPolicyPluginData struct {
 // in order for the CertificateRequestPolicy to be chosen for evaluation.
 // At least one of IssuerRef or Namespace must be defined.
 type CertificateRequestPolicySelector struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// IssuerRef is used to match by issuer, meaning the
 	// CertificateRequestPolicy will only evaluate CertificateRequests
 	// referring to matching issuers.
@@ -443,19 +492,21 @@ type CertificateRequestPolicySelector struct {
 	// issuerRef: {}
 	// ```
 	// +optional
-	IssuerRef *CertificateRequestPolicySelectorIssuerRef `json:"issuerRef"`
+	IssuerRef *CertificateRequestPolicySelectorIssuerRef `json:"issuerRef"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Namespace is used to match by namespace, meaning the
 	// CertificateRequestPolicy will only match CertificateRequests
 	// created in matching namespaces.
 	// If this field is omitted, resources in all namespaces are checked.
 	// +optional
-	Namespace *CertificateRequestPolicySelectorNamespace `json:"namespace"`
+	Namespace *CertificateRequestPolicySelectorNamespace `json:"namespace"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicySelectorIssuerRef defines the selector for matching
 // the issuer reference of requests.
 type CertificateRequestPolicySelectorIssuerRef struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Name is a wildcard enabled selector that matches the
 	// `spec.issuerRef.name` field of requests.
 	// Accepts wildcards "*".
@@ -463,6 +514,7 @@ type CertificateRequestPolicySelectorIssuerRef struct {
 	// +optional
 	Name *string `json:"name,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Kind is the wildcard selector to match the `spec.issuerRef.kind` field
 	// on requests.
 	// Accepts wildcards "*".
@@ -470,6 +522,7 @@ type CertificateRequestPolicySelectorIssuerRef struct {
 	// +optional
 	Kind *string `json:"kind,omitempty"`
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// Group is the wildcard selector to match the `spec.issuerRef.group` field
 	// on requests.
 	// Accepts wildcards "*".
@@ -482,13 +535,15 @@ type CertificateRequestPolicySelectorIssuerRef struct {
 // the namespace of requests. Note that all selectors must match in order
 // for the request to be considered for evaluation by this policy.
 type CertificateRequestPolicySelectorNamespace struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// MatchNames is the set of namespace names that select on
 	// CertificateRequests that have been created in a matching namespace.
 	// Accepts wildcards "*".
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
-	MatchNames []string `json:"matchNames,omitempty"`
+	MatchNames []string `json:"matchNames,omitempty"` //nolint:kubeapilinter // ssatags: pre-existing API; changing it now could break clients, revisit for a future API version
 
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// MatchLabels is the set of Namespace labels that select on
 	// CertificateRequests which have been created in a namespace matching the
 	// selector.
@@ -499,13 +554,14 @@ type CertificateRequestPolicySelectorNamespace struct {
 // CertificateRequestPolicyStatus defines the observed state of the
 // CertificateRequestPolicy.
 type CertificateRequestPolicyStatus struct {
+	//nolint:kubeapilinter // commentstart: rewording the godoc would change the published CRD field descriptions
 	// List of status conditions to indicate the status of the
 	// CertificateRequestPolicy.
 	// Known condition types are `Ready`.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"` //nolint:kubeapilinter // conditions: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 const (
