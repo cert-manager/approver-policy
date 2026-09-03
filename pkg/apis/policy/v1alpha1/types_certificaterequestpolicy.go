@@ -37,12 +37,16 @@ var CertificateRequestPolicyKind = "CertificateRequestPolicy"
 // or denied.
 type CertificateRequestPolicy struct {
 	metav1.TypeMeta `json:",inline"`
+	// metadata is the standard object metadata.
 	// +optional
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec CertificateRequestPolicySpec `json:"spec"`
+	// spec is the desired state of the CertificateRequestPolicy.
+	// +required
+	Spec CertificateRequestPolicySpec `json:"spec"` //nolint:kubeapilinter // nonpointerstructs: spec has always been required; marking it optional would change the published CRD
+	// status is the observed state of the CertificateRequestPolicy.
 	// +optional
-	Status CertificateRequestPolicyStatus `json:"status,omitzero"`
+	Status CertificateRequestPolicyStatus `json:"status,omitzero"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -58,7 +62,7 @@ type CertificateRequestPolicyList struct {
 // CertificateRequestPolicySpec defines the desired state of
 // CertificateRequestPolicy.
 type CertificateRequestPolicySpec struct {
-	// Allowed defines the allowed attributes for a CertificateRequest.
+	// allowed defines the allowed attributes for a CertificateRequest.
 	// A CertificateRequest can request _less_ than what is allowed,
 	// but _not more_, i.e. a CertificateRequest can request a subset of what
 	// is declared as allowed by the policy.
@@ -68,25 +72,25 @@ type CertificateRequestPolicySpec struct {
 	// +optional
 	Allowed *CertificateRequestPolicyAllowed `json:"allowed,omitempty"`
 
-	// Constraints define fields that _must_ be satisfied by a
+	// constraints define fields that _must_ be satisfied by a
 	// CertificateRequest for the request to be allowed by this policy.
 	// Omitted fields place no restrictions on the corresponding
 	// attribute in a request.
 	// +optional
 	Constraints *CertificateRequestPolicyConstraints `json:"constraints,omitempty"`
 
-	// Plugins are approvers that are built into approver-policy at
+	// plugins are approvers that are built into approver-policy at
 	// compile-time. This is an advanced feature typically used to extend
-	// approver-policy core features. This field define plugins and their
+	// approver-policy core features. This field defines plugins and their
 	// configuration that should be executed when this policy is evaluated
 	// against a CertificateRequest.
 	// +optional
-	Plugins map[string]CertificateRequestPolicyPluginData `json:"plugins,omitempty"`
+	Plugins map[string]CertificateRequestPolicyPluginData `json:"plugins,omitempty"` //nolint:kubeapilinter // nomaps: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Selector is used for selecting over which CertificateRequests this
+	// selector is used for selecting over which CertificateRequests this
 	// CertificateRequestPolicy is appropriate for and so will be used for its
 	// approval evaluation.
-	Selector CertificateRequestPolicySelector `json:"selector"`
+	Selector CertificateRequestPolicySelector `json:"selector"` //nolint:kubeapilinter // nonpointerstructs: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowed defines the allowed attributes for a
@@ -94,46 +98,46 @@ type CertificateRequestPolicySpec struct {
 // A CertificateRequest can request _less_ than what is allowed,
 // but _not more_, i.e. a CertificateRequest can request a subset of what is
 // declared as allowed by the policy.
-// Omitted fields declares that the equivalent CertificateRequest field _must_
+// Omitted fields declare that the equivalent CertificateRequest field _must_
 // be omitted or have an empty value for the request to be permitted.
 type CertificateRequestPolicyAllowed struct {
-	// CommonName defines the X.509 Common Name that may be requested.
+	// commonName defines the X.509 Common Name that may be requested.
 	// +optional
 	CommonName *CertificateRequestPolicyAllowedString `json:"commonName,omitempty"`
 
-	// DNSNames defines the X.509 DNS SANs that may be requested.
+	// dnsNames defines the X.509 DNS SANs that may be requested.
 	// +optional
 	DNSNames *CertificateRequestPolicyAllowedStringSlice `json:"dnsNames,omitempty"`
 
-	// IPAddresses defines the X.509 IP SANs that may be requested.
+	// ipAddresses defines the X.509 IP SANs that may be requested.
 	// +optional
 	IPAddresses *CertificateRequestPolicyAllowedStringSlice `json:"ipAddresses,omitempty"`
 
-	// URIs defines the X.509 URI SANs that may be requested.
+	// uris defines the X.509 URI SANs that may be requested.
 	// +optional
 	URIs *CertificateRequestPolicyAllowedStringSlice `json:"uris,omitempty"`
 
-	// EmailAddresses defines the X.509 Email SANs that may be requested.
+	// emailAddresses defines the X.509 Email SANs that may be requested.
 	// +optional
 	EmailAddresses *CertificateRequestPolicyAllowedStringSlice `json:"emailAddresses,omitempty"`
 
-	// IsCA defines if a CertificateRequest is allowed to set the `spec.isCA`
+	// isCA defines if a CertificateRequest is allowed to set the `spec.isCA`
 	// field set to `true`.
 	// If `true`, the `spec.isCA` field can be `true` or `false`.
 	// If `false` or unset, the `spec.isCA` field must be `false`.
 	// +optional
 	IsCA *bool `json:"isCA,omitempty"`
 
-	// Usages defines the key usages that may be included in a
+	// usages defines the key usages that may be included in a
 	// CertificateRequest `spec.keyUsages` field.
 	// If set, `spec.keyUsages` in a CertificateRequest must be a subset of the
 	// specified values.
 	// If `[]` or unset, no `spec.keyUsages` are allowed.
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
-	Usages *[]cmapi.KeyUsage `json:"usages,omitempty"`
+	Usages *[]cmapi.KeyUsage `json:"usages,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Subject declares the X.509 Subject attributes allowed in a
+	// subject declares the X.509 Subject attributes allowed in a
 	// CertificateRequest. An omitted field forbids any Subject attributes
 	// from being requested.
 	// A CertificateRequest can request a subset of the allowed X.509 Subject
@@ -141,7 +145,7 @@ type CertificateRequestPolicyAllowed struct {
 	// +optional
 	Subject *CertificateRequestPolicyAllowedX509Subject `json:"subject,omitempty"`
 
-	// OtherNames defines the additional SAN GeneralName otherName entries
+	// otherNames defines the additional SAN GeneralName otherName entries
 	// (context tag 0) that may be present in a CertificateRequest. Each
 	// entry pins a dotted ASN.1 OID (e.g. "1.3.6.1.4.1.311.20.2.3" for the
 	// Microsoft User Principal Name) and constrains the allowed values for
@@ -154,7 +158,7 @@ type CertificateRequestPolicyAllowed struct {
 	// +listType=map
 	// +listMapKey=oid
 	// +optional
-	OtherNames []CertificateRequestPolicyAllowedOtherName `json:"otherNames,omitempty"`
+	OtherNames []CertificateRequestPolicyAllowedOtherName `json:"otherNames,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedOtherName declares the allowed values for a
@@ -162,31 +166,31 @@ type CertificateRequestPolicyAllowed struct {
 // If neither Values nor Validations are specified, the related otherName
 // entry must be absent from the request.
 type CertificateRequestPolicyAllowedOtherName struct {
-	// OID is the dotted ASN.1 object identifier that the otherName entry
+	// oid is the dotted ASN.1 object identifier that the otherName entry
 	// must carry, e.g. "1.3.6.1.4.1.311.20.2.3" for the Microsoft User
 	// Principal Name.
-	OID string `json:"oid"`
+	OID string `json:"oid"` //nolint:kubeapilinter // optionalorrequired: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Values defines the allowed values for otherName entries with this
+	// values defines the allowed values for otherName entries with this
 	// OID. Accepts wildcards "*".
 	// If set, every otherName entry with the matching OID present in the
 	// request must be a member of this list.
 	// +optional
-	Values *[]string `json:"values,omitempty"`
+	Values *[]string `json:"values,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Required marks that at least one otherName entry with this OID must
+	// required marks that at least one otherName entry with this OID must
 	// be present on the request.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
-	// Validations applies rules using Common Expression Language (CEL) to
+	// validations applies rules using Common Expression Language (CEL) to
 	// validate every otherName value with the matching OID present on the
 	// request beyond what is possible to express using values/required.
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedX509Subject declares allowed X.509 Subject
@@ -194,43 +198,43 @@ type CertificateRequestPolicyAllowedOtherName struct {
 // A CertificateRequest can request a subset of the allowed X.509 Subject
 // attributes.
 type CertificateRequestPolicyAllowedX509Subject struct {
-	// Organizations define the X.509 Subject Organizations that may be
+	// organizations define the X.509 Subject Organizations that may be
 	// requested.
 	// +optional
 	Organizations *CertificateRequestPolicyAllowedStringSlice `json:"organizations,omitempty"`
 
-	// Countries define the X.509 Subject Countries that may be requested.
+	// countries define the X.509 Subject Countries that may be requested.
 	// +optional
 	Countries *CertificateRequestPolicyAllowedStringSlice `json:"countries,omitempty"`
 
-	// OrganizationalUnits defines the X.509 Subject Organizational Units that
+	// organizationalUnits defines the X.509 Subject Organizational Units that
 	// may be requested.
 	// +optional
 	OrganizationalUnits *CertificateRequestPolicyAllowedStringSlice `json:"organizationalUnits,omitempty"`
 
-	// Localities defines the X.509 Subject Localities that may be requested.
+	// localities defines the X.509 Subject Localities that may be requested.
 	// +optional
 	Localities *CertificateRequestPolicyAllowedStringSlice `json:"localities,omitempty"`
 
-	// Provinces defines the X.509 Subject Provinces that may be requested.
+	// provinces defines the X.509 Subject Provinces that may be requested.
 	// +optional
 	Provinces *CertificateRequestPolicyAllowedStringSlice `json:"provinces,omitempty"`
 
-	// StreetAddresses defines the X.509 Subject Street Addresses that may be
+	// streetAddresses defines the X.509 Subject Street Addresses that may be
 	// requested.
 	// +optional
 	StreetAddresses *CertificateRequestPolicyAllowedStringSlice `json:"streetAddresses,omitempty"`
 
-	// PostalCodes defines the X.509 Subject Postal Codes that may be requested.
+	// postalCodes defines the X.509 Subject Postal Codes that may be requested.
 	// +optional
 	PostalCodes *CertificateRequestPolicyAllowedStringSlice `json:"postalCodes,omitempty"`
 
-	// SerialNumber defines the X.509 Subject Serial Number that may be
+	// serialNumber defines the X.509 Subject Serial Number that may be
 	// requested.
 	// +optional
 	SerialNumber *CertificateRequestPolicyAllowedString `json:"serialNumber,omitempty"`
 
-	// OtherAttributes defines additional Subject RDN attribute OIDs that
+	// otherAttributes defines additional Subject RDN attribute OIDs that
 	// may be present in a CertificateRequest beyond the named fields above.
 	// Each entry pins a dotted ASN.1 OID (e.g. "1.2.840.113549.1.9.1" for
 	// emailAddress, "0.9.2342.19200300.100.1.25" for domainComponent) and
@@ -242,7 +246,7 @@ type CertificateRequestPolicyAllowedX509Subject struct {
 	// +listType=map
 	// +listMapKey=oid
 	// +optional
-	OtherAttributes []CertificateRequestPolicyAllowedSubjectOtherAttribute `json:"otherAttributes,omitempty"`
+	OtherAttributes []CertificateRequestPolicyAllowedSubjectOtherAttribute `json:"otherAttributes,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedSubjectOtherAttribute declares the allowed
@@ -251,38 +255,38 @@ type CertificateRequestPolicyAllowedX509Subject struct {
 // If neither Values nor Validations are specified, the related Subject RDN
 // attribute must be absent from the request.
 type CertificateRequestPolicyAllowedSubjectOtherAttribute struct {
-	// OID is the dotted ASN.1 object identifier of the Subject RDN
+	// oid is the dotted ASN.1 object identifier of the Subject RDN
 	// attribute, e.g. "1.2.840.113549.1.9.1" for emailAddress.
-	OID string `json:"oid"`
+	OID string `json:"oid"` //nolint:kubeapilinter // optionalorrequired: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Values defines the allowed values for Subject RDN attributes with
+	// values defines the allowed values for Subject RDN attributes with
 	// this OID. Accepts wildcards "*".
 	// If set, every Subject RDN attribute with the matching OID present in
 	// the request must be a member of this list.
 	// +optional
-	Values *[]string `json:"values,omitempty"`
+	Values *[]string `json:"values,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Required marks that at least one Subject RDN attribute with this OID
+	// required marks that at least one Subject RDN attribute with this OID
 	// must be present on the request.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
-	// Validations applies rules using Common Expression Language (CEL) to
+	// validations applies rules using Common Expression Language (CEL) to
 	// validate every Subject RDN attribute value with the matching OID
 	// present on the request beyond what is possible to express using
 	// values/required.
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedStringSlice represents allowed string values
 // and/or validations paired with whether the field is a required value on the request.
 // If neither allowed values nor validations are specified, the related field must be empty.
 type CertificateRequestPolicyAllowedStringSlice struct {
-	// Values defines allowed attribute values on the related CertificateRequest field.
+	// values defines allowed attribute values on the related CertificateRequest field.
 	// Accepts wildcards "*".
 	// If set, the related field can only include items contained in the allowed values.
 	//
@@ -290,14 +294,14 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 	// will never grant a `CertificateRequest`, but other policies may.
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
-	Values *[]string `json:"values,omitempty"`
+	Values *[]string `json:"values,omitempty"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Required controls whether the related field must have at least one value.
+	// required controls whether the related field must have at least one value.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
-	// Validations applies rules using Common Expression Language (CEL) to
+	// validations applies rules using Common Expression Language (CEL) to
 	// validate attribute values present on request beyond what is possible
 	// to express using values/required.
 	// ALL attribute values on the related CertificateRequest field must pass
@@ -305,14 +309,14 @@ type CertificateRequestPolicyAllowedStringSlice struct {
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyAllowedString represents an allowed string value
 // and/or validations paired with whether the field is a required value on the request.
 // If no allowed value nor validations are specified, the related field must be empty.
 type CertificateRequestPolicyAllowedString struct {
-	// Value defines the allowed attribute value on the related CertificateRequest field.
+	// value defines the allowed attribute value on the related CertificateRequest field.
 	// Accepts wildcards "*".
 	// If set, the related field must match the specified pattern.
 	//
@@ -321,13 +325,13 @@ type CertificateRequestPolicyAllowedString struct {
 	// +optional
 	Value *string `json:"value,omitempty"`
 
-	// Required marks that the related field must be provided and not be an
+	// required marks that the related field must be provided and not be an
 	// empty string.
 	// Defaults to `false`.
 	// +optional
 	Required *bool `json:"required,omitempty"`
 
-	// Validations applies rules using Common Expression Language (CEL) to
+	// validations applies rules using Common Expression Language (CEL) to
 	// validate attribute value present on request beyond what is possible
 	// to express using value/required.
 	// An attribute value on the related CertificateRequest field must pass
@@ -335,12 +339,12 @@ type CertificateRequestPolicyAllowedString struct {
 	// +listType=map
 	// +listMapKey=rule
 	// +optional
-	Validations []ValidationRule `json:"validations,omitempty"`
+	Validations []ValidationRule `json:"validations,omitempty"` //nolint:kubeapilinter // arrayofstruct: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // ValidationRule describes a validation rule expressed in CEL.
 type ValidationRule struct {
-	// Rule represents the expression which will be evaluated by CEL.
+	// rule represents the expression which will be evaluated by CEL.
 	// ref: https://github.com/google/cel-spec
 	// The Rule is scoped to the location of the validations in the schema.
 	// The `self` variable in the CEL expression is bound to the scoped value.
@@ -352,9 +356,9 @@ type ValidationRule struct {
 	// ```
 	// rule: self.endsWith(cr.namespace + '.svc.cluster.local')
 	// ```
-	Rule string `json:"rule"`
+	Rule string `json:"rule"` //nolint:kubeapilinter // optionalorrequired: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Message is the message to display when validation fails.
+	// message is the message to display when validation fails.
 	// Message is required if the Rule contains line breaks. Note that Message
 	// must not contain line breaks.
 	// If unset, a fallback message is used: "failed rule: `<rule>`".
@@ -368,23 +372,23 @@ type ValidationRule struct {
 // Omitted fields will be satisfied by any value in the corresponding attribute
 // of the request.
 type CertificateRequestPolicyConstraints struct {
-	// MinDuration defines the minimum duration for a certificate request.
+	// minDuration defines the minimum duration for a certificate request.
 	// Values are inclusive (i.e. a value of `1h` will accept a duration of
 	// `1h`). MinDuration and MaxDuration may be the same value.
 	// If set, a duration _must_ be requested in the CertificateRequest.
 	// An omitted field applies no minimum constraint for duration.
 	// +optional
-	MinDuration *metav1.Duration `json:"minDuration,omitempty"`
+	MinDuration *metav1.Duration `json:"minDuration,omitempty"` //nolint:kubeapilinter // nodurations: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// MaxDuration defines the maximum duration for a certificate request.
+	// maxDuration defines the maximum duration for a certificate request.
 	// Values are inclusive (i.e. a value of `1h` will accept a duration of
 	// `1h`). MinDuration and MaxDuration may be the same value.
 	// If set, a duration _must_ be requested in the CertificateRequest.
 	// An omitted field applies no maximum constraint for duration.
 	// +optional
-	MaxDuration *metav1.Duration `json:"maxDuration,omitempty"`
+	MaxDuration *metav1.Duration `json:"maxDuration,omitempty"` //nolint:kubeapilinter // nodurations: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// PrivateKey defines constraints on the shape of private key
+	// privateKey defines constraints on the shape of private key
 	// allowed for a CertificateRequest.
 	// An omitted field applies no private key shape constraints.
 	// +optional
@@ -394,31 +398,31 @@ type CertificateRequestPolicyConstraints struct {
 // CertificateRequestPolicyConstraintsPrivateKey defines constraints on the shape of private key
 // allowed for a CertificateRequest.
 type CertificateRequestPolicyConstraintsPrivateKey struct {
-	// Algorithm defines the allowed crypto algorithm for the private key
+	// algorithm defines the allowed crypto algorithm for the private key
 	// in a request.
 	// An omitted field permits any algorithm.
 	// +optional
 	Algorithm *cmapi.PrivateKeyAlgorithm `json:"algorithm,omitempty"`
 
-	// MinSize defines the minimum key size for a private key.
+	// minSize defines the minimum key size for a private key.
 	// Values are inclusive (i.e. a min value of `2048` will accept a size
 	// of `2048`). MinSize and MaxSize may be the same value.
 	// An omitted field applies no minimum constraint on size.
 	// +optional
-	MinSize *int `json:"minSize,omitempty"`
+	MinSize *int `json:"minSize,omitempty"` //nolint:kubeapilinter // integers: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// MaxSize defines the maximum key size for a private key.
+	// maxSize defines the maximum key size for a private key.
 	// Values are inclusive (i.e. a min value of `2048` will accept a size
 	// of `2048`). MaxSize and MinSize may be the same value.
 	// An omitted field applies no maximum constraint on size.
 	// +optional
-	MaxSize *int `json:"maxSize,omitempty"`
+	MaxSize *int `json:"maxSize,omitempty"` //nolint:kubeapilinter // integers: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicyPluginData is configuration needed by the plugin
 // approver to evaluate a CertificateRequest on this policy.
 type CertificateRequestPolicyPluginData struct {
-	// Values define a set of well-known, to the plugin, key value pairs that
+	// values define a set of well-known, to the plugin, key value pairs that
 	// are required for the plugin to successfully evaluate a request based on
 	// this policy.
 	// +optional
@@ -432,7 +436,7 @@ type CertificateRequestPolicyPluginData struct {
 // in order for the CertificateRequestPolicy to be chosen for evaluation.
 // At least one of IssuerRef or Namespace must be defined.
 type CertificateRequestPolicySelector struct {
-	// IssuerRef is used to match by issuer, meaning the
+	// issuerRef is used to match by issuer, meaning the
 	// CertificateRequestPolicy will only evaluate CertificateRequests
 	// referring to matching issuers.
 	// CertificateRequests will not be processed if the issuer does not match,
@@ -443,34 +447,34 @@ type CertificateRequestPolicySelector struct {
 	// issuerRef: {}
 	// ```
 	// +optional
-	IssuerRef *CertificateRequestPolicySelectorIssuerRef `json:"issuerRef"`
+	IssuerRef *CertificateRequestPolicySelectorIssuerRef `json:"issuerRef"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// Namespace is used to match by namespace, meaning the
+	// namespace is used to match by namespace, meaning the
 	// CertificateRequestPolicy will only match CertificateRequests
 	// created in matching namespaces.
 	// If this field is omitted, resources in all namespaces are checked.
 	// +optional
-	Namespace *CertificateRequestPolicySelectorNamespace `json:"namespace"`
+	Namespace *CertificateRequestPolicySelectorNamespace `json:"namespace"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 // CertificateRequestPolicySelectorIssuerRef defines the selector for matching
 // the issuer reference of requests.
 type CertificateRequestPolicySelectorIssuerRef struct {
-	// Name is a wildcard enabled selector that matches the
+	// name is a wildcard enabled selector that matches the
 	// `spec.issuerRef.name` field of requests.
 	// Accepts wildcards "*".
 	// An omitted field matches all names.
 	// +optional
 	Name *string `json:"name,omitempty"`
 
-	// Kind is the wildcard selector to match the `spec.issuerRef.kind` field
+	// kind is the wildcard selector to match the `spec.issuerRef.kind` field
 	// on requests.
 	// Accepts wildcards "*".
 	// An omitted field matches all kinds.
 	// +optional
 	Kind *string `json:"kind,omitempty"`
 
-	// Group is the wildcard selector to match the `spec.issuerRef.group` field
+	// group is the wildcard selector to match the `spec.issuerRef.group` field
 	// on requests.
 	// Accepts wildcards "*".
 	// An omitted field matches all groups.
@@ -482,14 +486,14 @@ type CertificateRequestPolicySelectorIssuerRef struct {
 // the namespace of requests. Note that all selectors must match in order
 // for the request to be considered for evaluation by this policy.
 type CertificateRequestPolicySelectorNamespace struct {
-	// MatchNames is the set of namespace names that select on
+	// matchNames is the set of namespace names that select on
 	// CertificateRequests that have been created in a matching namespace.
 	// Accepts wildcards "*".
 	// TODO: add x-kubernetes-list-type: set in v1alpha2
 	// +optional
-	MatchNames []string `json:"matchNames,omitempty"`
+	MatchNames []string `json:"matchNames,omitempty"` //nolint:kubeapilinter // ssatags: pre-existing API; changing it now could break clients, revisit for a future API version
 
-	// MatchLabels is the set of Namespace labels that select on
+	// matchLabels is the set of Namespace labels that select on
 	// CertificateRequests which have been created in a namespace matching the
 	// selector.
 	// +optional
@@ -499,13 +503,13 @@ type CertificateRequestPolicySelectorNamespace struct {
 // CertificateRequestPolicyStatus defines the observed state of the
 // CertificateRequestPolicy.
 type CertificateRequestPolicyStatus struct {
-	// List of status conditions to indicate the status of the
+	// conditions is a list of status conditions to indicate the status of the
 	// CertificateRequestPolicy.
 	// Known condition types are `Ready`.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"` //nolint:kubeapilinter // conditions: pre-existing API; changing it now could break clients, revisit for a future API version
 }
 
 const (

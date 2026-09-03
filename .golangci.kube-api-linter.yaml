@@ -1,0 +1,20 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - kubeapilinter
+  settings:
+    custom:
+      kubeapilinter:
+        type: module
+        description: Kube API Linter lints Kube-like APIs based on API conventions and best practices.
+  exclusions:
+    rules:
+      - linters:
+          - kubeapilinter
+        path-except: pkg/apis/.*
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
