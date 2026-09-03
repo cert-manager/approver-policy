@@ -1197,7 +1197,7 @@ spec:
                 description: |-
                   plugins are approvers that are built into approver-policy at
                   compile-time. This is an advanced feature typically used to extend
-                  approver-policy core features. This field define plugins and their
+                  approver-policy core features. This field defines plugins and their
                   configuration that should be executed when this policy is evaluated
                   against a CertificateRequest.
                 type: object

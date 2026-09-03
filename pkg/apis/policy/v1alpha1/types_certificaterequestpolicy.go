@@ -81,7 +81,7 @@ type CertificateRequestPolicySpec struct {
 
 	// plugins are approvers that are built into approver-policy at
 	// compile-time. This is an advanced feature typically used to extend
-	// approver-policy core features. This field define plugins and their
+	// approver-policy core features. This field defines plugins and their
 	// configuration that should be executed when this policy is evaluated
 	// against a CertificateRequest.
 	// +optional
@@ -98,7 +98,7 @@ type CertificateRequestPolicySpec struct {
 // A CertificateRequest can request _less_ than what is allowed,
 // but _not more_, i.e. a CertificateRequest can request a subset of what is
 // declared as allowed by the policy.
-// Omitted fields declares that the equivalent CertificateRequest field _must_
+// Omitted fields declare that the equivalent CertificateRequest field _must_
 // be omitted or have an empty value for the request to be permitted.
 type CertificateRequestPolicyAllowed struct {
 	// commonName defines the X.509 Common Name that may be requested.

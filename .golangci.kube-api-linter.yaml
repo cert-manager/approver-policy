@@ -8,7 +8,7 @@ linters:
     custom:
       kubeapilinter:
         type: module
-        description: Kube API Linter lints Kube like APIs based on API conventions and best practices.
+        description: Kube API Linter lints Kube-like APIs based on API conventions and best practices.
   exclusions:
     rules:
       - linters:
