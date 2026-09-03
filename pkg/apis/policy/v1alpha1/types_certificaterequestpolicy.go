@@ -42,8 +42,8 @@ type CertificateRequestPolicy struct {
 	metav1.ObjectMeta `json:"metadata"`
 
 	// spec is the desired state of the CertificateRequestPolicy.
-	// +optional
-	Spec CertificateRequestPolicySpec `json:"spec"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
+	// +required
+	Spec CertificateRequestPolicySpec `json:"spec"` //nolint:kubeapilinter // nonpointerstructs: spec has always been required; marking it optional would change the published CRD
 	// status is the observed state of the CertificateRequestPolicy.
 	// +optional
 	Status CertificateRequestPolicyStatus `json:"status,omitzero"` //nolint:kubeapilinter // optionalfields: pre-existing API; changing it now could break clients, revisit for a future API version
