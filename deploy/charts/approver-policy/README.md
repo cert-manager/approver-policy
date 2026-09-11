@@ -519,5 +519,187 @@ For more information, see [Configure a Security Context for a Pod or Container](
 
 Container Security Context to be set on the controller component container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
 
+#### **startupapicheck.enabled** ~ `bool`
+> Default value:
+> ```yaml
+> true
+> ```
+
+Enables the startup API check Job that verifies the webhook is ready.
+#### **startupapicheck.securityContext** ~ `object`
+> Default value:
+> ```yaml
+> runAsNonRoot: true
+> seccompProfile:
+>   type: RuntimeDefault
+> ```
+
+Pod Security Context to be set on the startupapicheck component Pod. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+
+#### **startupapicheck.containerSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> allowPrivilegeEscalation: false
+> capabilities:
+>   drop:
+>     - ALL
+> readOnlyRootFilesystem: true
+> ```
+
+Container Security Context to be set on the startupapicheck container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+
+#### **startupapicheck.timeout** ~ `string`
+> Default value:
+> ```yaml
+> 1m
+> ```
+
+Timeout for the startupapicheck 'check api' command.
+#### **startupapicheck.backoffLimit** ~ `number`
+> Default value:
+> ```yaml
+> 4
+> ```
+
+Job backoffLimit
+#### **startupapicheck.ttlSecondsAfterFinished** ~ `integer`
+
+Limits the lifetime of a Job that has finished execution (either Complete or Failed). Disabled by default (field is not set).
+
+
+#### **startupapicheck.jobAnnotations** ~ `object`
+> Default value:
+> ```yaml
+> helm.sh/hook: post-install,post-upgrade
+> helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+> helm.sh/hook-weight: "1"
+> ```
+
+Optional additional annotations to add to the startupapicheck Job.
+
+#### **startupapicheck.podAnnotations** ~ `object`
+
+Optional additional annotations to add to the startupapicheck Pods.
+
+#### **startupapicheck.extraArgs** ~ `array`
+> Default value:
+> ```yaml
+> - -v
+> ```
+
+Additional command line flags to pass to startupapicheck binary. Verbose logging is enabled by default so that if startupapicheck fails, you can know what exactly caused the failure.
+
+#### **startupapicheck.resources** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Resources to provide to the startupapicheck pod.
+#### **startupapicheck.nodeSelector** ~ `object`
+> Default value:
+> ```yaml
+> kubernetes.io/os: linux
+> ```
+
+The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels.
+
+#### **startupapicheck.affinity** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+A Kubernetes Affinity, if required.
+#### **startupapicheck.tolerations** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
+
+A list of Kubernetes Tolerations, if required.
+#### **startupapicheck.podLabels** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Optional additional labels to add to the startupapicheck Pods.
+#### **startupapicheck.image.registry** ~ `string`
+
+Deprecated: per-component registry prefix.  
+Prefer using the global `imageRegistry`/`imageNamespace` values.
+
+#### **startupapicheck.image.name** ~ `string`
+> Default value:
+> ```yaml
+> cert-manager-approver-policy-startupapicheck
+> ```
+
+The image name for the approver-policy startupapicheck.
+
+#### **startupapicheck.image.repository** ~ `string`
+> Default value:
+> ```yaml
+> ""
+> ```
+
+Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `startupapicheck.image.name`).
+
+#### **startupapicheck.image.tag** ~ `string`
+
+Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
+
+#### **startupapicheck.image.digest** ~ `string`
+
+Setting a digest pins the image.
+
+#### **startupapicheck.image.pullPolicy** ~ `string`
+> Default value:
+> ```yaml
+> IfNotPresent
+> ```
+
+Kubernetes imagePullPolicy on the Job.
+#### **startupapicheck.rbac.annotations** ~ `object`
+> Default value:
+> ```yaml
+> helm.sh/hook: post-install,post-upgrade
+> helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+> helm.sh/hook-weight: "-5"
+> ```
+
+Annotations for the startup API Check Job RBAC resources.
+
+#### **startupapicheck.serviceAccount.create** ~ `bool`
+> Default value:
+> ```yaml
+> true
+> ```
+
+Specifies whether a service account should be created.
+#### **startupapicheck.serviceAccount.name** ~ `string`
+
+The name of the service account to use.  
+If not set and create is true, a name is generated using the fullname template.
+
+#### **startupapicheck.serviceAccount.annotations** ~ `object`
+> Default value:
+> ```yaml
+> helm.sh/hook: post-install,post-upgrade
+> helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+> helm.sh/hook-weight: "-5"
+> ```
+
+Optional additional annotations to add to the Job's Service Account.
+
+#### **startupapicheck.serviceAccount.automountServiceAccountToken** ~ `bool`
+> Default value:
+> ```yaml
+> true
+> ```
+
+Automount API credentials for a Service Account.
+
 
 <!-- /AUTO-GENERATED -->
