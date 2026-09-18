@@ -111,3 +111,23 @@ minAvailable: {{ default 1 .minAvailable }}
 maxUnavailable: {{ .maxUnavailable }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+startupapicheck helpers
+*/}}
+{{- define "startupapicheck.name" -}}
+{{- printf "startupapicheck" -}}
+{{- end -}}
+
+{{- define "startupapicheck.fullname" -}}
+{{- $trimmedName := printf "%s" (include "cert-manager-approver-policy.name" .) | trunc 52 | trimSuffix "-" -}}
+{{- printf "%s-startupapicheck" $trimmedName | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "startupapicheck.serviceAccountName" -}}
+{{- if .Values.startupapicheck.serviceAccount.create -}}
+    {{ default (include "startupapicheck.fullname" .) .Values.startupapicheck.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.startupapicheck.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
