@@ -102,4 +102,13 @@ tests:
           path: metadata.labels.app
           value: from-common
         template: templates/webhook.yaml
-        documentIndex: 1
+        documentSelector:
+          path: kind
+          value: ValidatingWebhookConfiguration
+      - equal:
+          path: metadata.labels.app
+          value: from-common
+        template: templates/webhook.yaml
+        documentSelector:
+          path: kind
+          value: Service
