@@ -344,3 +344,131 @@ containerSecurityContext:
     drop:
     - ALL
   readOnlyRootFilesystem: true
+
+startupapicheck:
+  # Enables the startup API check Job that verifies the webhook is ready.
+  enabled: true
+
+  # Pod Security Context to be set on the startupapicheck component Pod.
+  # For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+  # +docs:property
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Container Security Context to be set on the startupapicheck container.
+  # For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+  # +docs:property
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+
+  # Timeout for the startupapicheck 'check api' command.
+  timeout: 1m
+
+  # Job backoffLimit
+  backoffLimit: 4
+
+  # Limits the lifetime of a Job that has finished execution (either Complete
+  # or Failed). Disabled by default (field is not set).
+  # +docs:property
+  # +docs:type=integer
+  # ttlSecondsAfterFinished:
+
+  # Optional additional annotations to add to the startupapicheck Job.
+  # +docs:property
+  jobAnnotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+
+  # Optional additional annotations to add to the startupapicheck Pods.
+  # +docs:property
+  # podAnnotations: {}
+
+  # Additional command line flags to pass to startupapicheck binary.
+  # Verbose logging is enabled by default so that if startupapicheck fails, you
+  # can know what exactly caused the failure.
+  # +docs:property
+  extraArgs:
+    - -v
+
+  # Resources to provide to the startupapicheck pod.
+  resources: {}
+
+  # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
+  # matching labels.
+  # +docs:property
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # A Kubernetes Affinity, if required.
+  affinity: {}
+
+  # A list of Kubernetes Tolerations, if required.
+  tolerations: []
+
+  # Optional additional labels to add to the startupapicheck Pods.
+  podLabels: {}
+
+  image:
+    # Deprecated: per-component registry prefix.
+    # Prefer using the global `imageRegistry`/`imageNamespace` values.
+    # +docs:property
+    # registry: ""
+
+    # The image name for the approver-policy startupapicheck.
+    # +docs:property
+    name: cert-manager-approver-policy-startupapicheck
+
+    # Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `startupapicheck.image.name`).
+    # +docs:property
+    repository: ""
+
+    # Override the image tag to deploy by setting this variable.
+    # If no value is set, the chart's appVersion is used.
+    # +docs:property
+    # tag: vX.Y.Z
+
+    # Setting a digest pins the image.
+    # +docs:property
+    # digest: sha256:...
+
+    # Kubernetes imagePullPolicy on the Job.
+    pullPolicy: IfNotPresent
+
+    # WARNING: For internal use only; overwritten before releasing the chart.
+    # +docs:hidden
+    _defaultReference: :v0.0.0
+
+  rbac:
+    # Annotations for the startup API Check Job RBAC resources.
+    # +docs:property
+    annotations:
+      helm.sh/hook: post-install,post-upgrade
+      helm.sh/hook-weight: "-5"
+      helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+
+  serviceAccount:
+    # Specifies whether a service account should be created.
+    create: true
+
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template.
+    # +docs:property
+    # name: ""
+
+    # Optional additional annotations to add to the Job's Service Account.
+    # +docs:property
+    annotations:
+      helm.sh/hook: post-install,post-upgrade
+      helm.sh/hook-weight: "-5"
+      helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+
+    # Automount API credentials for a Service Account.
+    # +docs:property
+    automountServiceAccountToken: true

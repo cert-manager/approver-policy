@@ -42,11 +42,13 @@ smoke-setup-cert-manager: | kind-cluster $(NEEDS_HELM) $(NEEDS_KUBECTL)
 # When a "test-smoke" target is run, the currently active cluster must be the kind
 # cluster created by the "kind-cluster" target.
 ifeq ($(findstring test-smoke,$(MAKECMDGOALS)),test-smoke)
-install: kind-cluster oci-load-manager
+install: kind-cluster oci-load-manager oci-load-startupapicheck
 endif
 
 test-smoke-deps: INSTALL_OPTIONS :=
 test-smoke-deps: INSTALL_OPTIONS += --set image.repository=$(oci_manager_image_name_development)
+test-smoke-deps: INSTALL_OPTIONS += --set startupapicheck.image.repository=$(oci_startupapicheck_image_name_development)
+test-smoke-deps: INSTALL_OPTIONS += --wait-for-jobs
 test-smoke-deps: smoke-setup-cert-manager
 test-smoke-deps: install
 
