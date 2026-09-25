@@ -1,0 +1,114 @@
+suite: Labels merge as a map without duplicate keys
+templates:
+  - templates/deployment.yaml
+  - templates/serviceaccount.yaml
+  - templates/metrics-service.yaml
+  - templates/metrics-servicemonitor.yaml
+  - templates/webhook.yaml
+release:
+  name: rel
+  namespace: cert-manager
+tests:
+  - it: commonLabels wins over a chart-owned label
+    set:
+      commonLabels:
+        app.kubernetes.io/managed-by: argocd
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: argocd
+        template: templates/serviceaccount.yaml
+
+  - it: label keys that YAML 1.1 would read as booleans stay strings
+    set:
+      commonLabels:
+        "on": alpha
+        "no": beta
+    asserts:
+      - equal:
+          path: metadata.labels["on"]
+          value: alpha
+        template: templates/serviceaccount.yaml
+      - equal:
+          path: metadata.labels["no"]
+          value: beta
+        template: templates/serviceaccount.yaml
+
+  - it: the pod template keeps the selector's app label, whatever commonLabels says
+    set:
+      commonLabels:
+        app: from-common
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: cert-manager-approver-policy
+        template: templates/deployment.yaml
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: cert-manager-approver-policy
+        template: templates/deployment.yaml
+
+  - it: the metrics Service keeps the app label the ServiceMonitor selects on
+    set:
+      commonLabels:
+        app: from-common
+      app:
+        metrics:
+          service:
+            enabled: true
+            servicemonitor:
+              enabled: true
+              prometheusInstance: default
+    asserts:
+      - equal:
+          path: metadata.labels.app
+          value: cert-manager-approver-policy
+        template: templates/metrics-service.yaml
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: cert-manager-approver-policy
+        template: templates/metrics-servicemonitor.yaml
+
+  - it: servicemonitor.labels and the prometheus label still win over commonLabels
+    set:
+      commonLabels:
+        team: from-common
+        prometheus: from-common
+      app:
+        metrics:
+          service:
+            enabled: true
+            servicemonitor:
+              enabled: true
+              prometheusInstance: default
+              labels:
+                team: from-servicemonitor
+    asserts:
+      - equal:
+          path: metadata.labels.team
+          value: from-servicemonitor
+        template: templates/metrics-servicemonitor.yaml
+      - equal:
+          path: metadata.labels.prometheus
+          value: default
+        template: templates/metrics-servicemonitor.yaml
+
+  - it: app stays overridable on resources no selector matches by it
+    set:
+      commonLabels:
+        app: from-common
+    asserts:
+      - equal:
+          path: metadata.labels.app
+          value: from-common
+        template: templates/webhook.yaml
+        documentSelector:
+          path: kind
+          value: ValidatingWebhookConfiguration
+      - equal:
+          path: metadata.labels.app
+          value: from-common
+        template: templates/webhook.yaml
+        documentSelector:
+          path: kind
+          value: Service

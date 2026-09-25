@@ -455,7 +455,7 @@ resources:
 > {}
 > ```
 
-Allow custom labels to be placed on resources - optional.
+Allow custom labels to be placed on resources - optional. On a key collision these win over the chart's own labels, with one exception: the "app" label on the approver-policy Pods and on the metrics. Service is matched by selectors, so it cannot be overridden there. It is still applied to every other resource.
 #### **podAnnotations** ~ `object`
 > Default value:
 > ```yaml
