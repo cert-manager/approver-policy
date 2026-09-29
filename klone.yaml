@@ -33,9 +33,9 @@ targets:
       repo_hash: edc0ae97a57e55d0184bf8ea921ef13c217dc2d0
       repo_path: modules/go
     - folder_name: helm
-      repo_url: https://github.com/cert-manager/makefile-modules.git
-      repo_ref: main
-      repo_hash: edc0ae97a57e55d0184bf8ea921ef13c217dc2d0
+      repo_url: https://github.com/wallrj-cyberark/makefile-modules.git
+      repo_ref: pin-kyverno-pod-security-policies
+      repo_hash: ad9e0642cce32fbe61db40104d40f3240b4f3e1f
       repo_path: modules/helm
     - folder_name: help
       repo_url: https://github.com/cert-manager/makefile-modules.git
