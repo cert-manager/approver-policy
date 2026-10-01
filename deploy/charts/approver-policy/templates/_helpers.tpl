@@ -41,14 +41,20 @@ See https://github.com/cert-manager/cert-manager/issues/9348 for a list of linke
 {{- end -}}
 
 {{/*
-Common labels plus "app", for resources that carry it but are not selected
-by it.
+Common labels plus "app", for resources where nothing has to keep matching
+the "app" label.
 
 "app" is applied at a lower precedence than the common labels, so
 .Values.commonLabels can still override it, as it could before the labels
-were merged. Resources whose "app" label IS read by a selector must not use
-this: they merge "app" in at a higher precedence instead, so that it cannot
-be overridden and leave the selector matching nothing.
+were merged. Where a selector does have to keep matching, merge "app" in at a
+higher precedence instead, as the pod template and the metrics Service do, so
+it cannot be overridden and leave the selector matching nothing.
+
+Note that the ServiceMonitor's selector is "app" on its own, so it also
+matches the webhook Service, which uses this helper. Letting commonLabels
+override "app" there is deliberate: that Service serves the webhook rather
+than /metrics, so dropping out of ServiceMonitor selection loses nothing, and
+the ValidatingWebhookConfiguration reaches it by name, not by label.
 */}}
 {{- define "cert-manager-approver-policy.labelsWithApp" -}}
 {{- toYaml (mergeOverwrite

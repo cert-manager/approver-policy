@@ -455,7 +455,7 @@ resources:
 > {}
 > ```
 
-Allow custom labels to be placed on resources - optional. On a key collision these win over the chart's own labels, with one exception: the "app" label on the approver-policy Pods and on the metrics. Service is matched by selectors, so it cannot be overridden there. It is still applied to every other resource.
+Allow custom labels to be placed on resources - optional. On a key collision these win over the chart's own labels, except where something has to keep matching the value: the "app" label on the approver-policy Pods and on the metrics Service, both read by selectors, and the "prometheus" label on the ServiceMonitor, read by the Prometheus instance that selects it. Those keep the chart's value on the resource in question, and are still applied from commonLabels to every other resource.
 #### **podAnnotations** ~ `object`
 > Default value:
 > ```yaml

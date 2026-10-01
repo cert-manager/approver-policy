@@ -93,7 +93,7 @@ tests:
           value: default
         template: templates/metrics-servicemonitor.yaml
 
-  - it: app stays overridable on resources no selector matches by it
+  - it: app stays overridable where nothing has to keep matching it
     set:
       commonLabels:
         app: from-common
