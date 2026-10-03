@@ -34,6 +34,27 @@ CHART NAME: {{ .Chart.Name }}
 CHART VERSION: {{ .Chart.Version }}
 APP VERSION: {{ .Chart.AppVersion }}
 
+{{ .Chart.Name }} has been deployed successfully!
+
+{{- if .Values.startupapicheck.enabled }}
+
+A startupapicheck Job has been created to verify that the webhook is ready.
+
+To wait for the webhook to be ready before the installation completes, use:
+  helm install {{ .Release.Name }} --wait --wait-for-jobs
+
+Note: Both --wait and --wait-for-jobs flags are required to wait for Jobs to complete.
+Helm also waits for post-install hook Jobs (including startupapicheck) during install.
+
+To check if the webhook is ready:
+  kubectl get job -n {{ .Release.Namespace }} {{ include "startupapicheck.fullname" . }}
+
+{{- else }}
+
+Note: The startupapicheck Job is disabled. The webhook may not be immediately ready after installation.
+
+{{- end }}
+
 {{ .Chart.Name }} is a cert-manager project.
 
 If you're a new user, we recommend that you read the [cert-manager Approval Policy documentation] to learn more.
