@@ -1,0 +1,25 @@
+suite: test deployment
+templates:
+  - deployment.yaml
+tests:
+  - it: should quote proxy env vars containing special YAML characters
+    set:
+      http_proxy: http://proxy.example.com:8080
+      https_proxy: http://proxy.example.com:8080
+      no_proxy: "*.example.com,1.2.3.4/8"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HTTP_PROXY
+            value: http://proxy.example.com:8080
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HTTPS_PROXY
+            value: http://proxy.example.com:8080
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NO_PROXY
+            value: "*.example.com,1.2.3.4/8"

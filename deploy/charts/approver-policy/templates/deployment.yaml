@@ -85,15 +85,15 @@ spec:
         env:
         {{- with .Values.http_proxy }}
         - name: HTTP_PROXY
-          value: {{ . }}
+          value: {{ . | quote }}
         {{- end }}
         {{- with .Values.https_proxy }}
         - name: HTTPS_PROXY
-          value: {{ . }}
+          value: {{ . | quote }}
         {{- end }}
         {{- with .Values.no_proxy }}
         - name: NO_PROXY
-          value: {{ . }}
+          value: {{ . | quote }}
         {{- end }}
         {{- end }}
 
