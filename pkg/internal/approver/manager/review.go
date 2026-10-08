@@ -107,11 +107,11 @@ func (m *mngr) Review(ctx context.Context, cr *cmapi.CertificateRequest) (manage
 		}
 	}
 
-	// Check for matching policies that haven't been reconciled yet (no Ready
-	// condition). Used below to defer terminal deny decisions during startup.
+	// Defer terminal denial while matching policies await reconciliation of
+	// their current generation.
 	hasUnreconciled := hasUnreconciledPolicies(policies)
 
-	// Filter to only Ready policies for evaluation.
+	// Filter to policies that are Ready for their current generation.
 	policies, err = m.readyPredicate(ctx, cr, policies)
 	if err != nil {
 		return manager.ReviewResponse{}, fmt.Errorf("failed to filter ready policies: %w", err)
@@ -197,13 +197,12 @@ func (m *mngr) Review(ctx context.Context, cr *cmapi.CertificateRequest) (manage
 }
 
 // hasUnreconciledPolicies returns true if any policy lacks a Ready condition
-// entirely, indicating it hasn't been reconciled yet. This is distinct from
-// Ready=False which is an explicit state set by the controller.
+// for its current generation. A current-generation Ready=False is reconciled.
 func hasUnreconciledPolicies(policies []policyapi.CertificateRequestPolicy) bool {
 	for _, policy := range policies {
 		hasReadyCondition := false
 		for _, condition := range policy.Status.Conditions {
-			if condition.Type == policyapi.ConditionTypeReady {
+			if condition.Type == policyapi.ConditionTypeReady && condition.ObservedGeneration == policy.Generation {
 				hasReadyCondition = true
 				break
 			}
