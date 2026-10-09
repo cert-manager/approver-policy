@@ -17,8 +17,18 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ include "cert-manager-approver-policy.name" . }}
-        {{- include "cert-manager-approver-policy.labels" . | nindent 8 }}
+        {{- /*
+          Merged as one map so no key can be emitted twice. "app" is merged in
+          last so .Values.commonLabels cannot override it: the Deployment,
+          PodDisruptionBudget, metrics Service and webhook Service selectors
+          all match on it, and a pod template that does not match the
+          Deployment's own selector is rejected by the API server.
+        */}}
+        {{- $podLabels := mergeOverwrite
+              (include "cert-manager-approver-policy.labels" . | fromYaml)
+              (dict "app" (include "cert-manager-approver-policy.name" .))
+        -}}
+        {{- toYaml $podLabels | nindent 8 }}
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}

@@ -5,8 +5,16 @@ metadata:
   name: {{ include "cert-manager-approver-policy.name" . }}-metrics
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    app: {{ include "cert-manager-approver-policy.name" . }}
-    {{- include "cert-manager-approver-policy.labels" . | nindent 4 }}
+    {{- /*
+      "app" is merged in last so .Values.commonLabels cannot override it: the
+      ServiceMonitor selects this Service on it, and overriding it would
+      silently stop metrics being scraped.
+    */}}
+    {{- $labels := mergeOverwrite
+          (include "cert-manager-approver-policy.labels" . | fromYaml)
+          (dict "app" (include "cert-manager-approver-policy.name" .))
+    -}}
+    {{- toYaml $labels | nindent 4 }}
 spec:
   type: {{ .Values.app.metrics.service.type }}
   ports:
