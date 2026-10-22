@@ -37,13 +37,13 @@ import (
 type Predicate func(context.Context, *cmapi.CertificateRequest, []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error)
 
 // Ready is a Predicate that returns the subset of given policies that have a
-// Ready condition set to True.
+// Ready condition set to True for their current generation.
 func Ready(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
 	var readyPolicies []policyapi.CertificateRequestPolicy
 
 	for _, policy := range policies {
 		for _, condition := range policy.Status.Conditions {
-			if condition.Type == policyapi.ConditionTypeReady && condition.Status == metav1.ConditionTrue {
+			if condition.Type == policyapi.ConditionTypeReady && condition.Status == metav1.ConditionTrue && condition.ObservedGeneration == policy.Generation {
 				readyPolicies = append(readyPolicies, policy)
 			}
 		}
