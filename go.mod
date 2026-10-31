@@ -3,7 +3,7 @@ module github.com/cert-manager/approver-policy
 go 1.26.0
 
 require (
-	cel.dev/cel-go v0.32.0
+	cel.dev/cel-go v0.33.1
 	github.com/cert-manager/cert-manager v1.21.3
 	github.com/go-logr/logr v1.4.4
 	github.com/google/go-cmp v0.7.0
