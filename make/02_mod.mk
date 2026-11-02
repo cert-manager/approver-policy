@@ -34,10 +34,13 @@ include make/test-unit.mk
 ## @category [shared] Release
 release:
 	$(MAKE) oci-push-manager
+	$(MAKE) oci-push-startupapicheck
 	$(MAKE) helm-chart-oci-push
 
 	@echo "RELEASE_OCI_MANAGER_IMAGE=$(oci_manager_image_name)" >> "$(GITHUB_OUTPUT)"
 	@echo "RELEASE_OCI_MANAGER_TAG=$(oci_manager_image_tag)" >> "$(GITHUB_OUTPUT)"
+	@echo "RELEASE_OCI_STARTUPAPICHECK_IMAGE=$(oci_startupapicheck_image_name)" >> "$(GITHUB_OUTPUT)"
+	@echo "RELEASE_OCI_STARTUPAPICHECK_TAG=$(oci_startupapicheck_image_tag)" >> "$(GITHUB_OUTPUT)"
 	@echo "RELEASE_HELM_CHART_IMAGE=$(helm_chart_image_name)" >> "$(GITHUB_OUTPUT)"
 	@echo "RELEASE_HELM_CHART_VERSION=$(helm_chart_version)" >> "$(GITHUB_OUTPUT)"
 
