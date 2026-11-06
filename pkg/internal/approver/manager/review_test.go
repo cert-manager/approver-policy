@@ -36,6 +36,54 @@ import (
 	testenv "github.com/cert-manager/approver-policy/test/env"
 )
 
+func Test_hasUnreconciledPolicies(t *testing.T) {
+	tests := map[string]struct {
+		conditions      []metav1.Condition
+		expUnreconciled bool
+	}{
+		"no Ready condition": {
+			expUnreconciled: true,
+		},
+		"unrelated condition": {
+			conditions:      []metav1.Condition{{Type: "Other", Status: metav1.ConditionTrue, ObservedGeneration: 2}},
+			expUnreconciled: true,
+		},
+		"current Ready condition": {
+			conditions: []metav1.Condition{{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue, ObservedGeneration: 2}},
+		},
+		"current NotReady condition": {
+			conditions: []metav1.Condition{{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionFalse, ObservedGeneration: 2}},
+		},
+		"stale Ready condition": {
+			conditions:      []metav1.Condition{{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue, ObservedGeneration: 1}},
+			expUnreconciled: true,
+		},
+		"stale NotReady condition": {
+			conditions:      []metav1.Condition{{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionFalse, ObservedGeneration: 1}},
+			expUnreconciled: true,
+		},
+		"missing observed generation": {
+			conditions:      []metav1.Condition{{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue}},
+			expUnreconciled: true,
+		},
+		"future observed generation": {
+			conditions:      []metav1.Condition{{Type: policyapi.ConditionTypeReady, Status: metav1.ConditionTrue, ObservedGeneration: 3}},
+			expUnreconciled: true,
+		},
+	}
+
+	assert.False(t, hasUnreconciledPolicies(nil))
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			policies := []policyapi.CertificateRequestPolicy{{
+				ObjectMeta: metav1.ObjectMeta{Generation: 2},
+				Status:     policyapi.CertificateRequestPolicyStatus{Conditions: test.conditions},
+			}}
+			assert.Equal(t, test.expUnreconciled, hasUnreconciledPolicies(policies))
+		})
+	}
+}
+
 func Test_Review(t *testing.T) {
 	env := testenv.RunControlPlane(t, t.Context(),
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
@@ -49,13 +97,24 @@ func Test_Review(t *testing.T) {
 		})
 	}
 
+	approveUpdatedPolicy := func(t *testing.T) approver.Evaluator {
+		return fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, policy *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+			if policy.Name == "test-policy-updated" {
+				return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
+			}
+			return approver.EvaluationResponse{Result: approver.ResultDenied, Message: "this is a denied response"}, nil
+		})
+	}
+
 	tests := map[string]struct {
-		evaluator        func(t *testing.T) approver.Evaluator
-		predicate        func(t *testing.T) predicate.Predicate
-		policies         []policyapi.CertificateRequestPolicy
-		setReadyPolicies []string // policy names to set Ready condition on after creation
-		expResponse      manager.ReviewResponse
-		expErr           bool
+		evaluator                 func(t *testing.T) approver.Evaluator
+		predicate                 func(t *testing.T) predicate.Predicate
+		policies                  []policyapi.CertificateRequestPolicy
+		readyConditions           map[string]metav1.ConditionStatus
+		updatePolicies            []string
+		expResponse               manager.ReviewResponse
+		expResponseAfterReconcile *manager.ReviewResponse
+		expErr                    bool
 	}{
 		"if no CertificateRequestPolicies exist, return ResultUnprocessed": {
 			evaluator: expNoEvaluation,
@@ -112,9 +171,9 @@ func Test_Review(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
-			setReadyPolicies: []string{"test-policy-a"},
-			expResponse:      manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
-			expErr:           false,
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-a": metav1.ConditionTrue},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
+			expErr:          false,
 		},
 		"if single policy returns and evaluator returns not-denied, return ResultApproved": {
 			evaluator: func(t *testing.T) approver.Evaluator {
@@ -131,9 +190,9 @@ func Test_Review(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
 				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
-			setReadyPolicies: []string{"test-policy-a"},
-			expResponse:      manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
-			expErr:           false,
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-a": metav1.ConditionTrue},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
+			expErr:          false,
 		},
 		"if two policies returned and evaluator returns one not-denied, return ResultApproved": {
 			evaluator: func(t *testing.T) approver.Evaluator {
@@ -159,9 +218,9 @@ func Test_Review(t *testing.T) {
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
-			setReadyPolicies: []string{"test-policy-a", "test-policy-b"},
-			expResponse:      manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-b"`},
-			expErr:           false,
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-a": metav1.ConditionTrue, "test-policy-b": metav1.ConditionTrue},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-b"`},
+			expErr:          false,
 		},
 		"if two policies returned and both return denied, return ResultDenied": {
 			evaluator: func(t *testing.T) approver.Evaluator {
@@ -184,9 +243,9 @@ func Test_Review(t *testing.T) {
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
-			setReadyPolicies: []string{"test-policy-a", "test-policy-b"},
-			expResponse:      manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response] [test-policy-b: this is a denied response]"},
-			expErr:           false,
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-a": metav1.ConditionTrue, "test-policy-b": metav1.ConditionTrue},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response] [test-policy-b: this is a denied response]"},
+			expErr:          false,
 		},
 		"if evaluator denies but some policies are unreconciled, return ResultUnprocessed": {
 			evaluator: func(t *testing.T) approver.Evaluator {
@@ -209,12 +268,142 @@ func Test_Review(t *testing.T) {
 					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
-			setReadyPolicies: []string{"test-policy-deny"},
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-deny": metav1.ConditionTrue},
 			expResponse: manager.ReviewResponse{
 				Result:  manager.ResultUnprocessed,
 				Message: "Not all policies are ready for evaluation; refusing to deny pending policy readiness: [test-policy-deny: this is a denied response]",
 			},
 			expErr: false,
+		},
+		"if an approving policy has stale Ready=True, defer denial until it reconciles": {
+			evaluator: approveUpdatedPolicy,
+			predicate: func(t *testing.T) predicate.Predicate {
+				return func(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+					return policies, nil
+				}
+			},
+			policies: []policyapi.CertificateRequestPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-deny"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-updated"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+			},
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-deny": metav1.ConditionTrue, "test-policy-updated": metav1.ConditionTrue},
+			updatePolicies:  []string{"test-policy-updated"},
+			expResponse: manager.ReviewResponse{
+				Result:  manager.ResultUnprocessed,
+				Message: "Not all policies are ready for evaluation; refusing to deny pending policy readiness: [test-policy-deny: this is a denied response]",
+			},
+			expResponseAfterReconcile: &manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-updated"`},
+		},
+		"if an approving policy has stale Ready=False, defer denial until it reconciles": {
+			evaluator: approveUpdatedPolicy,
+			predicate: func(t *testing.T) predicate.Predicate {
+				return func(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+					return policies, nil
+				}
+			},
+			policies: []policyapi.CertificateRequestPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-deny"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-updated"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+			},
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-deny": metav1.ConditionTrue, "test-policy-updated": metav1.ConditionFalse},
+			updatePolicies:  []string{"test-policy-updated"},
+			expResponse: manager.ReviewResponse{
+				Result:  manager.ResultUnprocessed,
+				Message: "Not all policies are ready for evaluation; refusing to deny pending policy readiness: [test-policy-deny: this is a denied response]",
+			},
+			expResponseAfterReconcile: &manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-updated"`},
+		},
+		"if another policy is NotReady at its current generation, do not defer denial": {
+			evaluator: approveUpdatedPolicy,
+			predicate: func(t *testing.T) predicate.Predicate {
+				return func(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+					return policies, nil
+				}
+			},
+			policies: []policyapi.CertificateRequestPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-deny"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-updated"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+			},
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-deny": metav1.ConditionTrue, "test-policy-updated": metav1.ConditionFalse},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-deny: this is a denied response]"},
+		},
+		"if a stale policy does not match, do not defer denial": {
+			evaluator: approveUpdatedPolicy,
+			predicate: func(t *testing.T) predicate.Predicate {
+				return predicate.SelectorIssuerRef
+			},
+			policies: []policyapi.CertificateRequestPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-deny"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-updated"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+			},
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-deny": metav1.ConditionTrue, "test-policy-updated": metav1.ConditionTrue},
+			updatePolicies:  []string{"test-policy-updated"},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-deny: this is a denied response]"},
+		},
+		"if a current policy approves, a stale policy does not block approval": {
+			evaluator: func(t *testing.T) approver.Evaluator {
+				return fake.NewFakeEvaluator().WithEvaluate(func(_ context.Context, policy *policyapi.CertificateRequestPolicy, _ *cmapi.CertificateRequest) (approver.EvaluationResponse, error) {
+					assert.Equal(t, "test-policy-current", policy.Name)
+					return approver.EvaluationResponse{Result: approver.ResultNotDenied}, nil
+				})
+			},
+			predicate: func(t *testing.T) predicate.Predicate {
+				return func(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+					return policies, nil
+				}
+			},
+			policies: []policyapi.CertificateRequestPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-current"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-updated"},
+					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				},
+			},
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-current": metav1.ConditionTrue, "test-policy-updated": metav1.ConditionTrue},
+			updatePolicies:  []string{"test-policy-updated"},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-current"`},
+		},
+		"if the only policy has stale readiness, do not evaluate it": {
+			evaluator: expNoEvaluation,
+			predicate: func(t *testing.T) predicate.Predicate {
+				return func(_ context.Context, _ *cmapi.CertificateRequest, policies []policyapi.CertificateRequestPolicy) ([]policyapi.CertificateRequestPolicy, error) {
+					return policies, nil
+				}
+			},
+			policies: []policyapi.CertificateRequestPolicy{{
+				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-updated"},
+				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+			}},
+			readyConditions: map[string]metav1.ConditionStatus{"test-policy-updated": metav1.ConditionTrue},
+			updatePolicies:  []string{"test-policy-updated"},
+			expResponse:     manager.ReviewResponse{Result: manager.ResultUnprocessed, Message: "No CertificateRequestPolicies bound or applicable"},
 		},
 	}
 
@@ -238,7 +427,7 @@ func Test_Review(t *testing.T) {
 			}
 
 			// Set the Ready condition on specified policies via status subresource.
-			for _, name := range test.setReadyPolicies {
+			for name, status := range test.readyConditions {
 				var policy policyapi.CertificateRequestPolicy
 				if err := env.AdminClient.Get(ctx, client.ObjectKey{Name: name}, &policy); err != nil {
 					t.Fatalf("failed to get policy %q for status update: %s", name, err)
@@ -246,15 +435,30 @@ func Test_Review(t *testing.T) {
 				policy.Status.Conditions = []metav1.Condition{
 					{
 						Type:               policyapi.ConditionTypeReady,
-						Status:             metav1.ConditionTrue,
-						Reason:             "Ready",
-						Message:            "CertificateRequestPolicy is ready for approval evaluation",
+						Status:             status,
+						ObservedGeneration: policy.Generation,
+						Reason:             "TestReadiness",
+						Message:            "Test policy readiness",
 						LastTransitionTime: metav1.Now(),
 					},
 				}
 				if err := env.AdminClient.Status().Update(ctx, &policy); err != nil {
 					t.Fatalf("failed to update status for policy %q: %s", name, err)
 				}
+			}
+
+			for _, name := range test.updatePolicies {
+				var policy policyapi.CertificateRequestPolicy
+				if err := env.AdminClient.Get(ctx, client.ObjectKey{Name: name}, &policy); err != nil {
+					t.Fatalf("failed to get policy %q for spec update: %s", name, err)
+				}
+				previousGeneration := policy.Generation
+				issuerName := "updated-issuer"
+				policy.Spec.Selector.IssuerRef.Name = &issuerName
+				if err := env.AdminClient.Update(ctx, &policy); err != nil {
+					t.Fatalf("failed to update spec for policy %q: %s", name, err)
+				}
+				assert.Greater(t, policy.Generation, previousGeneration)
 			}
 
 			mngr := &mngr{
@@ -264,7 +468,7 @@ func Test_Review(t *testing.T) {
 				evaluators:     []approver.Evaluator{test.evaluator(t)},
 			}
 
-			response, err := mngr.Review(ctx, &cmapi.CertificateRequest{
+			request := &cmapi.CertificateRequest{
 				ObjectMeta: metav1.ObjectMeta{Name: "test-req"},
 				Spec: cmapi.CertificateRequestSpec{
 					Username: "example",
@@ -274,10 +478,28 @@ func Test_Review(t *testing.T) {
 						Group: "test-group",
 					},
 				},
-			})
+			}
 
+			response, err := mngr.Review(ctx, request)
 			assert.Equalf(t, test.expErr, err != nil, "%v", err)
 			assert.Equal(t, test.expResponse, response)
+
+			if test.expResponseAfterReconcile != nil {
+				for _, name := range test.updatePolicies {
+					var policy policyapi.CertificateRequestPolicy
+					if err := env.AdminClient.Get(ctx, client.ObjectKey{Name: name}, &policy); err != nil {
+						t.Fatalf("failed to get policy %q for reconciliation: %s", name, err)
+					}
+					policy.Status.Conditions[0].Status = metav1.ConditionTrue
+					policy.Status.Conditions[0].ObservedGeneration = policy.Generation
+					if err := env.AdminClient.Status().Update(ctx, &policy); err != nil {
+						t.Fatalf("failed to reconcile policy %q: %s", name, err)
+					}
+				}
+				response, err := mngr.Review(ctx, request)
+				assert.NoError(t, err)
+				assert.Equal(t, *test.expResponseAfterReconcile, response)
+			}
 		})
 	}
 }
