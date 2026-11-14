@@ -42,3 +42,11 @@ release:
 	@echo "RELEASE_HELM_CHART_VERSION=$(helm_chart_version)" >> "$(GITHUB_OUTPUT)"
 
 	@echo "Release complete!"
+
+.PHONY: trivy-scan-manager
+## Build the manager container image for the local architecture and scan it
+## for fixable vulnerabilities using trivy. This approximates the security
+## report that ArtifactHub generates for the published image.
+## @category Development
+trivy-scan-manager: docker-tarball-manager | $(NEEDS_TRIVY)
+	$(TRIVY) image --input $(docker_tarball_path_manager) --ignore-unfixed --exit-code 1
