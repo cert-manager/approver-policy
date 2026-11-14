@@ -30,7 +30,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/clock"
@@ -110,9 +109,7 @@ func addCertificateRequestController(_ context.Context, opts Options) error {
 				apiutil.CertificateRequestIsDenied(&cr) /* #nosec G601 -- Func drops pointer at end of call. */ {
 				continue
 			}
-			requests = append(requests, reconcile.Request{
-				NamespacedName: types.NamespacedName{Namespace: cr.Namespace, Name: cr.Name}},
-			)
+			requests = append(requests, reconcile.Request{Namespace: cr.Namespace, Name: cr.Name})
 		}
 
 		return requests
@@ -175,10 +172,8 @@ func (c *certificaterequests) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 
 		if err := c.client.Status().Patch(ctx, cr, patch, &client.SubResourcePatchOptions{
-			PatchOptions: client.PatchOptions{
-				FieldManager: "approver-policy",
-				Force:        new(true),
-			},
+			FieldManager: "approver-policy",
+			Force:        new(true),
 		}); err != nil {
 			err = fmt.Errorf("failed to apply CertificateRequest.Status patch: %w", err)
 			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})

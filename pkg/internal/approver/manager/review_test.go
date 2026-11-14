@@ -77,8 +77,8 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			policies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				Name: "test-policy-a",
+				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
 			expResponse: manager.ReviewResponse{},
 			expErr:      true,
@@ -91,8 +91,8 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			policies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				Name: "test-policy-a",
+				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
 			expResponse: manager.ReviewResponse{Result: manager.ResultUnprocessed, Message: "No CertificateRequestPolicies bound or applicable"},
 			expErr:      false,
@@ -109,8 +109,8 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			policies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				Name: "test-policy-a",
+				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
 			setReadyPolicies: []string{"test-policy-a"},
 			expResponse:      manager.ReviewResponse{Result: manager.ResultDenied, Message: "No policy approved this request: [test-policy-a: this is a denied response]"},
@@ -128,8 +128,8 @@ func Test_Review(t *testing.T) {
 				}
 			},
 			policies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-				Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+				Name: "test-policy-a",
+				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 			}},
 			setReadyPolicies: []string{"test-policy-a"},
 			expResponse:      manager.ReviewResponse{Result: manager.ResultApproved, Message: `Approved by CertificateRequestPolicy: "test-policy-a"`},
@@ -151,12 +151,12 @@ func Test_Review(t *testing.T) {
 			},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+					Name: "test-policy-a",
+					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
-					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+					Name: "test-policy-b",
+					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
 			setReadyPolicies: []string{"test-policy-a", "test-policy-b"},
@@ -176,12 +176,12 @@ func Test_Review(t *testing.T) {
 			},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
-					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+					Name: "test-policy-a",
+					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
-					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+					Name: "test-policy-b",
+					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
 			setReadyPolicies: []string{"test-policy-a", "test-policy-b"},
@@ -201,12 +201,12 @@ func Test_Review(t *testing.T) {
 			},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-deny"},
-					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+					Name: "test-policy-deny",
+					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-unreconciled"},
-					Spec:       policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
+					Name: "test-policy-unreconciled",
+					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}}},
 				},
 			},
 			setReadyPolicies: []string{"test-policy-deny"},
@@ -265,7 +265,7 @@ func Test_Review(t *testing.T) {
 			}
 
 			response, err := mngr.Review(ctx, &cmapi.CertificateRequest{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-req"},
+				Name: "test-req",
 				Spec: cmapi.CertificateRequestSpec{
 					Username: "example",
 					IssuerRef: cmmeta.IssuerReference{

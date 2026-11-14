@@ -24,7 +24,6 @@ import (
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -48,7 +47,8 @@ var _ = Context("RBAC", func() {
 	)
 
 	createPolicy := func() policyapi.CertificateRequestPolicy {
-		policy := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-"},
+		policy := policyapi.CertificateRequestPolicy{
+			GenerateName: "approve-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -66,10 +66,8 @@ var _ = Context("RBAC", func() {
 
 	createRole := func(policy policyapi.CertificateRequestPolicy, name string) string {
 		role := rbacv1.Role{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: namespace.Name,
-			},
+			Name:      name,
+			Namespace: namespace.Name,
 			Rules: []rbacv1.PolicyRule{
 				{
 					APIGroups:     []string{"policy.cert-manager.io"},
@@ -90,10 +88,8 @@ var _ = Context("RBAC", func() {
 	}
 	createRoleBinding := func(name string) {
 		roleBinding := rbacv1.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: namespace.Name,
-			},
+			Name:      name,
+			Namespace: namespace.Name,
 			Subjects: []rbacv1.Subject{
 				{
 					Kind:     "User",
@@ -113,9 +109,7 @@ var _ = Context("RBAC", func() {
 
 	createClusterRole := func(policy policyapi.CertificateRequestPolicy, name string) string {
 		clusterRole := rbacv1.ClusterRole{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
+			Name: name,
 			Rules: []rbacv1.PolicyRule{
 				{
 					APIGroups:     []string{"policy.cert-manager.io"},
@@ -136,9 +130,7 @@ var _ = Context("RBAC", func() {
 	}
 	createClusterRoleBinding := func(name string) {
 		clusterRoleBinding := rbacv1.ClusterRoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
+			Name: name,
 			Subjects: []rbacv1.Subject{
 				{
 					Kind:     "User",
@@ -246,8 +238,8 @@ var _ = Context("RBAC", func() {
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
 		deleteRoleAndRoleBindings(ctx, namespace.Name, userCreateCRRoleName)
-		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRole{ObjectMeta: metav1.ObjectMeta{Name: clusterRoleName}})).NotTo(HaveOccurred())
-		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "approver-policy-test-rbac"}})).NotTo(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRole{Name: clusterRoleName})).NotTo(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRoleBinding{Name: "approver-policy-test-rbac"})).NotTo(HaveOccurred())
 	})
 
 	It("if a ClusterRoleBinding is created which binds the user, the request should be re-reconciled and approved", func() {
@@ -273,7 +265,7 @@ var _ = Context("RBAC", func() {
 		waitForApproval(ctx, env.AdminClient, namespace.Name, crName)
 
 		deleteRoleAndRoleBindings(ctx, namespace.Name, userCreateCRRoleName)
-		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRole{ObjectMeta: metav1.ObjectMeta{Name: clusterRoleName}})).NotTo(HaveOccurred())
-		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRoleBinding{ObjectMeta: metav1.ObjectMeta{Name: clusterRoleName}})).NotTo(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRole{Name: clusterRoleName})).NotTo(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.ClusterRoleBinding{Name: clusterRoleName})).NotTo(HaveOccurred())
 	})
 })
