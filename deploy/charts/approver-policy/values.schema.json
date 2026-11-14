@@ -72,6 +72,9 @@
         "securityContext": {
           "$ref": "#/$defs/helm-values.securityContext"
         },
+        "startupapicheck": {
+          "$ref": "#/$defs/helm-values.startupapicheck"
+        },
         "strategy": {
           "$ref": "#/$defs/helm-values.strategy"
         },
@@ -543,6 +546,271 @@
       },
       "description": "Pod Security Context.\nFor more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
       "type": "object"
+    },
+    "helm-values.startupapicheck": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "$ref": "#/$defs/helm-values.startupapicheck.affinity"
+        },
+        "backoffLimit": {
+          "$ref": "#/$defs/helm-values.startupapicheck.backoffLimit"
+        },
+        "containerSecurityContext": {
+          "$ref": "#/$defs/helm-values.startupapicheck.containerSecurityContext"
+        },
+        "enabled": {
+          "$ref": "#/$defs/helm-values.startupapicheck.enabled"
+        },
+        "extraArgs": {
+          "$ref": "#/$defs/helm-values.startupapicheck.extraArgs"
+        },
+        "image": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image"
+        },
+        "jobAnnotations": {
+          "$ref": "#/$defs/helm-values.startupapicheck.jobAnnotations"
+        },
+        "nodeSelector": {
+          "$ref": "#/$defs/helm-values.startupapicheck.nodeSelector"
+        },
+        "podAnnotations": {
+          "$ref": "#/$defs/helm-values.startupapicheck.podAnnotations"
+        },
+        "podLabels": {
+          "$ref": "#/$defs/helm-values.startupapicheck.podLabels"
+        },
+        "rbac": {
+          "$ref": "#/$defs/helm-values.startupapicheck.rbac"
+        },
+        "resources": {
+          "$ref": "#/$defs/helm-values.startupapicheck.resources"
+        },
+        "securityContext": {
+          "$ref": "#/$defs/helm-values.startupapicheck.securityContext"
+        },
+        "serviceAccount": {
+          "$ref": "#/$defs/helm-values.startupapicheck.serviceAccount"
+        },
+        "timeout": {
+          "$ref": "#/$defs/helm-values.startupapicheck.timeout"
+        },
+        "tolerations": {
+          "$ref": "#/$defs/helm-values.startupapicheck.tolerations"
+        },
+        "ttlSecondsAfterFinished": {
+          "$ref": "#/$defs/helm-values.startupapicheck.ttlSecondsAfterFinished"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.startupapicheck.affinity": {
+      "default": {},
+      "description": "A Kubernetes Affinity, if required.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.backoffLimit": {
+      "default": 4,
+      "description": "Job backoffLimit",
+      "type": "number"
+    },
+    "helm-values.startupapicheck.containerSecurityContext": {
+      "default": {
+        "allowPrivilegeEscalation": false,
+        "capabilities": {
+          "drop": [
+            "ALL"
+          ]
+        },
+        "readOnlyRootFilesystem": true
+      },
+      "description": "Container Security Context to be set on the startupapicheck container. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.enabled": {
+      "default": true,
+      "description": "Enables the startup API check Job that verifies the webhook is ready.",
+      "type": "boolean"
+    },
+    "helm-values.startupapicheck.extraArgs": {
+      "default": [
+        "-v"
+      ],
+      "description": "Additional command line flags to pass to startupapicheck binary. Verbose logging is enabled by default so that if startupapicheck fails, you can know what exactly caused the failure.",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.startupapicheck.image": {
+      "additionalProperties": false,
+      "properties": {
+        "_defaultReference": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image._defaultReference"
+        },
+        "digest": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image.digest"
+        },
+        "name": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image.name"
+        },
+        "pullPolicy": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image.registry"
+        },
+        "repository": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image.repository"
+        },
+        "tag": {
+          "$ref": "#/$defs/helm-values.startupapicheck.image.tag"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.startupapicheck.image._defaultReference": {
+      "default": ":v0.0.0",
+      "description": "WARNING: For internal use only; overwritten before releasing the chart.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.image.digest": {
+      "description": "Setting a digest pins the image.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.image.name": {
+      "default": "cert-manager-approver-policy-startupapicheck",
+      "description": "The image name for the approver-policy startupapicheck.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.image.pullPolicy": {
+      "default": "IfNotPresent",
+      "description": "Kubernetes imagePullPolicy on the Job.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.image.registry": {
+      "description": "Deprecated: per-component registry prefix.\nPrefer using the global `imageRegistry`/`imageNamespace` values.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.image.repository": {
+      "default": "",
+      "description": "Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `startupapicheck.image.name`).",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.image.tag": {
+      "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.jobAnnotations": {
+      "default": {
+        "helm.sh/hook": "post-install,post-upgrade",
+        "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
+        "helm.sh/hook-weight": "1"
+      },
+      "description": "Optional additional annotations to add to the startupapicheck Job.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.nodeSelector": {
+      "default": {
+        "kubernetes.io/os": "linux"
+      },
+      "description": "The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with matching labels.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.podAnnotations": {
+      "description": "Optional additional annotations to add to the startupapicheck Pods.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.podLabels": {
+      "default": {},
+      "description": "Optional additional labels to add to the startupapicheck Pods.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.rbac": {
+      "additionalProperties": false,
+      "properties": {
+        "annotations": {
+          "$ref": "#/$defs/helm-values.startupapicheck.rbac.annotations"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.startupapicheck.rbac.annotations": {
+      "default": {
+        "helm.sh/hook": "post-install,post-upgrade",
+        "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
+        "helm.sh/hook-weight": "-5"
+      },
+      "description": "Annotations for the startup API Check Job RBAC resources.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.resources": {
+      "default": {},
+      "description": "Resources to provide to the startupapicheck pod.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.securityContext": {
+      "default": {
+        "runAsNonRoot": true,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "description": "Pod Security Context to be set on the startupapicheck component Pod. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.serviceAccount": {
+      "additionalProperties": false,
+      "properties": {
+        "annotations": {
+          "$ref": "#/$defs/helm-values.startupapicheck.serviceAccount.annotations"
+        },
+        "automountServiceAccountToken": {
+          "$ref": "#/$defs/helm-values.startupapicheck.serviceAccount.automountServiceAccountToken"
+        },
+        "create": {
+          "$ref": "#/$defs/helm-values.startupapicheck.serviceAccount.create"
+        },
+        "name": {
+          "$ref": "#/$defs/helm-values.startupapicheck.serviceAccount.name"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.startupapicheck.serviceAccount.annotations": {
+      "default": {
+        "helm.sh/hook": "post-install,post-upgrade",
+        "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
+        "helm.sh/hook-weight": "-5"
+      },
+      "description": "Optional additional annotations to add to the Job's Service Account.",
+      "type": "object"
+    },
+    "helm-values.startupapicheck.serviceAccount.automountServiceAccountToken": {
+      "default": true,
+      "description": "Automount API credentials for a Service Account.",
+      "type": "boolean"
+    },
+    "helm-values.startupapicheck.serviceAccount.create": {
+      "default": true,
+      "description": "Specifies whether a service account should be created.",
+      "type": "boolean"
+    },
+    "helm-values.startupapicheck.serviceAccount.name": {
+      "description": "The name of the service account to use.\nIf not set and create is true, a name is generated using the fullname template.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.timeout": {
+      "default": "1m",
+      "description": "Timeout for the startupapicheck 'check api' command.",
+      "type": "string"
+    },
+    "helm-values.startupapicheck.tolerations": {
+      "default": [],
+      "description": "A list of Kubernetes Tolerations, if required.",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.startupapicheck.ttlSecondsAfterFinished": {
+      "description": "Limits the lifetime of a Job that has finished execution (either Complete or Failed). Disabled by default (field is not set)."
     },
     "helm-values.strategy": {
       "default": {},
