@@ -148,13 +148,9 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 
 	ctrl.SetLogger(log)
 
-	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "test-policy-",
-		},
-	}
-	By("Creating Policy Namespace: " + namespace.Name)
+	namespace := corev1.Namespace{GenerateName: "test-policy-"}
 	Expect(env.AdminClient.Create(ctx, &namespace)).NotTo(HaveOccurred())
+	By("Creating Policy Namespace: " + namespace.Name)
 
 	// A channel which will be closed after the controller-manager stops and
 	// just before its goroutine exits.
@@ -250,10 +246,8 @@ func startControllers(registry *registry.Registry) (context.Context, func(), cor
 // should be deleted after the test has completed by the consumer.
 func bindUserToUseCertificateRequestPolicies(ctx context.Context, cl client.Client, ns string, policyNames ...string) string {
 	role := rbacv1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "test-policy-use-",
-			Namespace:    ns,
-		},
+		GenerateName: "test-policy-use-",
+		Namespace:    ns,
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups:     []string{"policy.cert-manager.io"},
@@ -266,10 +260,8 @@ func bindUserToUseCertificateRequestPolicies(ctx context.Context, cl client.Clie
 	Expect(cl.Create(ctx, &role)).NotTo(HaveOccurred())
 
 	binding := rbacv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      role.Name,
-			Namespace: ns,
-		},
+		Name:      role.Name,
+		Namespace: ns,
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:     "User",
@@ -294,10 +286,8 @@ func bindUserToUseCertificateRequestPolicies(ctx context.Context, cl client.Clie
 // deleted after the test has completed by the consumer.
 func bindUserToCreateCertificateRequest(ctx context.Context, cl client.Client, ns string) string {
 	role := rbacv1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "test-cr-create-",
-			Namespace:    ns,
-		},
+		GenerateName: "test-cr-create-",
+		Namespace:    ns,
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{"cert-manager.io"},
@@ -309,10 +299,8 @@ func bindUserToCreateCertificateRequest(ctx context.Context, cl client.Client, n
 	Expect(cl.Create(ctx, &role)).NotTo(HaveOccurred())
 
 	binding := rbacv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      role.Name,
-			Namespace: ns,
-		},
+		Name:      role.Name,
+		Namespace: ns,
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:     "User",
@@ -335,8 +323,8 @@ func bindUserToCreateCertificateRequest(ctx context.Context, cl client.Client, n
 // given name.
 func deleteRoleAndRoleBindings(ctx context.Context, ns string, names ...string) {
 	for _, name := range names {
-		Expect(env.AdminClient.Delete(ctx, &rbacv1.Role{ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: name}})).ToNot(HaveOccurred())
-		Expect(env.AdminClient.Delete(ctx, &rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: name}})).ToNot(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.Role{Namespace: ns, Name: name})).ToNot(HaveOccurred())
+		Expect(env.AdminClient.Delete(ctx, &rbacv1.RoleBinding{Namespace: ns, Name: name})).ToNot(HaveOccurred())
 	}
 }
 

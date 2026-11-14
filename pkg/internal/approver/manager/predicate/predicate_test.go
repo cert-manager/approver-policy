@@ -49,7 +49,7 @@ func Test_RBACBound(t *testing.T) {
 	)
 
 	if err := env.AdminClient.Create(t.Context(),
-		&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: requestNamespace}},
+		&corev1.Namespace{Name: requestNamespace},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func Test_RBACBound(t *testing.T) {
 		"if no CertificateRequestPolicies are bound to the user, return ResultUnprocessed": {
 			apiObjects: []client.Object{
 				&policyapi.CertificateRequestPolicy{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -79,7 +79,7 @@ func Test_RBACBound(t *testing.T) {
 		"if single CertificateRequestPolicy exists but not bound, return nothing": {
 			apiObjects: []client.Object{},
 			policies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+				Name: "test-policy-a",
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				}},
@@ -90,13 +90,13 @@ func Test_RBACBound(t *testing.T) {
 			apiObjects: []client.Object{},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -107,25 +107,25 @@ func Test_RBACBound(t *testing.T) {
 		"if single CertificateRequestPolicy bound at cluster level, return policy": {
 			apiObjects: []client.Object{
 				&rbacv1.ClusterRole{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
+					Name: "test-binding",
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
 					},
 				},
 				&rbacv1.ClusterRoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
+					Name:     "test-role",
+					Subjects: []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:  rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+				Name: "test-policy-a",
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				}},
 			}},
 			expPolicies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+				Name: "test-policy-a",
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				}},
@@ -134,25 +134,27 @@ func Test_RBACBound(t *testing.T) {
 		"if single CertificateRequestPolicy bound at namespace, return policy": {
 			apiObjects: []client.Object{
 				&rbacv1.Role{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Name:      "test-binding",
+					Namespace: requestNamespace,
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"}},
 					},
 				},
 				&rbacv1.RoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+					Name:      "test-role",
+					Namespace: requestNamespace,
+					Subjects:  []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:   rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+				Name: "test-policy-a",
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				}},
 			}},
 			expPolicies: []policyapi.CertificateRequestPolicy{{
-				ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+				Name: "test-policy-a",
 				Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 				}},
@@ -161,7 +163,7 @@ func Test_RBACBound(t *testing.T) {
 		"if two CertificateRequestPolicies bound at cluster level, return policies": {
 			apiObjects: []client.Object{
 				&rbacv1.ClusterRole{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-binding"},
+					Name: "test-binding",
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
 							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a", "test-policy-b"},
@@ -169,20 +171,20 @@ func Test_RBACBound(t *testing.T) {
 					},
 				},
 				&rbacv1.ClusterRoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
+					Name:     "test-role",
+					Subjects: []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:  rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding"},
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -190,13 +192,13 @@ func Test_RBACBound(t *testing.T) {
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -206,7 +208,8 @@ func Test_RBACBound(t *testing.T) {
 		"if two CertificateRequestPolicies bound at namespace level, return policies": {
 			apiObjects: []client.Object{
 				&rbacv1.Role{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding"},
+					Name:      "test-binding",
+					Namespace: requestNamespace,
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
 							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a", "test-policy-b"},
@@ -214,20 +217,21 @@ func Test_RBACBound(t *testing.T) {
 					},
 				},
 				&rbacv1.RoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
+					Name:      "test-role",
+					Namespace: requestNamespace,
+					Subjects:  []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:   rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding"},
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -235,13 +239,13 @@ func Test_RBACBound(t *testing.T) {
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -251,7 +255,8 @@ func Test_RBACBound(t *testing.T) {
 		"if two CertificateRequestPolicies bound at namespace and cluster, return policies": {
 			apiObjects: []client.Object{
 				&rbacv1.Role{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding-namespaced"},
+					Name:      "test-binding-namespaced",
+					Namespace: requestNamespace,
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
 							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"},
@@ -259,31 +264,32 @@ func Test_RBACBound(t *testing.T) {
 					},
 				},
 				&rbacv1.RoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding-namespaced"},
+					Name:      "test-role",
+					Namespace: requestNamespace,
+					Subjects:  []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:   rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding-namespaced"},
 				},
 				&rbacv1.ClusterRole{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-binding-cluster"},
+					Name: "test-binding-cluster",
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-b"}},
 					},
 				},
 				&rbacv1.ClusterRoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding-cluster"},
+					Name:     "test-role",
+					Subjects: []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:  rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding-cluster"},
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -291,13 +297,13 @@ func Test_RBACBound(t *testing.T) {
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -307,7 +313,8 @@ func Test_RBACBound(t *testing.T) {
 		"if two CertificateRequestPolicies bound at namespace and cluster and other policies exist, return only bound policies": {
 			apiObjects: []client.Object{
 				&rbacv1.Role{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-binding-namespaced"},
+					Name:      "test-binding-namespaced",
+					Namespace: requestNamespace,
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"},
 							Verbs: []string{"use"}, ResourceNames: []string{"test-policy-a"},
@@ -315,43 +322,44 @@ func Test_RBACBound(t *testing.T) {
 					},
 				},
 				&rbacv1.RoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace, Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding-namespaced"},
+					Name:      "test-role",
+					Namespace: requestNamespace,
+					Subjects:  []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:   rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "test-binding-namespaced"},
 				},
 				&rbacv1.ClusterRole{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-binding-cluster"},
+					Name: "test-binding-cluster",
 					Rules: []rbacv1.PolicyRule{
 						{APIGroups: []string{"policy.cert-manager.io"}, Resources: []string{"certificaterequestpolicies"}, Verbs: []string{"use"}, ResourceNames: []string{"test-policy-b"}},
 					},
 				},
 				&rbacv1.ClusterRoleBinding{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-role"},
-					Subjects:   []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
-					RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding-cluster"},
+					Name:     "test-role",
+					Subjects: []rbacv1.Subject{{Kind: "User", Name: requestUser, APIGroup: "rbac.authorization.k8s.io"}},
+					RoleRef:  rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "test-binding-cluster"},
 				},
 			},
 			policies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-c"},
+					Name: "test-policy-c",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-d"},
+					Name: "test-policy-d",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -359,13 +367,13 @@ func Test_RBACBound(t *testing.T) {
 			},
 			expPolicies: []policyapi.CertificateRequestPolicy{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-a"},
+					Name: "test-policy-a",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name: "test-policy-b"},
+					Name: "test-policy-b",
 					Spec: policyapi.CertificateRequestPolicySpec{Selector: policyapi.CertificateRequestPolicySelector{
 						IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
 					}},
@@ -394,7 +402,7 @@ func Test_RBACBound(t *testing.T) {
 			}
 
 			req := &cmapi.CertificateRequest{
-				ObjectMeta: metav1.ObjectMeta{Namespace: requestNamespace},
+				Namespace: requestNamespace,
 				Spec: cmapi.CertificateRequestSpec{
 					Username: "example",
 					IssuerRef: cmmeta.IssuerReference{
@@ -736,12 +744,8 @@ func Test_SelectorIssuerRef(t *testing.T) {
 
 func Test_SelectorNamespace(t *testing.T) {
 	var (
-		baseRequest = &cmapi.CertificateRequest{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "test-namespace",
-			},
-		}
-		testns = &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace"}}
+		baseRequest = &cmapi.CertificateRequest{Namespace: "test-namespace"}
+		testns      = &corev1.Namespace{Name: "test-namespace"}
 	)
 
 	tests := map[string]struct {
@@ -800,7 +804,7 @@ func Test_SelectorNamespace(t *testing.T) {
 					}},
 				}},
 			},
-			existingNamespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace", Labels: map[string]string{"bar": "foo"}}},
+			existingNamespace: &corev1.Namespace{Name: "test-namespace", Labels: map[string]string{"bar": "foo"}},
 			expPolicies:       nil,
 			expErr:            false,
 		},
@@ -817,7 +821,7 @@ func Test_SelectorNamespace(t *testing.T) {
 					}},
 				}},
 			},
-			existingNamespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace", Labels: map[string]string{"bar": "foo"}}},
+			existingNamespace: &corev1.Namespace{Name: "test-namespace", Labels: map[string]string{"bar": "foo"}},
 			expPolicies:       nil,
 			expErr:            false,
 		},
@@ -1038,7 +1042,7 @@ func Test_SelectorNamespace(t *testing.T) {
 					}},
 				}},
 			},
-			existingNamespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-namespace", Labels: map[string]string{"foo": "bar"}}},
+			existingNamespace: &corev1.Namespace{Name: "test-namespace", Labels: map[string]string{"foo": "bar"}},
 			expErr:            false,
 		},
 	}

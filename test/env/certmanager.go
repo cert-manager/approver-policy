@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -32,12 +31,8 @@ func getCMValidatingWebhookConfig(url string, caPEM []byte) client.Object {
 	sideEffects := admissionregistrationv1.SideEffectClassNone
 	validateURL := fmt.Sprintf("%s/validate", url)
 	webhook := admissionregistrationv1.ValidatingWebhookConfiguration{
-		TypeMeta: metav1.TypeMeta{
-			Kind: "ValidatingWebhookConfiguration",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "cert-manager-webhook",
-		},
+		Kind: "ValidatingWebhookConfiguration",
+		Name: "cert-manager-webhook",
 		Webhooks: []admissionregistrationv1.ValidatingWebhook{
 			{
 				Name: "webhook.cert-manager.io",
@@ -51,11 +46,9 @@ func getCMValidatingWebhookConfig(url string, caPEM []byte) client.Object {
 							admissionregistrationv1.Create,
 							admissionregistrationv1.Update,
 						},
-						Rule: admissionregistrationv1.Rule{
-							APIGroups:   []string{"cert-manager.io", "acme.cert-manager.io"},
-							APIVersions: []string{"*"},
-							Resources:   []string{"*/*"},
-						},
+						APIGroups:   []string{"cert-manager.io", "acme.cert-manager.io"},
+						APIVersions: []string{"*"},
+						Resources:   []string{"*/*"},
 					},
 				},
 				FailurePolicy:           &failurePolicy,
@@ -76,12 +69,8 @@ func getCMMutatingWebhookConfig(url string, caPEM []byte) client.Object {
 	sideEffects := admissionregistrationv1.SideEffectClassNone
 	validateURL := fmt.Sprintf("%s/mutate", url)
 	webhook := admissionregistrationv1.MutatingWebhookConfiguration{
-		TypeMeta: metav1.TypeMeta{
-			Kind: "MutatingWebhookConfiguration",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "cert-manager-webhook",
-		},
+		Kind: "MutatingWebhookConfiguration",
+		Name: "cert-manager-webhook",
 		Webhooks: []admissionregistrationv1.MutatingWebhook{
 			{
 				Name: "webhook.cert-manager.io",
@@ -95,11 +84,9 @@ func getCMMutatingWebhookConfig(url string, caPEM []byte) client.Object {
 							admissionregistrationv1.Create,
 							admissionregistrationv1.Update,
 						},
-						Rule: admissionregistrationv1.Rule{
-							APIGroups:   []string{"cert-manager.io", "acme.cert-manager.io"},
-							APIVersions: []string{"*"},
-							Resources:   []string{"*/*"},
-						},
+						APIGroups:   []string{"cert-manager.io", "acme.cert-manager.io"},
+						APIVersions: []string{"*"},
+						Resources:   []string{"*/*"},
 					},
 				},
 				FailurePolicy:           &failurePolicy,

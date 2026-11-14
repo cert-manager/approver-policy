@@ -24,8 +24,6 @@ import (
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -69,7 +67,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -103,7 +101,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -139,7 +137,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -175,7 +173,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -206,7 +204,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -234,10 +232,10 @@ var _ = Context("Selector", func() {
 
 	It("it should not select on CertificateRequests where the IssuerRef matches but the policy is not ready", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{RequeueAfter: time.Millisecond * 50}}, nil
+			return approver.ReconcilerReadyResponse{Ready: false, RequeueAfter: time.Millisecond * 50}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -268,7 +266,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -298,7 +296,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -330,7 +328,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{},
@@ -364,7 +362,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -400,7 +398,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -436,7 +434,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -472,7 +470,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -511,7 +509,7 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Update(ctx, &namespace)).ToNot(HaveOccurred())
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -546,7 +544,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -582,7 +580,7 @@ var _ = Context("Selector", func() {
 		Expect(env.AdminClient.Update(ctx, &namespace)).ToNot(HaveOccurred())
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -611,11 +609,11 @@ var _ = Context("Selector", func() {
 
 	It("it should not select on CertificateRequests where the namespace matches but the policy is not ready", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{RequeueAfter: time.Millisecond * 50}}, nil
+			return approver.ReconcilerReadyResponse{Ready: false, RequeueAfter: time.Millisecond * 50}, nil
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -646,7 +644,7 @@ var _ = Context("Selector", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -677,7 +675,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -712,7 +710,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -747,7 +745,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{
@@ -782,7 +780,7 @@ var _ = Context("Selector", func() {
 		})
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "selector-"},
+			GenerateName: "selector-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					Namespace: &policyapi.CertificateRequestPolicySelectorNamespace{

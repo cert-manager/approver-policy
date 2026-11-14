@@ -28,7 +28,6 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/events"
 	"k8s.io/klog/v2/ktesting"
 	fakeclock "k8s.io/utils/clock/testing"
@@ -193,7 +192,7 @@ func Test_certificaterequests_Reconcile(t *testing.T) {
 				clock:    fixedclock,
 			}
 
-			resp, statusPatch, err := c.reconcileStatusPatch(t.Context(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: gen.DefaultTestNamespace, Name: requestName}})
+			resp, statusPatch, err := c.reconcileStatusPatch(t.Context(), ctrl.Request{Namespace: gen.DefaultTestNamespace, Name: requestName})
 			if (err != nil) != test.expError {
 				t.Errorf("unexpected error, exp=%t got=%v", test.expError, err)
 			}
