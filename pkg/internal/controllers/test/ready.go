@@ -45,32 +45,38 @@ var _ = Context("Ready", func() {
 		enqueueChan1, enqueueChan2, enqueueChan3 = make(chan string), make(chan string), make(chan string)
 	)
 
-	JustBeforeEach(func() {
+	BeforeEach(func() {
 		plugin1 = fake.NewFakeApprover()
 		plugin1.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-1").WithEnqueueChan(func() <-chan string { return enqueueChan1 })
 		plugin2 = fake.NewFakeApprover()
 		plugin2.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-2").WithEnqueueChan(func() <-chan string { return enqueueChan2 })
 		plugin3 = fake.NewFakeApprover()
 		plugin3.FakeReconciler = fake.NewFakeReconciler().WithName("test-plugin-3").WithEnqueueChan(func() <-chan string { return enqueueChan3 })
-
-		registry := new(registry.Registry).Store(plugin1, plugin2, plugin3)
-		ctx, cancel, _ = startControllers(registry)
 	})
+
+	// start starts the controllers. Each spec calls it after it has set the
+	// Ready funcs of the plugins, because the controllers call those funcs
+	// from other goroutines as soon as they start.
+	start := func() {
+		ctx, cancel, _ = startControllers(new(registry.Registry).Store(plugin1, plugin2, plugin3))
+	}
 
 	JustAfterEach(func() {
 		cancel()
 	})
 
 	It("if all reconcilers are defined in the policy and return ready, should mark policy as ready", func() {
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -90,15 +96,17 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if all reconcilers are defined but 1 returns not ready, should mark policy as not ready", func() {
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: false}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -118,15 +126,17 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if all reconcilers are defined but 2 return not ready, should mark policy as not ready", func() {
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: false}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: false}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -146,15 +156,17 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if all reconcilers are defined but 3 return not ready, should mark policy as not ready", func() {
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: false}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: false}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: false}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -174,18 +186,20 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if some reconcilers are defined but not the one which is not ready, should mark the policy as ready", func() {
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			if _, ok := policy.Spec.Plugins["plugin-2"]; !ok {
 				return approver.ReconcilerReadyResponse{Ready: true}, nil
 			}
 			return approver.ReconcilerReadyResponse{Ready: false, Errors: field.ErrorList{field.Forbidden(field.NewPath("I"), "should not be called")}}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -204,22 +218,24 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if a reconciler returns not ready, but eventually becomes ready, should mark the policy as not ready, then ready", func() {
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 
-		var i int
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			if i > 5 {
+		var i atomic.Int64
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			if i.Load() > 5 {
 				return approver.ReconcilerReadyResponse{Ready: true}, nil
 			}
-			i++
+			i.Add(1)
 			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{RequeueAfter: time.Millisecond * 100}}, nil
 		})
 
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -240,20 +256,22 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if reconcilers return ready should set ready. After enqueue event, should update to false if next reconcile returns false", func() {
-		var i int
+		var i atomic.Int64
 
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			if i == 0 {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			if i.Load() == 0 {
 				return approver.ReconcilerReadyResponse{Ready: true}, nil
 			}
 			return approver.ReconcilerReadyResponse{Ready: false}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -271,26 +289,28 @@ var _ = Context("Ready", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForReady(ctx, env.AdminClient, policy.Name)
 
-		i++
+		i.Add(1)
 		enqueueChan1 <- policy.Name
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 	})
 
 	It("if reconcilers return not-ready should set not-ready. After enqueue event, should update to true if next reconcile returns true", func() {
-		var i int
+		var i atomic.Int64
 
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			if i == 0 {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			if i.Load() == 0 {
 				return approver.ReconcilerReadyResponse{Ready: false}, nil
 			}
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -308,7 +328,7 @@ var _ = Context("Ready", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 
-		i++
+		i.Add(1)
 		enqueueChan2 <- policy.Name
 		waitForReady(ctx, env.AdminClient, policy.Name)
 	})
@@ -323,16 +343,21 @@ var _ = Context("Ready", func() {
 			readyCalls atomic.Int64
 		)
 
-		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			// Read the flag before counting the call, so that a call which the
+			// test has counted can not report the flipped value.
+			r := ready.Load()
 			readyCalls.Add(1)
-			return approver.ReconcilerReadyResponse{Ready: ready.Load()}, nil
+			return approver.ReconcilerReadyResponse{Ready: r}, nil
 		})
-		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
+
+		start()
 
 		policy := policyapi.CertificateRequestPolicy{
 			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
@@ -350,14 +375,18 @@ var _ = Context("Ready", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 
-		// The controller reconciles the policy again in response to its own
-		// status update. Wait for those reconciles to finish before flipping
-		// plugin 2 to ready, otherwise one of them marks the policy ready and
-		// the test wrongly blames the enqueue event.
+		// The controller reconciles the policy twice: once for the create and
+		// once for its own status update. Wait for both, and then for a quiet
+		// second, before flipping plugin 2 to ready. Otherwise the second
+		// reconcile marks the policy ready and the test wrongly blames the
+		// enqueue event.
+		// TODO: delete this wait once the controller ignores its
+		// own status updates. See https://github.com/cert-manager/approver-policy/issues/1086
 		Eventually(func(g Gomega) {
 			calls := readyCalls.Load()
+			g.Expect(calls).To(BeNumerically(">=", 2))
 			g.Consistently(readyCalls.Load).WithTimeout(time.Second).WithPolling(time.Millisecond * 10).Should(Equal(calls))
-		}).WithTimeout(time.Second*30).Should(Succeed(), "expected the controller to stop reconciling the policy")
+		}).WithTimeout(time.Second*30).Should(Succeed(), "expected the controller to reconcile the policy twice and then stop")
 
 		ready.Store(true)
 		enqueueChan2 <- "not-the-correct-name"
