@@ -19,7 +19,6 @@ package ssa_client
 import (
 	"encoding/json"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,9 +36,7 @@ func GenerateCertificateRequestPolicyStatusPatch(
 	status *policyapi.CertificateRequestPolicyStatus,
 ) (*policyapi.CertificateRequestPolicy, client.Patch, error) {
 	// This object is used to deduce the name + unmarshall the return value in
-	crp := &policyapi.CertificateRequestPolicy{
-		ObjectMeta: metav1.ObjectMeta{Name: name},
-	}
+	crp := &policyapi.CertificateRequestPolicy{Name: name}
 
 	// This object is used to render the patch
 	b := &certificateRequestPolicyStatusStatusApplyConfiguration{

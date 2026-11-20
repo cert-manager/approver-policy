@@ -1,6 +1,6 @@
 module github.com/cert-manager/approver-policy
 
-go 1.26.0
+go 1.27.0
 
 require (
 	cel.dev/cel-go v0.33.2
