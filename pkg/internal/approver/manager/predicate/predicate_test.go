@@ -37,6 +37,36 @@ import (
 	testenv "github.com/cert-manager/approver-policy/test/env"
 )
 
+func Test_ReadyForCurrentGeneration(t *testing.T) {
+	for name, observedGeneration := range map[string]int64{
+		"current generation":          2,
+		"previous generation":         1,
+		"missing observed generation": 0,
+		"future generation":           3,
+	} {
+		t.Run(name, func(t *testing.T) {
+			policies := []policyapi.CertificateRequestPolicy{{
+				ObjectMeta: metav1.ObjectMeta{Name: "test-policy", Generation: 2},
+				Status: policyapi.CertificateRequestPolicyStatus{
+					Conditions: []metav1.Condition{{
+						Type:               policyapi.ConditionTypeReady,
+						Status:             metav1.ConditionTrue,
+						ObservedGeneration: observedGeneration,
+					}},
+				},
+			}}
+
+			readyPolicies, err := Ready(t.Context(), nil, policies)
+			require.NoError(t, err)
+			if observedGeneration == policies[0].Generation {
+				assert.Equal(t, policies, readyPolicies)
+			} else {
+				assert.Empty(t, readyPolicies)
+			}
+		})
+	}
+}
+
 func Test_RBACBound(t *testing.T) {
 	env := testenv.RunControlPlane(t, t.Context(),
 		testenv.GetenvOrFail(t, "CERT_MANAGER_CRDS"),
