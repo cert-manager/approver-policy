@@ -18,6 +18,7 @@ package test
 
 import (
 	"context"
+	"sync/atomic"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -313,16 +314,21 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if reconcilers return not-ready should set not-ready. After enqueue event but for wrong name, should not change returning not-ready", func() {
-		var i int
+		var (
+			// ready is what plugin 2 reports. The test flips it to true before
+			// sending the enqueue event, so that any reconcile of the policy
+			// after that point marks it ready.
+			ready atomic.Bool
+			// readyCalls counts how many times plugin 2 has been asked.
+			readyCalls atomic.Int64
+		)
 
 		plugin1.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		plugin2.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			if i == 0 {
-				return approver.ReconcilerReadyResponse{Ready: false}, nil
-			}
-			return approver.ReconcilerReadyResponse{Ready: true}, nil
+			readyCalls.Add(1)
+			return approver.ReconcilerReadyResponse{Ready: ready.Load()}, nil
 		})
 		plugin3.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
@@ -344,7 +350,16 @@ var _ = Context("Ready", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 
-		i++
+		// The controller reconciles the policy again in response to its own
+		// status update. Wait for those reconciles to finish before flipping
+		// plugin 2 to ready, otherwise one of them marks the policy ready and
+		// the test wrongly blames the enqueue event.
+		Eventually(func(g Gomega) {
+			calls := readyCalls.Load()
+			g.Consistently(readyCalls.Load).WithTimeout(time.Second).WithPolling(time.Millisecond * 10).Should(Equal(calls))
+		}).WithTimeout(time.Second*30).Should(Succeed(), "expected the controller to stop reconciling the policy")
+
+		ready.Store(true)
 		enqueueChan2 <- "not-the-correct-name"
 
 		Consistently(func() bool {
