@@ -334,24 +334,16 @@ var _ = Context("Ready", func() {
 	})
 
 	It("if reconcilers return not-ready should set not-ready. After enqueue event but for wrong name, should not change returning not-ready", func() {
-		var (
-			// ready is what plugin 2 reports. The test flips it to true before
-			// sending the enqueue event, so that any reconcile of the policy
-			// after that point marks it ready.
-			ready atomic.Bool
-			// readyCalls counts how many times plugin 2 has been asked.
-			readyCalls atomic.Int64
-		)
+		// ready is what plugin 2 reports. The test flips it to true before
+		// sending the enqueue event, so that any reconcile of the policy after
+		// that point marks it ready.
+		var ready atomic.Bool
 
 		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			// Read the flag before counting the call, so that a call which the
-			// test has counted can not report the flipped value.
-			r := ready.Load()
-			readyCalls.Add(1)
-			return approver.ReconcilerReadyResponse{Ready: r}, nil
+			return approver.ReconcilerReadyResponse{Ready: ready.Load()}, nil
 		})
 		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
@@ -375,19 +367,6 @@ var _ = Context("Ready", func() {
 		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
 		waitForNotReady(ctx, env.AdminClient, policy.Name)
 
-		// The controller reconciles the policy twice: once for the create and
-		// once for its own status update. Wait for both, and then for a quiet
-		// second, before flipping plugin 2 to ready. Otherwise the second
-		// reconcile marks the policy ready and the test wrongly blames the
-		// enqueue event.
-		// TODO: delete this wait once the controller ignores its
-		// own status updates. See https://github.com/cert-manager/approver-policy/issues/1086
-		Eventually(func(g Gomega) {
-			calls := readyCalls.Load()
-			g.Expect(calls).To(BeNumerically(">=", 2))
-			g.Consistently(readyCalls.Load).WithTimeout(time.Second).WithPolling(time.Millisecond * 10).Should(Equal(calls))
-		}).WithTimeout(time.Second*30).Should(Succeed(), "expected the controller to reconcile the policy twice and then stop")
-
 		ready.Store(true)
 		enqueueChan2 <- "not-the-correct-name"
 
@@ -405,5 +384,60 @@ var _ = Context("Ready", func() {
 			}
 			return false
 		}).WithTimeout(time.Second*10).WithPolling(time.Millisecond*10).Should(BeFalse(), "expected the condition to maintain not-ready")
+	})
+
+	It("should reconcile the policy once for each change, and not again for its own status update", func() {
+		// readyCalls counts how many times plugin 1 has been asked, which is
+		// once per reconcile of the policy.
+		var readyCalls atomic.Int64
+
+		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			readyCalls.Add(1)
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
+			return approver.ReconcilerReadyResponse{Ready: true}, nil
+		})
+
+		start()
+
+		// expectReadyCalls waits for the policy to be ready, and then checks
+		// that plugin 1 has been called n times and is not called again.
+		expectReadyCalls := func(policyName string, n int64) {
+			waitForReady(ctx, env.AdminClient, policyName)
+			Eventually(readyCalls.Load).WithTimeout(time.Second * 10).WithPolling(time.Millisecond * 10).Should(Equal(n))
+			Consistently(readyCalls.Load).WithTimeout(time.Second*2).WithPolling(time.Millisecond*10).Should(Equal(n), "expected no reconcile after the status update")
+		}
+
+		policy := policyapi.CertificateRequestPolicy{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			Spec: policyapi.CertificateRequestPolicySpec{
+				Selector: policyapi.CertificateRequestPolicySelector{
+					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
+				},
+				Plugins: map[string]policyapi.CertificateRequestPolicyPluginData{
+					"test-plugin-1": {},
+					"test-plugin-2": {},
+					"test-plugin-3": {},
+				},
+			},
+		}
+		Expect(env.AdminClient.Create(ctx, &policy)).ToNot(HaveOccurred())
+		expectReadyCalls(policy.Name, 1)
+
+		By("Changing the spec")
+		patch := client.MergeFrom(policy.DeepCopy())
+		policy.Spec.Plugins["test-plugin-1"] = policyapi.CertificateRequestPolicyPluginData{Values: map[string]string{"key": "value"}}
+		Expect(env.AdminClient.Patch(ctx, &policy, patch)).ToNot(HaveOccurred())
+		expectReadyCalls(policy.Name, 2)
+
+		By("Changing a label")
+		patch = client.MergeFrom(policy.DeepCopy())
+		policy.Labels = map[string]string{"foo": "bar"}
+		Expect(env.AdminClient.Patch(ctx, &policy, patch)).ToNot(HaveOccurred())
+		expectReadyCalls(policy.Name, 3)
 	})
 })

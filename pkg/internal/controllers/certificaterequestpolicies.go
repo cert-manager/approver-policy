@@ -31,11 +31,13 @@ import (
 	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -117,7 +119,15 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
 		WithOptions(controller.Options{MaxConcurrentReconciles: opts.CertificateRequestPolicyMaxConcurrentReconciles}).
-		For(new(policyapi.CertificateRequestPolicy)).
+		// Ignore updates which only change the status, such as the status patch
+		// at the end of every reconcile. Otherwise the controller reconciles each
+		// policy a second time in response to its own update. Label and
+		// annotation changes still pass, because a plugin may read them in Ready.
+		For(new(policyapi.CertificateRequestPolicy), builder.WithPredicates(predicate.Or(
+			predicate.GenerationChangedPredicate{},
+			predicate.LabelChangedPredicate{},
+			predicate.AnnotationChangedPredicate{},
+		))).
 		WatchesRawSource(source.Channel(genericChan, handler.EnqueueRequestsFromMapFunc(
 			func(_ context.Context, obj client.Object) []reconcile.Request {
 				log.Info("reconciling certificaterequestpolicy after receiving event message", "name", obj.GetName())
