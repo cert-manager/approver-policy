@@ -387,12 +387,16 @@ var _ = Context("Ready", func() {
 	})
 
 	It("should reconcile the policy once for each change, and not again for its own status update", func() {
-		// readyCalls counts how many times plugin 1 has been asked, which is
-		// once per reconcile of the policy.
+		// readyCalls counts how many times plugin 1 has been asked about this
+		// spec's policy, which is once per reconcile of that policy. Calls for
+		// any other policy are not counted.
+		const policyName = "reconcile-once-per-change"
 		var readyCalls atomic.Int64
 
 		plugin1.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
-			readyCalls.Add(1)
+			if policy.Name == policyName {
+				readyCalls.Add(1)
+			}
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 		plugin2.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
@@ -413,7 +417,7 @@ var _ = Context("Ready", func() {
 		}
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			ObjectMeta: metav1.ObjectMeta{Name: policyName},
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -439,5 +443,11 @@ var _ = Context("Ready", func() {
 		policy.Labels = map[string]string{"foo": "bar"}
 		Expect(env.AdminClient.Patch(ctx, &policy, patch)).ToNot(HaveOccurred())
 		expectReadyCalls(policy.Name, 3)
+
+		By("Changing an annotation")
+		patch = client.MergeFrom(policy.DeepCopy())
+		policy.Annotations = map[string]string{"foo": "bar"}
+		Expect(env.AdminClient.Patch(ctx, &policy, patch)).ToNot(HaveOccurred())
+		expectReadyCalls(policy.Name, 4)
 	})
 })

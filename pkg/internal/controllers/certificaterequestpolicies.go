@@ -123,10 +123,13 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 		// at the end of every reconcile. Otherwise the controller reconciles each
 		// policy a second time in response to its own update. Label and
 		// annotation changes still pass, because a plugin may read them in Ready.
+		// The periodic cache resync also passes, so every policy is still
+		// re-checked about once per sync period.
 		For(new(policyapi.CertificateRequestPolicy), builder.WithPredicates(predicate.Or(
 			predicate.GenerationChangedPredicate{},
 			predicate.LabelChangedPredicate{},
 			predicate.AnnotationChangedPredicate{},
+			resyncPredicate,
 		))).
 		WatchesRawSource(source.Channel(genericChan, handler.EnqueueRequestsFromMapFunc(
 			func(_ context.Context, obj client.Object) []reconcile.Request {
@@ -282,4 +285,18 @@ func (c *certificaterequestpolicies) setCondition(
 	}
 
 	meta.SetStatusCondition(patchConditions, newCondition)
+}
+
+// resyncPredicate passes the update events of the periodic cache resync. A
+// resync replays the cached object unchanged, so the old and new objects have
+// the same resourceVersion, while every real update, including the status
+// patch of a reconcile, changes it. Create, delete and generic events return
+// false, because predicate.Funcs treats a nil func as true.
+var resyncPredicate = predicate.Funcs{
+	CreateFunc:  func(event.CreateEvent) bool { return false },
+	DeleteFunc:  func(event.DeleteEvent) bool { return false },
+	GenericFunc: func(event.GenericEvent) bool { return false },
+	UpdateFunc: func(e event.UpdateEvent) bool {
+		return e.ObjectNew.GetResourceVersion() == e.ObjectOld.GetResourceVersion()
+	},
 }
