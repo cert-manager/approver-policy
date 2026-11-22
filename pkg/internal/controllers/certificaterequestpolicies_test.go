@@ -32,6 +32,7 @@ import (
 	fakeclock "k8s.io/utils/clock/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
 	"github.com/cert-manager/approver-policy/pkg/approver"
@@ -574,6 +575,46 @@ func Test_certificaterequestpolicies_setCondition(t *testing.T) {
 
 			if !apiequality.Semantic.DeepEqual(test.patchConditions, test.expectedConditions) {
 				t.Errorf("unexpected resulting conditions, exp=%v got=%v", test.expectedConditions, test.patchConditions)
+			}
+		})
+	}
+}
+
+func Test_resyncPredicate(t *testing.T) {
+	policyWithRV := func(rv string) *policyapi.CertificateRequestPolicy {
+		return &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: "test-policy", ResourceVersion: rv}}
+	}
+
+	tests := map[string]struct {
+		got  bool
+		want bool
+	}{
+		"an update with the same resourceVersion is a resync and should pass": {
+			got:  resyncPredicate.Update(event.UpdateEvent{ObjectOld: policyWithRV("10"), ObjectNew: policyWithRV("10")}),
+			want: true,
+		},
+		"an update with a new resourceVersion should not pass": {
+			got:  resyncPredicate.Update(event.UpdateEvent{ObjectOld: policyWithRV("10"), ObjectNew: policyWithRV("11")}),
+			want: false,
+		},
+		"a create should not pass": {
+			got:  resyncPredicate.Create(event.CreateEvent{Object: policyWithRV("10")}),
+			want: false,
+		},
+		"a delete should not pass": {
+			got:  resyncPredicate.Delete(event.DeleteEvent{Object: policyWithRV("10")}),
+			want: false,
+		},
+		"a generic event should not pass": {
+			got:  resyncPredicate.Generic(event.GenericEvent{Object: policyWithRV("10")}),
+			want: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			if test.got != test.want {
+				t.Errorf("unexpected result, exp=%t got=%t", test.want, test.got)
 			}
 		})
 	}

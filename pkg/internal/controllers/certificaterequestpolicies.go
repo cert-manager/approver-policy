@@ -31,11 +31,13 @@ import (
 	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -117,7 +119,18 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
 		WithOptions(controller.Options{MaxConcurrentReconciles: opts.CertificateRequestPolicyMaxConcurrentReconciles}).
-		For(new(policyapi.CertificateRequestPolicy)).
+		// Ignore updates which only change the status, such as the status patch
+		// at the end of every reconcile. Otherwise the controller reconciles each
+		// policy a second time in response to its own update. Label and
+		// annotation changes still pass, because a plugin may read them in Ready.
+		// The periodic cache resync also passes, so every policy is still
+		// re-checked about once per sync period.
+		For(new(policyapi.CertificateRequestPolicy), builder.WithPredicates(predicate.Or(
+			predicate.GenerationChangedPredicate{},
+			predicate.LabelChangedPredicate{},
+			predicate.AnnotationChangedPredicate{},
+			resyncPredicate,
+		))).
 		WatchesRawSource(source.Channel(genericChan, handler.EnqueueRequestsFromMapFunc(
 			func(_ context.Context, obj client.Object) []reconcile.Request {
 				log.Info("reconciling certificaterequestpolicy after receiving event message", "name", obj.GetName())
@@ -272,4 +285,18 @@ func (c *certificaterequestpolicies) setCondition(
 	}
 
 	meta.SetStatusCondition(patchConditions, newCondition)
+}
+
+// resyncPredicate passes the update events of the periodic cache resync. A
+// resync replays the cached object unchanged, so the old and new objects have
+// the same resourceVersion, while every real update, including the status
+// patch of a reconcile, changes it. Create, delete and generic events return
+// false, because predicate.Funcs treats a nil func as true.
+var resyncPredicate = predicate.Funcs{
+	CreateFunc:  func(event.CreateEvent) bool { return false },
+	DeleteFunc:  func(event.DeleteEvent) bool { return false },
+	GenericFunc: func(event.GenericEvent) bool { return false },
+	UpdateFunc: func(e event.UpdateEvent) bool {
+		return e.ObjectNew.GetResourceVersion() == e.ObjectOld.GetResourceVersion()
+	},
 }
