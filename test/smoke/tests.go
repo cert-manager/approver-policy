@@ -55,25 +55,19 @@ var _ = Describe("Policy", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		namespace = corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: "smoke-test-policy-",
-			},
+			GenerateName: "smoke-test-policy-",
 		}
 		Expect(cl.Create(ctx, &namespace)).To(Succeed())
 
 		issuer = cmapi.Issuer{
-			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: "smoke-test-policy-",
-				Namespace:    namespace.Name,
-			},
-			Spec: cmapi.IssuerSpec{IssuerConfig: cmapi.IssuerConfig{SelfSigned: &cmapi.SelfSignedIssuer{}}},
+			GenerateName: "smoke-test-policy-",
+			Namespace:    namespace.Name,
+			Spec:         cmapi.IssuerSpec{SelfSigned: &cmapi.SelfSignedIssuer{}},
 		}
 		Expect(cl.Create(ctx, &issuer)).To(Succeed())
 
 		policy = policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: "smoke-test-policy-",
-			},
+			GenerateName: "smoke-test-policy-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{
@@ -114,10 +108,8 @@ var _ = Describe("Policy", func() {
 
 		BeforeEach(func() {
 			certificateRequest = cmapi.CertificateRequest{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "smoke-test-policy-",
-					Namespace:    namespace.Name,
-				},
+				GenerateName: "smoke-test-policy-",
+				Namespace:    namespace.Name,
 				Spec: cmapi.CertificateRequestSpec{
 					IssuerRef: cmmeta.IssuerReference{Name: issuer.Name, Kind: "Issuer", Group: "cert-manager.io"},
 				},

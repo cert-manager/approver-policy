@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -35,49 +34,56 @@ func Test_Metrics(t *testing.T) {
 	t.Run("certificaterequests_approval reports the approval status of CertificateRequests", func(t *testing.T) {
 		mock := mockCollector(t, []*cmapi.CertificateRequest{
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "approved-1", Namespace: "bar"},
+				Name:      "approved-1",
+				Namespace: "bar",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "approved-2", Namespace: "bar"},
+				Name:      "approved-2",
+				Namespace: "bar",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "approved-3", Namespace: "bar"},
+				Name:      "approved-3",
+				Namespace: "bar",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "approved-4", Namespace: "other"},
+				Name:      "approved-4",
+				Namespace: "other",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Approved", Status: "True"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "denied-1", Namespace: "bar"},
+				Name:      "denied-1",
+				Namespace: "bar",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Denied", Status: "True"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "denied-2", Namespace: "bar"},
+				Name:      "denied-2",
+				Namespace: "bar",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Denied", Status: "True"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "denied-3", Namespace: "other"},
+				Name:      "denied-3",
+				Namespace: "other",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 					{Type: "Denied", Status: "True"},
@@ -85,19 +91,22 @@ func Test_Metrics(t *testing.T) {
 			},
 			// Three unmatched CRs.
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "unmatched-1", Namespace: "bar"},
+				Name:      "unmatched-1",
+				Namespace: "bar",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "unmatched-2", Namespace: "bar"},
+				Name:      "unmatched-2",
+				Namespace: "bar",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{Name: "unmatched-3", Namespace: "other"},
+				Name:      "unmatched-3",
+				Namespace: "other",
 				Status: cmapi.CertificateRequestStatus{Conditions: []cmapi.CertificateRequestCondition{
 					{Type: "Ready", Status: "False"},
 				}},

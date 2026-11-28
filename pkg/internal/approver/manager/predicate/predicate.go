@@ -141,7 +141,7 @@ func SelectorNamespace(reader client.Reader) Predicate {
 			if nsSel.MatchLabels != nil {
 
 				if namespaceLabels == nil {
-					namespace := &metav1.PartialObjectMetadata{TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Namespace"}}
+					namespace := &metav1.PartialObjectMetadata{APIVersion: "v1", Kind: "Namespace"}
 					if err := reader.Get(ctx, client.ObjectKey{Name: request.Namespace}, namespace); err != nil {
 						return nil, fmt.Errorf("failed to get request's namespace to determine namespace selector: %w", err)
 					}

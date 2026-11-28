@@ -23,7 +23,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	policyapi "github.com/cert-manager/approver-policy/pkg/apis/policy/v1alpha1"
@@ -79,7 +78,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -109,7 +108,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -139,7 +138,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -169,7 +168,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -202,7 +201,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -228,7 +227,7 @@ var _ = Context("Ready", func() {
 				return approver.ReconcilerReadyResponse{Ready: true}, nil
 			}
 			i.Add(1)
-			return approver.ReconcilerReadyResponse{Ready: false, Result: ctrl.Result{RequeueAfter: time.Millisecond * 100}}, nil
+			return approver.ReconcilerReadyResponse{Ready: false, RequeueAfter: time.Millisecond * 100}, nil
 		})
 
 		plugin3.FakeReconciler.WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
@@ -238,7 +237,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -274,7 +273,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -313,7 +312,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -352,7 +351,7 @@ var _ = Context("Ready", func() {
 		start()
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "allow-all-"},
+			GenerateName: "allow-all-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},
@@ -417,7 +416,7 @@ var _ = Context("Ready", func() {
 		}
 
 		policy := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{Name: policyName},
+			Name: policyName,
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Selector: policyapi.CertificateRequestPolicySelector{
 					IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{},

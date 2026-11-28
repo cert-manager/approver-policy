@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -37,9 +36,7 @@ func GenerateCertificateRequestStatusPatch(
 	status *cmapi.CertificateRequestStatus,
 ) (*cmapi.CertificateRequest, client.Patch, error) {
 	// This object is used to deduce the name & namespace + unmarshall the return value in
-	cr := &cmapi.CertificateRequest{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
-	}
+	cr := &cmapi.CertificateRequest{Name: name, Namespace: namespace}
 
 	// This object is used to render the patch
 	b := &certificateRequestStatusApplyConfiguration{

@@ -23,7 +23,6 @@ import (
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/cert-manager/cert-manager/test/unit/gen"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/komega"
 
@@ -68,7 +67,8 @@ var _ = Context("Review", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		policy := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-"},
+		policy := policyapi.CertificateRequestPolicy{
+			GenerateName: "approve-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -98,7 +98,8 @@ var _ = Context("Review", func() {
 		plugin.FakeReconciler = fake.NewFakeReconciler().WithReady(func(_ context.Context, policy *policyapi.CertificateRequestPolicy) (approver.ReconcilerReadyResponse, error) {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
-		policy := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
+		policy := policyapi.CertificateRequestPolicy{
+			GenerateName: "deny-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -133,7 +134,8 @@ var _ = Context("Review", func() {
 		})
 
 		alg := cmapi.ECDSAKeyAlgorithm
-		policy := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
+		policy := policyapi.CertificateRequestPolicy{
+			GenerateName: "deny-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Constraints: &policyapi.CertificateRequestPolicyConstraints{
@@ -169,7 +171,8 @@ var _ = Context("Review", func() {
 			return approver.ReconcilerReadyResponse{Ready: true}, nil
 		})
 
-		policy := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-then-approve-"},
+		policy := policyapi.CertificateRequestPolicy{
+			GenerateName: "deny-then-approve-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -205,13 +208,15 @@ var _ = Context("Review", func() {
 	})
 
 	It("if one policy denies the request but one allows, the request should be approved", func() {
-		policyDeny := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
+		policyDeny := policyapi.CertificateRequestPolicy{
+			GenerateName: "deny-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
-		policyApprove := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-"},
+		policyApprove := policyapi.CertificateRequestPolicy{
+			GenerateName: "approve-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -235,19 +240,22 @@ var _ = Context("Review", func() {
 	})
 
 	It("if two policies deny the request but one allows, it should approve the request", func() {
-		policyDeny1 := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-1-"},
+		policyDeny1 := policyapi.CertificateRequestPolicy{
+			GenerateName: "deny-1-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
-		policyDeny2 := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
+		policyDeny2 := policyapi.CertificateRequestPolicy{
+			GenerateName: "deny-2-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: new("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
-		policyApprove := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-"},
+		policyApprove := policyapi.CertificateRequestPolicy{
+			GenerateName: "approve-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -275,19 +283,22 @@ var _ = Context("Review", func() {
 	})
 
 	It("if one policy denies the request but two allows, it should approve the request", func() {
-		policyDeny := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
+		policyDeny := policyapi.CertificateRequestPolicy{
+			GenerateName: "deny-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
-		policyApprove1 := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-1-"},
+		policyApprove1 := policyapi.CertificateRequestPolicy{
+			GenerateName: "approve-1-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
-		policyApprove2 := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-1-"},
+		policyApprove2 := policyapi.CertificateRequestPolicy{
+			GenerateName: "approve-2-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -314,14 +325,14 @@ var _ = Context("Review", func() {
 
 	It("if two policies deny the request, it should deny the request", func() {
 		policyDeny1 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-1-"},
+			GenerateName: "deny-1-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
 		policyDeny2 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
+			GenerateName: "deny-2-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: new("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -346,21 +357,21 @@ var _ = Context("Review", func() {
 
 	It("if three policies deny the request, it should deny the request", func() {
 		policyDeny1 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-1-"},
+			GenerateName: "deny-1-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
 		policyDeny2 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
+			GenerateName: "deny-2-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{CommonName: &policyapi.CertificateRequestPolicyAllowedString{Value: new("foo.example.com")}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
 			},
 		}
 		policyDeny3 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-3-"},
+			GenerateName: "deny-3-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed:  &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"bar.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{IssuerRef: &policyapi.CertificateRequestPolicySelectorIssuerRef{}},
@@ -400,7 +411,7 @@ var _ = Context("Review", func() {
 		})
 
 		policyApprove := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-"},
+			GenerateName: "approve-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -409,7 +420,7 @@ var _ = Context("Review", func() {
 			},
 		}
 		policyDeny := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
+			GenerateName: "deny-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -446,7 +457,7 @@ var _ = Context("Review", func() {
 		})
 
 		policyApprove := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-"},
+			GenerateName: "approve-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -455,7 +466,7 @@ var _ = Context("Review", func() {
 			},
 		}
 		policyDeny := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
+			GenerateName: "deny-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -490,7 +501,7 @@ var _ = Context("Review", func() {
 		})
 
 		policyApprove1 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-1-"},
+			GenerateName: "approve-1-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -499,7 +510,7 @@ var _ = Context("Review", func() {
 			},
 		}
 		policyApprove2 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "approve-2-"},
+			GenerateName: "approve-2-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -509,7 +520,7 @@ var _ = Context("Review", func() {
 			},
 		}
 		policyDeny := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-"},
+			GenerateName: "deny-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -542,7 +553,7 @@ var _ = Context("Review", func() {
 		})
 
 		policyDeny1 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-1-"},
+			GenerateName: "deny-1-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"bar.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -552,7 +563,7 @@ var _ = Context("Review", func() {
 			},
 		}
 		policyDeny2 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-2-"},
+			GenerateName: "deny-2-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"*.bar"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -562,7 +573,7 @@ var _ = Context("Review", func() {
 			},
 		}
 		policyDeny3 := policyapi.CertificateRequestPolicy{
-			ObjectMeta: metav1.ObjectMeta{GenerateName: "deny-3-"},
+			GenerateName: "deny-3-",
 			Spec: policyapi.CertificateRequestPolicySpec{
 				Allowed: &policyapi.CertificateRequestPolicyAllowed{DNSNames: &policyapi.CertificateRequestPolicyAllowedStringSlice{Values: &[]string{"foo.example.com"}}},
 				Selector: policyapi.CertificateRequestPolicySelector{
@@ -596,7 +607,7 @@ var _ = Context("Review", func() {
 				return approver.ReconcilerReadyResponse{Ready: false}, nil
 			})
 
-			policyNotReady := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "not-ready-"}}
+			policyNotReady := policyapi.CertificateRequestPolicy{GenerateName: "not-ready-"}
 			var policy policyapi.CertificateRequestPolicy
 
 			komega.SetClient(env.AdminClient)
@@ -609,7 +620,7 @@ var _ = Context("Review", func() {
 		})
 
 		It("If the policy is ready, should have stable resource version", func() {
-			policyReady := policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{GenerateName: "ready-"}}
+			policyReady := policyapi.CertificateRequestPolicy{GenerateName: "ready-"}
 			var policy policyapi.CertificateRequestPolicy
 
 			komega.SetClient(env.AdminClient)

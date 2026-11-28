@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/events"
@@ -108,7 +107,7 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 				select {
 				case <-ctx.Done():
 					return nil
-				case genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{ObjectMeta: metav1.ObjectMeta{Name: val.String()}}}:
+				case genericChan <- event.GenericEvent{Object: &policyapi.CertificateRequestPolicy{Name: val.String()}}:
 					// Continue with loop
 				}
 			}
@@ -134,7 +133,7 @@ func addCertificateRequestPolicyController(_ context.Context, opts Options) erro
 		WatchesRawSource(source.Channel(genericChan, handler.EnqueueRequestsFromMapFunc(
 			func(_ context.Context, obj client.Object) []reconcile.Request {
 				log.Info("reconciling certificaterequestpolicy after receiving event message", "name", obj.GetName())
-				return []ctrl.Request{{NamespacedName: types.NamespacedName{Name: obj.GetName()}}}
+				return []ctrl.Request{{Name: obj.GetName()}}
 			},
 		))).
 		Complete(&certificaterequestpolicies{
@@ -161,10 +160,8 @@ func (c *certificaterequestpolicies) Reconcile(ctx context.Context, req ctrl.Req
 		}
 
 		if err := c.client.Status().Patch(ctx, crp, patch, &client.SubResourcePatchOptions{
-			PatchOptions: client.PatchOptions{
-				FieldManager: "approver-policy",
-				Force:        new(true),
-			},
+			FieldManager: "approver-policy",
+			Force:        new(true),
 		}); err != nil {
 			err = fmt.Errorf("failed to apply CertificateRequestPolicy.Status patch: %w", err)
 			return ctrl.Result{}, utilerrors.NewAggregate([]error{resultErr, err})
