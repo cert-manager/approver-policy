@@ -116,6 +116,9 @@
         "readinessProbe": {
           "$ref": "#/$defs/helm-values.app.readinessProbe"
         },
+        "usePoliciesRbac": {
+          "$ref": "#/$defs/helm-values.app.usePoliciesRbac"
+        },
         "webhook": {
           "$ref": "#/$defs/helm-values.app.webhook"
         }
@@ -245,6 +248,54 @@
       "default": 6060,
       "description": "The container port to expose approver-policy HTTP readiness probe on default network interface.",
       "type": "number"
+    },
+    "helm-values.app.usePoliciesRbac": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "$ref": "#/$defs/helm-values.app.usePoliciesRbac.enabled"
+        },
+        "policyNames": {
+          "$ref": "#/$defs/helm-values.app.usePoliciesRbac.policyNames"
+        },
+        "serviceAccount": {
+          "$ref": "#/$defs/helm-values.app.usePoliciesRbac.serviceAccount"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.usePoliciesRbac.enabled": {
+      "default": true,
+      "description": "Create RBAC to grant permission to use policies.",
+      "type": "boolean"
+    },
+    "helm-values.app.usePoliciesRbac.policyNames": {
+      "default": [],
+      "description": "List of policies that the referenced service account will be given permission to use. Defaults to an empty array, allowing use of all policies.",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.app.usePoliciesRbac.serviceAccount": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/helm-values.app.usePoliciesRbac.serviceAccount.name"
+        },
+        "namespace": {
+          "$ref": "#/$defs/helm-values.app.usePoliciesRbac.serviceAccount.namespace"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.app.usePoliciesRbac.serviceAccount.name": {
+      "default": "cert-manager",
+      "description": "Name of ServiceAccount.",
+      "type": "string"
+    },
+    "helm-values.app.usePoliciesRbac.serviceAccount.namespace": {
+      "default": "cert-manager",
+      "description": "Namespace of ServiceAccount.",
+      "type": "string"
     },
     "helm-values.app.webhook": {
       "additionalProperties": false,
